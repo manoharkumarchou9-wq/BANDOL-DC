@@ -18,9 +18,18 @@ function cSet(hq,cat,d){
 var PENDING_KEY="dc_pending3";
 function getPending(){try{return JSON.parse(localStorage.getItem(PENDING_KEY))||{};}catch(e){return {};}}
 function setPendingObj(p){try{localStorage.setItem(PENDING_KEY,JSON.stringify(p));}catch(e){}}
-function markPending(hq,cat,type){
+// patch दिया हो (migrated HQ/श्रेणी की per-record बचत) तो पहले से पेंडिंग patch के साथ जोड़ें —
+// ताकि नेट आने पर सिर्फ असल बदले records ही PATCH हों, पूरी लिस्ट नहीं
+function markPending(hq,cat,type,patch){
   var p=getPending();
-  p[cKey(hq,cat)]={hq:hq,cat:cat,type:type||"put"};
+  var k=cKey(hq,cat);
+  var entry=p[k]||{hq:hq,cat:cat,type:type||"put"};
+  entry.type=type||entry.type;
+  if(patch){
+    entry.patch=entry.patch||{};
+    Object.keys(patch).forEach(function(pk){ entry.patch[pk]=patch[pk]; });
+  }
+  p[k]=entry;
   setPendingObj(p);
   setSyncStatus(navigator.onLine);
 }
@@ -84,7 +93,21 @@ function flushPending(){
         .catch(function(e){if(navigator.onLine)logErr("sync-del-fail",e,it.hq+"/"+it.cat);setSyncStatus(false);fin(false);});
       return;
     }
-    // put — पहले server data लो, merge करो, फिर save — दोनों के बदलाव बचें
+    if(it.patch){
+      // migrated HQ/श्रेणी — सिर्फ offline में बदले records PATCH करो; server के बाकी records को हाथ मत लगाओ
+      // (इसलिए यहां fetch+merge की ज़रूरत नहीं — PATCH अपने-आप बाकी keys को बिना छेड़े रहने देता है)
+      fetch(FB+"/"+fbPath(it.hq,it.cat)+".json",{
+        method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(it.patch)
+      }).then(function(r){
+        if(!r.ok)throw new Error("HTTP "+r.status);
+        clearPendingKey(k);
+        updTime();setSyncStatus(true);
+        if(CU&&it.hq===activeHQ&&it.cat===activeCat){var d=cGet(it.hq,it.cat);renderSummaryWith(d);renderListWith(d);}
+        fin(true);
+      }).catch(function(e){if(navigator.onLine)logErr("sync-patch-fail",e,it.hq+"/"+it.cat);setSyncStatus(false);fin(false);});
+      return;
+    }
+    // put (पुराना array फॉर्मेट) — पहले server data लो, merge करो, फिर save — दोनों के बदलाव बचें
     fetch(FB+"/"+fbPath(it.hq,it.cat)+".json?t="+Date.now())
       .then(function(r){return r.json();})
       .then(function(d){

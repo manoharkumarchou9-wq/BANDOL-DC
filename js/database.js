@@ -56,11 +56,13 @@ function fbGet(hq,cat,cb){
 }
 
 function fbSet(hq,cat,arr,cb){
+  var prev=cGet(hq,cat)||[];
   cSet(hq,cat,arr);
   if(arr.length>200){
     toast("⏳ "+arr.length+" records सेव हो रहे हैं...","inf");
   }
-  _fbPut(hq,cat,arr,cb);
+  if(isMigrated(hq,cat)) _fbPutPerRecord(hq,cat,prev,arr,cb);
+  else _fbPut(hq,cat,arr,cb);
 }
 
 function _fbPut(hq,cat,arr,cb){
@@ -76,6 +78,58 @@ function _fbPut(hq,cat,arr,cb){
   }).catch(function(e){
     if(navigator.onLine) logErr("save-fail",e,hq+"/"+cat); // ऑनलाइन होते हुए save fail — असली गड़बड़
     markPending(hq,cat,"put");
+    setSyncStatus(false);
+    toast("📴 ऑफलाइन — बदलाव device पर save है, नेट आते ही अपने आप sync होगा","inf");
+    if(cb) cb(false);
+  });
+}
+
+// migrated (per-record) HQ/श्रेणी के लिए — prev/arr में जो record बदले/जुड़े/हटे हों सिर्फ उन्हें PATCH करना,
+// पूरी लिस्ट दोबारा नहीं भेजना (bandwidth बचत + concurrent-edit टकराव खत्म)
+// किसी record में acc न हो तो null लौटाएं — caller पुराने सुरक्षित array-PUT पर वापस जाए
+function _diffToPatch(prev,arr){
+  for(var i=0;i<arr.length;i++){
+    var x=arr[i];
+    if(!x||x.acc==null||String(x.acc).trim()==="") return null;
+  }
+  var prevByAcc={};
+  (prev||[]).forEach(function(x){ if(x&&x.acc!=null) prevByAcc[String(x.acc)]=x; });
+  var maxO=-1;
+  (prev||[]).forEach(function(x){ if(x&&x.o!=null&&Number(x.o)>maxO) maxO=Number(x.o); });
+  var patch={},changed=false,nextO=maxO+1,newAccSet={};
+  arr.forEach(function(x){
+    var k=String(x.acc);
+    newAccSet[k]=1;
+    if(x.o==null) x.o=nextO++; // नया record — मौजूदा क्रम के आखिर में जुड़े
+    var old=prevByAcc[k];
+    if(!old||JSON.stringify(old)!==JSON.stringify(x)){ patch[k]=x; changed=true; }
+  });
+  Object.keys(prevByAcc).forEach(function(k){
+    if(!newAccSet[k]){ patch[k]=null; changed=true; } // हटाया गया record — PATCH में null = delete
+  });
+  return changed?patch:{};
+}
+
+function _fbPutPerRecord(hq,cat,prev,arr,cb){
+  var patch=_diffToPatch(prev,arr);
+  if(patch===null){
+    logErr("mig-noacc-fallback","record बिना acc मिला — सुरक्षा के लिए पूरी लिस्ट (array) से सेव किया",hq+"/"+cat);
+    _fbPut(hq,cat,arr,cb);
+    return;
+  }
+  if(!Object.keys(patch).length){ if(cb) cb(true); return; } // कुछ बदला ही नहीं — network call भी नहीं
+  fetch(FB+"/"+fbPath(hq,cat)+".json",{
+    method:"PATCH",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(patch)
+  }).then(function(r){
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    clearPendingKey(cKey(hq,cat));
+    updTime(); setSyncStatus(true);
+    if(cb) cb(true);
+  }).catch(function(e){
+    if(navigator.onLine) logErr("save-fail",e,hq+"/"+cat);
+    markPending(hq,cat,"put",patch);
     setSyncStatus(false);
     toast("📴 ऑफलाइन — बदलाव device पर save है, नेट आते ही अपने आप sync होगा","inf");
     if(cb) cb(false);
@@ -193,10 +247,12 @@ function startListen(hq,cat){
     startPolling();
   }
 
-  // हर 8 sec में CAT_NAMES check — JE का बदला नाम तुरंत दिखे
+  // हर 8 sec में CAT_NAMES check — JE का बदला नाम तुरंत दिखे; साथ ही MIGRATED flags भी ताज़ा रहें
+  // (चरण 3 माइग्रेशन के दौरान/बाद हर device जल्दी सही write-path — array या per-record — अपनाए)
   if(catNamesTimer) clearInterval(catNamesTimer);
   catNamesTimer=setInterval(function(){
     fetchCatNamesFromFB(true);
+    loadMigratedFlags();
   },8000);
 }
 
