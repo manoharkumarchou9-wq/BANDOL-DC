@@ -47,6 +47,8 @@ function _migRunDryRun(){
       .then(function(r){return r.json();})
       .then(function(d){
         var a=_migAnalyzeList(d);
+        // MIGRATED flag "हां" कहता है पर data अब भी array है — किसी पुराने device ने migration पलट दिया
+        a.reverted=isMigrated(j.hq,j.cat)&&!a.alreadyObj;
         rows.push({hq:j.hq,cat:j.cat,a:a});
         fin();
       })
@@ -68,22 +70,25 @@ function _migRunDryRun(){
 
 function _migRender(rows){
   var el=document.getElementById("mig-content");
-  var gTot=0,gMiss=0,gDup=0,gIll=0,anyErr=false;
-  rows.forEach(function(r){gTot+=r.a.tot;gMiss+=r.a.missingAcc;gDup+=r.a.dupAcc;gIll+=r.a.illegalAcc;if(r.a.fetchErr)anyErr=true;});
-  var clean=(gMiss===0&&gDup===0&&gIll===0&&!anyErr);
+  var gTot=0,gMiss=0,gDup=0,gIll=0,anyErr=false,anyReverted=false;
+  rows.forEach(function(r){gTot+=r.a.tot;gMiss+=r.a.missingAcc;gDup+=r.a.dupAcc;gIll+=r.a.illegalAcc;if(r.a.fetchErr)anyErr=true;if(r.a.reverted)anyReverted=true;});
+  var clean=(gMiss===0&&gDup===0&&gIll===0&&!anyErr&&!anyReverted);
   var html="";
+  if(anyReverted){
+    html+="<div style='background:rgba(240,80,80,.1);border:1px solid rgba(240,80,80,.4);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--red);font-weight:700;'>🛠 कुछ HQ/श्रेणी में migration किसी पुराने device ने पलट दिया था — नीचे 'पलटा हुआ' दिख रहीं वो अपने आप ठीक हो रही हैं (या हो चुकी हैं); कुछ देर बाद दोबारा जांचें।</div>";
+  }
   if(anyErr){
     html+="<div class='box-danger' style='background:#fdf0f1;border:1px solid #ecc8cc;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;'>⚠️ कुछ HQ/श्रेणी लोड नहीं हो पाईं (नेट/network) — दोबारा जांचें दबाएं।</div>";
   } else if(clean){
     html+="<div style='background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green);font-weight:700;'>✅ सभी "+gTot+" records ठीक हैं — कोई acc missing/duplicate/illegal नहीं। माइग्रेशन के लिए तैयार।"+
       "<div style='margin-top:8px;'><button class='btn-save' style='width:100%;background:#c0392b;' onclick='confirmAndRunMigration()'>🚀 अभी माइग्रेट करें (कम-ट्रैफिक समय पर)</button></div></div>";
-  } else {
+  } else if(!anyReverted){
     html+="<div style='background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--gold2);font-weight:700;'>⚠️ पहले इन समस्याओं को ठीक करें — Missing acc: "+gMiss+", Duplicate acc: "+gDup+", अवैध acc: "+gIll+"</div>";
   }
   html+="<table class='wasc-table'><thead><tr><th>HQ</th><th>श्रेणी</th><th>कुल</th><th>Missing<br>acc</th><th>Duplicate<br>acc</th><th>अवैध<br>acc</th></tr></thead><tbody>";
   rows.forEach(function(r){
-    var bad=r.a.missingAcc||r.a.dupAcc||r.a.illegalAcc||r.a.fetchErr;
-    html+="<tr"+(bad?" style='background:rgba(240,80,80,.06);'":"")+"><td class='wasc-hq'>"+escHtml(r.hq)+"</td><td>"+escHtml(r.cat)+"</td>"+
+    var bad=r.a.missingAcc||r.a.dupAcc||r.a.illegalAcc||r.a.fetchErr||r.a.reverted;
+    html+="<tr"+(bad?" style='background:rgba(240,80,80,.06);'":"")+"><td class='wasc-hq'>"+escHtml(r.hq)+"</td><td>"+escHtml(r.cat)+(r.a.reverted?" <span style='color:var(--red);'>(पलटा हुआ)</span>":"")+"</td>"+
       "<td>"+r.a.tot+"</td><td>"+(r.a.fetchErr?"—":r.a.missingAcc)+"</td><td>"+(r.a.fetchErr?"—":r.a.dupAcc)+"</td><td>"+(r.a.fetchErr?"—":r.a.illegalAcc)+"</td></tr>";
   });
   html+="</tbody><tfoot><tr><td colspan='2'>योग</td><td>"+gTot+"</td><td>"+gMiss+"</td><td>"+gDup+"</td><td>"+gIll+"</td></tr></tfoot></table>";
@@ -104,6 +109,24 @@ function loadMigratedFlags(){
     .then(function(r){return r.json();})
     .then(function(d){ if(d&&typeof d==="object") MIGRATED=d; })
     .catch(function(){});
+}
+
+// ── ऑटो-पहचान + ऑटो-सुधार: कोई पुराने version वाला device migrated list को बचाते समय
+// वापस array में न बदल दे — जो भी device वह list खोले/देखे (fbGet या real-time listener से),
+// अगर MIGRATED flag "true" है पर data अब भी array दिखे, तो समझो पलट गया — तुरंत ठीक करो
+var _revertFixing={};
+function _checkMigrationRevert(hq,cat,raw){
+  if(!isMigrated(hq,cat)) return; // यह HQ/श्रेणी migrated ही नहीं — कुछ जांचने को नहीं
+  if(!Array.isArray(raw)) return; // अब भी सही (object/per-record) है — ठीक है
+  var key=hqKey(hq)+"/"+catKey(cat);
+  if(_revertFixing[key]) return; // पहले से ठीक करने की कोशिश चल रही है — दोबारा शुरू मत करो
+  _revertFixing[key]=true;
+  logErr("migration-reverted","किसी पुराने version वाले device ने बचाते समय वापस array format में बदल दिया — अपने आप ठीक किया जा रहा है",hq+"/"+cat);
+  _migrateOne(hq,cat,function(r){
+    _revertFixing[key]=false;
+    if(r&&r.status==="ok") toast("🛠 "+hq+"/"+cat+" — पुराना format मिला, अपने आप ठीक कर दिया गया","inf");
+    else if(r&&r.status==="unsafe") logErr("migration-revert-unsafe","ऑटो-सुधार असुरक्षित लगा (acc missing/duplicate) — मैन्युअल जांच ज़रूरी",hq+"/"+cat);
+  });
 }
 
 // array → per-record object — हर record की key उसका acc, क्रम बनाए रखने के लिए 'o' field जोड़ें

@@ -30,6 +30,7 @@ function fbGet(hq,cat,cb){
     fetch(FB+"/"+fbPath(hq,cat)+".json?t="+Date.now())
       .then(function(r){return r.json();})
       .then(function(d){
+        _checkMigrationRevert(hq,cat,d); // migrated list कहीं पुराने device ने वापस array में तो नहीं बदल दी
         var data=normList(d);
         overlayOps(hq,cat,data);
         var changed=JSON.stringify(data)!==JSON.stringify(cached);
@@ -43,6 +44,7 @@ function fbGet(hq,cat,cb){
   fetch(FB+"/"+fbPath(hq,cat)+".json?t="+Date.now())
     .then(function(r){return r.json();})
     .then(function(d){
+      _checkMigrationRevert(hq,cat,d);
       var data=normList(d);
       overlayOps(hq,cat,data);
       cSet(hq,cat,data);
@@ -189,6 +191,7 @@ function startListen(hq,cat){
   stopListen();
 
   function applyIncoming(d){
+    _checkMigrationRevert(hq,cat,d); // migrated list कहीं पुराने device ने वापस array में तो नहीं बदल दी
     var data=normList(d);
     overlayOps(hq,cat,data);
     var prev=cGet(hq,cat);
