@@ -499,6 +499,58 @@ test.describe('चरण 3 माइग्रेशन — Dry-run जांच'
   });
 });
 
+test.describe('डिवाइस Version ट्रैकिंग', () => {
+  test('login होते ही pingDeviceVersion सही payload के साथ PUT करता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const call = await page.evaluate(() => new Promise((resolve) => {
+      const real = window.fetch;
+      window.fetch = function (url, opts) {
+        if (String(url).indexOf('/DEVICE_VERSIONS/') > -1) {
+          resolve({ url: String(url), body: JSON.parse(opts.body), method: opts.method, ver: APP_VER });
+          window.fetch = real;
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(true) });
+        }
+        return real(url, opts);
+      };
+      pingDeviceVersion();
+    }));
+    expect(call.method).toBe('PUT');
+    expect(call.body).toEqual(expect.objectContaining({ v: call.ver, role: 'supervisor' }));
+  });
+
+  test('logout पर deviceTimer साफ़ हो जाता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.waitForFunction(() => deviceTimer !== null);
+    await page.evaluate(() => doLogout(false));
+    expect(await page.evaluate(() => deviceTimer)).toBeNull();
+  });
+
+  test('_dvRender — पुराने version वाले devices को अलग/ऊपर दिखाता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openMigModal());
+    await page.evaluate(() => {
+      window.fetch = function (url) {
+        if (String(url).indexOf('/DEVICE_VERSIONS.json') > -1) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({
+            d1: { v: APP_VER, hq: 'आदेगांव', role: 'supervisor', name: 'JE', t: Date.now() },
+            d2: { v: '9.0', hq: 'पिंडरई', role: 'lineman', name: 'पुराना लाइनमैन', t: Date.now() - 1000 },
+          }) });
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(null) });
+      };
+      _dvRender();
+    });
+    await page.waitForFunction(() => document.getElementById('mig-devices').textContent.indexOf('पुराना लाइनमैन') > -1);
+    const html = await page.evaluate(() => document.getElementById('mig-devices').innerHTML);
+    expect(html).toContain('⚠️');
+    // पुराना version वाली row पहले (ऊपर) आनी चाहिए
+    expect(html.indexOf('पुराना लाइनमैन')).toBeLessThan(html.indexOf('JE'));
+  });
+});
+
 test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
   test('बदले/नए/हटाए गए records का सही PATCH payload बनता है', async ({ page }) => {
     await openApp(page);
