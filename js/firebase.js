@@ -14,7 +14,9 @@ var firebaseConfig = {
 };
 var ID_TOKEN = null;
 var AC_TOKEN = null; // App Check token — साबित करता है कि request असली app से है (अभी monitor mode)
+var AC_READY = false; // पहला App Check token मिल चुका है (सफल/असफल दोनों) — वरना request अनिश्चित काल इंतज़ार न करे
 var _tokenWaiters = []; // app खुलते ही token बनने से पहले निकली DB-calls यहां इंतज़ार करती हैं
+var _acWaiters = []; // वैसे ही App Check token के लिए — पहले सिर्फ ID_TOKEN का इंतज़ार होता था, इसलिए ज़्यादातर requests बिना App Check header के निकल जाती थीं (Verified% कम दिखता था)
 try{
   firebase.initializeApp(firebaseConfig);
   try{
@@ -22,11 +24,14 @@ try{
     var _acRefresh=function(){
       firebase.appCheck().getToken(false)
         .then(function(t){AC_TOKEN=(t&&t.token)||null;})
-        .catch(function(){});
+        .catch(function(){})
+        .then(function(){
+          if(!AC_READY){AC_READY=true; _acWaiters.splice(0).forEach(function(f){try{f();}catch(e){}});}
+        });
     };
     _acRefresh();
     setInterval(_acRefresh, 30*60*1000);
-  }catch(eAC){}
+  }catch(eAC){AC_READY=true;}
   firebase.auth().onIdTokenChanged(function(u){
     if(u){
       u.getIdToken().then(function(t){
@@ -57,15 +62,21 @@ function _fbOpts(opts){
 }
 window.fetch = function(url, opts){
   if(typeof url==="string" && url.indexOf(FB)===0){
-    if(ID_TOKEN) return _rawFetch(_withToken(url), _fbOpts(opts));
+    if(ID_TOKEN && AC_READY) return _rawFetch(_withToken(url), _fbOpts(opts));
     if(!navigator.onLine) return _rawFetch(url, opts); // offline — तुरंत fail होकर offline-queue संभाले
     return new Promise(function(resolve){
       var done=false;
-      var tm=setTimeout(function(){ if(done)return; done=true; resolve(_rawFetch(url, _fbOpts(opts))); },4000);
-      _tokenWaiters.push(function(){
-        if(done)return; done=true; clearTimeout(tm);
+      var tm=setTimeout(function(){
+        if(done)return; done=true;
+        resolve(_rawFetch(ID_TOKEN?_withToken(url):url, _fbOpts(opts)));
+      },4000);
+      function check(){
+        if(done||!ID_TOKEN||!AC_READY)return;
+        done=true; clearTimeout(tm);
         resolve(_rawFetch(_withToken(url), _fbOpts(opts)));
-      });
+      }
+      if(ID_TOKEN) check(); else _tokenWaiters.push(check);
+      if(AC_READY) check(); else _acWaiters.push(check);
     });
   }
   return _rawFetch(url, opts);
