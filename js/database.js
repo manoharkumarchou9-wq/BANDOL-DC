@@ -121,6 +121,16 @@ function stopListen(){
   if(liveSource){liveSource.close();liveSource=null;}
 }
 
+// SSE "put" event का data पार्स करना — Firebase पूरे node (path:"/") के बदलाव पर event में ही नया data दे देता है
+// तभी {ok:true,data} लौटाएं ताकि caller दोबारा fetch न करे; कोई और path/parse-issue हो तो {ok:false} (caller safe fallback ले)
+function _sseFullPutData(evData){
+  try{
+    var msg=JSON.parse(evData);
+    if(msg&&msg.path==="/") return {ok:true,data:msg.data};
+  }catch(e){}
+  return {ok:false};
+}
+
 function startListen(hq,cat){
   stopListen();
 
@@ -157,7 +167,14 @@ function startListen(hq,cat){
       var url=FB+"/"+fbPath(hq,cat)+".json"+(ID_TOKEN?("?auth="+encodeURIComponent(ID_TOKEN)):"");
       var es=new EventSource(url);
       liveSource=es;
-      es.addEventListener("put",function(){ if(!isPending(hq,cat)) pollOnce(); });
+      // "put" event में Firebase पहले से पूरा नया data भेज देता है — उसी को इस्तेमाल करो,
+      // दोबारा fetch करके एक ही data दो बार डाउनलोड मत करो (bandwidth बचत)
+      es.addEventListener("put",function(ev){
+        if(isPending(hq,cat))return;
+        var r=_sseFullPutData(ev.data);
+        if(r.ok){ applyIncoming(r.data); return; }
+        pollOnce(); // सुरक्षित fallback
+      });
       es.addEventListener("patch",function(){ if(!isPending(hq,cat)) pollOnce(); });
       es.onopen=function(){setSyncStatus(true);};
       es.onerror=function(){

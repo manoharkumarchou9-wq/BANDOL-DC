@@ -445,6 +445,22 @@ test.describe('data format (चरण 1 — दोनों ढांचे)', (
   });
 });
 
+test.describe('SSE bandwidth बचत', () => {
+  test('_sseFullPutData — path:"/" पर data लौटाए, वरना दोबारा fetch का संकेत दे', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => ({
+      full: _sseFullPutData(JSON.stringify({ path: '/', data: [{ acc: '1' }] })),
+      nullData: _sseFullPutData(JSON.stringify({ path: '/', data: null })),
+      subPath: _sseFullPutData(JSON.stringify({ path: '/5', data: { acc: '1' } })),
+      badJson: _sseFullPutData('not-json{'),
+    }));
+    expect(r.full).toEqual({ ok: true, data: [{ acc: '1' }] });
+    expect(r.nullData).toEqual({ ok: true, data: null });
+    expect(r.subPath).toEqual({ ok: false });
+    expect(r.badJson).toEqual({ ok: false });
+  });
+});
+
 test.describe('चरण 3 माइग्रेशन — Dry-run जांच', () => {
   test('_migAnalyzeList — missing/duplicate/अवैध acc सही पकड़ता है', async ({ page }) => {
     await openApp(page);
