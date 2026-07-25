@@ -3,7 +3,7 @@ var CATS = ["कुल उपभोक्ता","घरेलू","व्यव
 var CICO = ["👥","🏠","🏪","🌾","🏛️","🏭","📋","📌"];
 // JE का पासवर्ड अब code में नहीं — Firebase Authentication से verify होता है (देखें ui-core.js: verifyJE)
 var JE_EMAIL = "pradeepks2015@gmail.com";
-var APP_VER = "9.20"; // हर अपडेट पर यह नंबर बढ़ाएं
+var APP_VER = "9.21"; // हर अपडेट पर यह नंबर बढ़ाएं
 document.getElementById("ver-badge").textContent="Version "+APP_VER+" • Offline + Auto Sync";
 var MAX_RECORDS = 1000;
 // Per-category limits: "कुल उपभोक्ता"=3500, others=1000
@@ -20,6 +20,7 @@ var CATS_DEFAULT = ["कुल उपभोक्ता","घरेलू","व�
 var CAT_NAMES = {}; // {HQ: {4:"नाम", 5:"नाम", 6:"नाम", 7:"नाम"}}
 
 function hqKey(hq){ return (hq||activeHQ).replace(/[\s.#$\[\]]/g,"_"); }
+function catKey(cat){ return (cat||"").replace(/[\s.#$\[\]]/g,"_"); }
 
 function getCatName(hq,i){
   return (CAT_NAMES[hq]&&CAT_NAMES[hq][i]!=null) ? CAT_NAMES[hq][i] : CATS_DEFAULT[i];

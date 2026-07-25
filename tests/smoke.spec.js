@@ -487,6 +487,72 @@ test.describe('चरण 3 माइग्रेशन — Dry-run जांच'
     await page.evaluate(() => openMigModal());
     expect(await page.evaluate(() => document.getElementById('mig-overlay').classList.contains('open'))).toBe(false);
   });
+
+  test('_migConvertToObject — acc को key बनाकर o (क्रम) जोड़ता है, बिना acc वाला record छोड़ देता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() =>
+      _migConvertToObject([{ acc: '10', name: 'क' }, { name: 'बिना-acc' }, { acc: '20', name: 'ख' }])
+    );
+    expect(Object.keys(r).sort()).toEqual(['10', '20']);
+    expect(r['10']).toEqual(expect.objectContaining({ name: 'क', o: 0 }));
+    expect(r['20']).toEqual(expect.objectContaining({ name: 'ख', o: 2 }));
+  });
+});
+
+test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
+  test('बदले/नए/हटाए गए records का सही PATCH payload बनता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => {
+      const prev = [
+        { acc: '1', status: 'pending', o: 0 },
+        { acc: '2', status: 'pending', o: 1 },
+        { acc: '3', status: 'paid', o: 2 },
+      ];
+      // acc:1 बदला (status), acc:2 वैसा ही रहा, acc:3 हटाया गया, acc:4 नया जुड़ा
+      const arr = [
+        { acc: '1', status: 'paid', o: 0 },
+        { acc: '2', status: 'pending', o: 1 },
+        { acc: '4', status: 'pending' },
+      ];
+      return _diffToPatch(prev, arr);
+    });
+    expect(r['1']).toEqual(expect.objectContaining({ status: 'paid' }));
+    expect(r['2']).toBeUndefined(); // नहीं बदला — patch में नहीं आना चाहिए
+    expect(r['3']).toBeNull(); // हटाया गया — null यानी delete
+    expect(r['4']).toEqual(expect.objectContaining({ status: 'pending', o: 3 })); // नया — अगला क्रम मिला
+  });
+
+  test('कुछ न बदले तो खाली patch ({}) लौटे — कोई network call नहीं', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => {
+      const list = [{ acc: '1', status: 'pending', o: 0 }];
+      return _diffToPatch(list, JSON.parse(JSON.stringify(list)));
+    });
+    expect(r).toEqual({});
+  });
+
+  test('किसी record में acc न हो तो null (असुरक्षित — caller array-PUT पर वापस जाए)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => _diffToPatch([], [{ status: 'pending' }]));
+    expect(r).toBeNull();
+  });
+
+  test('offline में fbSet — migrated HQ/श्रेणी पर पेंडिंग queue में सिर्फ patch बनता है, पूरी array नहीं', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => {
+      MIGRATED['टेस्ट_HQ'] = { 'कुल_उपभोक्ता': true };
+    });
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      cSet('टेस्ट HQ', 'कुल उपभोक्ता', [{ acc: '9', status: 'pending', o: 0 }]);
+      fbSet('टेस्ट HQ', 'कुल उपभोक्ता', [{ acc: '9', status: 'paid', o: 0 }], function () {
+        var p = getPending()['टेस्ट HQ_कुल उपभोक्ता'];
+        resolve(p);
+      });
+    }));
+    expect(r.patch).toBeTruthy();
+    expect(r.patch['9']).toEqual(expect.objectContaining({ status: 'paid' }));
+  });
 });
 
 test.describe('error logging', () => {

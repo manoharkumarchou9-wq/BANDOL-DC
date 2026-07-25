@@ -3,6 +3,7 @@ var _appStarted=false;
 function startApp(){
   if(_appStarted)return; _appStarted=true;
   loadCatNames();
+  loadMigratedFlags();
   rebuildCatsForHQ(HQS[0]);
   hideLoader();
   document.getElementById("login-screen").classList.add("active");
