@@ -386,6 +386,11 @@
     <div class="mtitle">&#128736;&#65039; चरण 3 — Dry-run जांच</div>
     <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;">यह सिर्फ पढ़ता है — Firebase में कुछ भी नहीं बदलता। मकसद: असली माइग्रेशन से पहले पक्का करना कि हर record का acc मौजूद, अलग-अलग और वैध है।</div>
     <div id="mig-content"></div>
+
+    <div class="log-sec-hdr" style="margin-top:14px;">&#128241; सक्रिय Devices — कोई पुराने version पर तो नहीं</div>
+    <div id="mig-devices"></div>
+    <div style="margin-top:6px;"><button class="btn-cancel" style="width:100%;" onclick="_dvRender()">&#128260; Devices दोबारा जांचें</button></div>
+
     <div class="mfooter">
       <button class="btn-cancel" id="mig-dl" style="display:none;" onclick="downloadMigReport()">&#128190; रिपोर्ट Excel</button>
       <button class="btn-save" onclick="_migRunDryRun()">&#128260; दोबारा जांचें</button>

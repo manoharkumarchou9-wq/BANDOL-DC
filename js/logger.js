@@ -10,6 +10,60 @@ var DEV_ID=(function(){
   }catch(e){return "unknown";}
 })();
 
+// ── DEVICE VERSION TRACKING: कौन सा device किस app version पर है, यह हमेशा पता रहे ──
+// चरण 3 माइग्रेशन (per-record) से पहले/बाद यह पक्का करने के लिए ज़रूरी कि कोई device पुराने
+// write-path वाले code पर न रह जाए (वरना वह migrated list को दोबारा array में लिख सकता है)
+var deviceTimer=null;
+function pingDeviceVersion(){
+  if(!navigator.onLine||!CU)return;
+  fetch(FB+"/DEVICE_VERSIONS/"+DEV_ID+".json",{
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({v:APP_VER,hq:CU.hq,role:CU.role,name:CU.name,t:Date.now()})
+  }).catch(function(){});
+}
+function startDevicePing(){
+  pingDeviceVersion();
+  if(deviceTimer) clearInterval(deviceTimer);
+  // हर 4 घंटे दोबारा — जो device हफ्तों बंद न हो (सिर्फ background में पड़ा रहे), उसकी असली (शायद पुरानी) version भी पता चलती रहे
+  deviceTimer=setInterval(pingDeviceVersion,4*60*60*1000);
+}
+function stopDevicePing(){
+  if(deviceTimer){clearInterval(deviceTimer);deviceTimer=null;}
+}
+
+// ── DEVICE VERSION VIEWER (सिर्फ JE) — कौन से devices पुराने version पर हैं, साफ़ दिखे ──
+function _dvRender(){
+  var el=document.getElementById("mig-devices");
+  if(!el)return;
+  el.innerHTML="<div class='log-empty'>⏳ लोड हो रहा है...</div>";
+  fetch(FB+"/DEVICE_VERSIONS.json?t="+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var rows=[];
+      if(d&&typeof d==="object") Object.keys(d).forEach(function(k){ if(d[k]) rows.push(d[k]); });
+      if(!rows.length){ el.innerHTML="<div class='log-empty'>अभी तक कोई device record नहीं — यह नए version से अपने आप बनता है</div>"; return; }
+      rows.sort(function(a,b){
+        var aOld=a.v!==APP_VER, bOld=b.v!==APP_VER;
+        if(aOld!==bOld) return aOld?-1:1; // पुराने version पहले दिखें
+        return (b.t||0)-(a.t||0);
+      });
+      var anyOld=rows.some(function(r){return r.v!==APP_VER;});
+      var html=anyOld
+        ?"<div style='background:rgba(240,80,80,.08);border:1px solid rgba(240,80,80,.3);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:12px;color:var(--red);font-weight:700;'>⚠️ कुछ devices अभी भी पुराने version पर हैं — माइग्रेट करने से पहले इन्हें अपडेट करवाएं</div>"
+        :"<div style='background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.3);border-radius:10px;padding:9px 11px;margin-bottom:8px;font-size:12px;color:var(--green);font-weight:700;'>✅ सभी दिखे devices v"+escHtml(APP_VER)+" पर हैं</div>";
+      html+="<table class='wasc-table'><thead><tr><th>नाम</th><th>HQ</th><th>Version</th><th>आख़िरी बार</th></tr></thead><tbody>";
+      rows.forEach(function(r){
+        var old=r.v!==APP_VER;
+        var when=r.t?new Date(r.t).toLocaleString("hi-IN"):"?";
+        html+="<tr"+(old?" style='background:rgba(240,80,80,.06);'":"")+"><td class='wasc-hq'>"+escHtml(r.name||"?")+(r.role==="supervisor"?" (JE)":"")+"</td><td>"+escHtml(r.hq||"?")+"</td><td>"+(old?"⚠️ v":"✅ v")+escHtml(r.v||"?")+"</td><td>"+when+"</td></tr>";
+      });
+      html+="</tbody></table>";
+      el.innerHTML=html;
+    })
+    .catch(function(){ el.innerHTML="<div class='log-empty'>लोड नहीं हो पाया — दोबारा कोशिश करें</div>"; });
+}
+
 function getLogs(){try{return JSON.parse(localStorage.getItem(LOG_KEY))||[];}catch(e){return [];}}
 
 function logErr(ctx, err, extra){

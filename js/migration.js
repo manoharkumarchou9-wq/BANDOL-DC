@@ -10,6 +10,7 @@ function openMigModal(){
   document.getElementById("mig-overlay").classList.add("open");
   document.getElementById("mig-content").innerHTML="<div class='log-empty'>ऊपर 'दोबारा जांचें' दबाकर dry-run शुरू करें</div>";
   document.getElementById("mig-dl").style.display="none";
+  _dvRender();
 }
 function closeMigModal(){document.getElementById("mig-overlay").classList.remove("open");}
 

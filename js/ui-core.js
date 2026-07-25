@@ -175,6 +175,7 @@ function _finishLogin(name){
     startListen(activeHQ,activeCat);
     hideLoader(); toast("स्वागत है "+name+"!","ok");
     setTimeout(prefetchAll,1500); // सभी लिस्ट offline के लिए download
+    startDevicePing(); // यह device किस app version पर है — Firebase पर दर्ज करें
   });
 }
 
@@ -188,6 +189,7 @@ function doLogout(askConfirm){
   }catch(e){}
   stopListen();
   if(catNamesTimer){clearInterval(catNamesTimer);catNamesTimer=null;}
+  stopDevicePing();
   CU=null; selectedRole="";
   document.getElementById("app-screen").classList.remove("active");
   document.getElementById("login-screen").classList.add("active");
