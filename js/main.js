@@ -4,6 +4,7 @@ function startApp(){
   if(_appStarted)return; _appStarted=true;
   loadCatNames();
   loadMigratedFlags();
+  loadHQPins();
   rebuildCatsForHQ(HQS[0]);
   hideLoader();
   document.getElementById("login-screen").classList.add("active");

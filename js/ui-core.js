@@ -139,6 +139,51 @@ function verifyJE(pw,cb){
   }
 }
 
+// ── Lineman PIN: हर HQ का एक साझा PIN (सामान्य सुरक्षा-मज़बूती — कोई भी नाम भरकर न घुस सके) ──
+// असली access-control नहीं (Security Rules अलग से restrict नहीं करतीं) — JE खुद /HQ_PIN में सेट/बदल सकते हैं
+var HQ_PINS={};
+function loadHQPins(){
+  try{var s=localStorage.getItem("dc_hqpins");if(s)HQ_PINS=JSON.parse(s);}catch(e){}
+  fetchHQPinsFromFB();
+}
+function fetchHQPinsFromFB(){
+  fetch(FB+"/HQ_PIN.json?t="+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&typeof d==="object"){
+        HQ_PINS=d;
+        try{localStorage.setItem("dc_hqpins",JSON.stringify(d));}catch(e){}
+      }
+    }).catch(function(){});
+}
+function openPinModal(){
+  if(!CU||CU.role!=="supervisor"){toast("सिर्फ JE PIN सेट कर सकते हैं","err");return;}
+  var mn=document.getElementById("logout-menu"); if(mn) mn.classList.remove("open");
+  var el=document.getElementById("pin-fields");
+  el.innerHTML=HQS.map(function(hq){
+    var v=HQ_PINS[hqKey(hq)]||"";
+    return "<label class='f-label'>"+escHtml(hq)+"</label><input type='text' inputmode='numeric' class='f-input' id='pin-"+hqKey(hq)+"' value='"+escHtml(v)+"' placeholder='खाली = PIN ज़रूरी नहीं' style='margin-bottom:10px;'>";
+  }).join("");
+  document.getElementById("pin-overlay").classList.add("open");
+}
+function closePinModal(){document.getElementById("pin-overlay").classList.remove("open");}
+function savePins(){
+  var d={};
+  HQS.forEach(function(hq){
+    var v=document.getElementById("pin-"+hqKey(hq)).value.trim();
+    if(v) d[hqKey(hq)]=v;
+  });
+  fetch(FB+"/HQ_PIN.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)})
+    .then(function(r){
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      HQ_PINS=d;
+      try{localStorage.setItem("dc_hqpins",JSON.stringify(d));}catch(e){}
+      toast("✅ PIN सेव हो गए","ok");
+      closePinModal();
+    })
+    .catch(function(e){logErr("pin-save-fail",e);toast("⚠️ सेव नहीं हुआ — दोबारा कोशिश करें","err");});
+}
+
 function doLogin(){
   var role=selectedRole,name=document.getElementById("uname-inp").value.trim();
   if(!role){toast("भूमिका चुनें","err");return;}
@@ -153,6 +198,10 @@ function doLogin(){
   }
   var hq=document.getElementById("hq-sel").value;
   if(!hq){toast("HQ चुनें","err");return;}
+  var expectedPin=HQ_PINS[hqKey(hq)];
+  if(expectedPin&&document.getElementById("lin-pin").value.trim()!==expectedPin){
+    toast("गलत PIN! JE से सही PIN लें","err");return;
+  }
   // lineman: अगर इस device पर JE का Firebase session बचा हो तो हटा दें (anonymous पर लौटें)
   try{
     var u=firebase.auth().currentUser;
@@ -212,7 +261,7 @@ function buildUI(){
   document.getElementById("hdr-sub").textContent=CU.role==="supervisor"?"JE | सभी HQ":"Lineman | "+CU.hq;
   var info=document.getElementById("user-info-menu");
   if(info) info.textContent=(CU.role==="supervisor"?"👨‍💼 JE":"🔧 Lineman")+" | "+CU.hq+" | "+CU.name+" | v"+APP_VER;
-  ["log-menu-item","hsc-menu-item","cash-menu-item","backup-menu-item","wasc-menu-item","mig-menu-item"].forEach(function(id){
+  ["log-menu-item","hsc-menu-item","cash-menu-item","backup-menu-item","wasc-menu-item","mig-menu-item","pin-menu-item"].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.style.display=CU.role==="supervisor"?"flex":"none";
   });

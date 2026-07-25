@@ -53,6 +53,8 @@
           <option>पाटन</option><option>बीबी</option><option>मढ़ी</option>
         </select>
       </div>
+      <label class="f-label">HQ PIN (JE से लें)</label>
+      <input type="text" inputmode="numeric" id="lin-pin" class="f-input" placeholder="अगर JE ने PIN दिया हो तो डालें">
     </div>
     <label class="f-label">आपका नाम</label>
     <input type="text" id="uname-inp" class="f-input" placeholder="जैसे: राजेश कुमार">
@@ -94,6 +96,7 @@
             <div class="logout-item" id="backup-menu-item" style="display:none;color:var(--gold);" onclick="downloadFullBackup()">&#128190; पूरा बैकअप</div>
             <div class="logout-item" id="log-menu-item" style="display:none;color:var(--gold2);" onclick="openLogModal()">&#129534; एरर लॉग</div>
             <div class="logout-item" id="mig-menu-item" style="display:none;color:#90a4ae;" onclick="openMigModal()">&#128736;&#65039; चरण 3 जांच</div>
+            <div class="logout-item" id="pin-menu-item" style="display:none;color:#ef9a9a;" onclick="openPinModal()">&#128274; Lineman PIN</div>
             <div class="logout-item" onclick="doLogout(true)">&#128682; लॉगआउट करें</div>
           </div>
         </div>
@@ -395,6 +398,20 @@
       <button class="btn-cancel" id="mig-dl" style="display:none;" onclick="downloadMigReport()">&#128190; रिपोर्ट Excel</button>
       <button class="btn-save" onclick="_migRunDryRun()">&#128260; दोबारा जांचें</button>
       <button class="btn-save" onclick="closeMigModal()">बंद करें</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lineman PIN सेट करना (JE only) — हर HQ के लिए एक साझा PIN, सामान्य सुरक्षा-मज़बूती के लिए -->
+<div class="moverlay" id="pin-overlay" onclick="if(event.target===this)closePinModal()">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">&#128274; Lineman PIN</div>
+    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;">हर HQ के लिए एक PIN — जिस HQ का खाली छोड़ेंगे, वहां बिना PIN के login चलता रहेगा (पुराना व्यवहार)। यह हल्की सुरक्षा है — कोई भी नाम भरकर घुस न सके, पूरी तरह secure account-login नहीं।</div>
+    <div id="pin-fields"></div>
+    <div class="mfooter">
+      <button class="btn-save" onclick="savePins()">&#128190; सेव करें</button>
+      <button class="btn-save" onclick="closePinModal()">बंद करें</button>
     </div>
   </div>
 </div>
