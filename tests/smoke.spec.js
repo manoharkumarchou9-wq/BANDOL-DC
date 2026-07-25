@@ -80,7 +80,7 @@ test.describe('रोल-आधारित UI', () => {
     await page.evaluate(() => doLogout(false));
     await loginLineman(page);
     const linHidden = await page.evaluate(() =>
-      ['hsc-menu-item', 'cash-menu-item', 'log-menu-item', 'backup-menu-item', 'wasc-menu-item']
+      ['hsc-menu-item', 'cash-menu-item', 'log-menu-item', 'backup-menu-item', 'wasc-menu-item', 'mig-menu-item']
         .every((id) => document.getElementById(id).style.display === 'none'));
     expect(linHidden).toBe(true);
   });
@@ -96,9 +96,10 @@ test.describe('रोल-आधारित UI', () => {
       openHscModal(); results.push(document.getElementById('hsc-overlay').classList.contains('open')); closeHscModal();
       openCashModal(); results.push(document.getElementById('cash-overlay').classList.contains('open')); closeCashModal();
       openWaScorecard(); results.push(document.getElementById('wasc-overlay').classList.contains('open')); closeWaScorecard();
+      openMigModal(); results.push(document.getElementById('mig-overlay').classList.contains('open')); closeMigModal();
       return results;
     });
-    expect(ok).toEqual([true, true, true, true, true, true]);
+    expect(ok).toEqual([true, true, true, true, true, true, true]);
   });
 
   test('स्कोरकार्ड डिस्प्ले — सभी HQ की सही गिनती और वसूल% बनता है', async ({ page }) => {
@@ -441,6 +442,34 @@ test.describe('data format (चरण 1 — दोनों ढांचे)', (
       };
     });
     expect(r).toEqual({ arrayOk: true, objectOk: true, remarksMigrated: true, orderOk: true, nullOk: true });
+  });
+});
+
+test.describe('चरण 3 माइग्रेशन — Dry-run जांच', () => {
+  test('_migAnalyzeList — missing/duplicate/अवैध acc सही पकड़ता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => ({
+      clean: _migAnalyzeList([{ acc: '1' }, { acc: '2' }, { acc: '3' }]),
+      missing: _migAnalyzeList([{ acc: '1' }, { acc: '' }, { name: 'no-acc' }]),
+      dup: _migAnalyzeList([{ acc: '5' }, { acc: '5' }, { acc: '6' }]),
+      illegal: _migAnalyzeList([{ acc: '7' }, { acc: 'a.b' }, { acc: 'c#d' }]),
+      alreadyObjFmt: _migAnalyzeList({ '1': { acc: '1' }, '2': { acc: '2' } }),
+      empty: _migAnalyzeList(null),
+    }));
+    expect(r.clean).toEqual(expect.objectContaining({ tot: 3, missingAcc: 0, dupAcc: 0, illegalAcc: 0 }));
+    expect(r.missing).toEqual(expect.objectContaining({ tot: 3, missingAcc: 2 }));
+    expect(r.dup).toEqual(expect.objectContaining({ tot: 3, dupAcc: 1 }));
+    expect(r.dup.dupSamples).toContain('5');
+    expect(r.illegal).toEqual(expect.objectContaining({ tot: 3, illegalAcc: 2 }));
+    expect(r.alreadyObjFmt).toEqual(expect.objectContaining({ tot: 2, alreadyObj: true }));
+    expect(r.empty).toEqual(expect.objectContaining({ tot: 0 }));
+  });
+
+  test('सिर्फ JE "चरण 3 जांच" खोल सकते हैं', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => openMigModal());
+    expect(await page.evaluate(() => document.getElementById('mig-overlay').classList.contains('open'))).toBe(false);
   });
 });
 
