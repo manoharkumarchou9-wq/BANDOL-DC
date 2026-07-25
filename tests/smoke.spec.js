@@ -607,6 +607,46 @@ test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
   });
 });
 
+test.describe('चरण 3 — migration-revert ऑटो-पहचान', () => {
+  test('migrated flag true + data अब भी object हो, या flag ही false हो — तो कोई चेतावनी नहीं', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const r = await page.evaluate(() => {
+      try { localStorage.removeItem('dc_logs3'); } catch (e) {}
+      MIGRATED['टेस्ट_HQ3'] = { 'कुल_उपभोक्ता': true };
+      _checkMigrationRevert('टेस्ट HQ3', 'कुल उपभोक्ता', { '1': { acc: '1' } }); // object — ठीक है
+      _checkMigrationRevert('टेस्ट HQ4', 'कुल उपभोक्ता', [{ acc: '1' }]); // migrated ही नहीं — कुछ जांचना नहीं
+      return getLogs().filter((l) => l.c === 'migration-reverted');
+    });
+    expect(r.length).toBe(0);
+  });
+
+  test('migrated HQ का data array में मिले तो एक बार चेतावनी log होती है, बार-बार नहीं (गेट)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const logs = await page.evaluate(() => new Promise((resolve) => {
+      try { localStorage.removeItem('dc_logs3'); } catch (e) {}
+      MIGRATED['टेस्ट_HQ5'] = { 'कुल_उपभोक्ता': true };
+      _checkMigrationRevert('टेस्ट HQ5', 'कुल उपभोक्ता', [{ acc: '1' }]); // पलटा हुआ — पहली बार
+      _checkMigrationRevert('टेस्ट HQ5', 'कुल उपभोक्ता', [{ acc: '1' }]); // तुरंत दोबारा — गेट हो जाना चाहिए
+      setTimeout(() => resolve(getLogs()), 300);
+    }));
+    expect(logs.filter((l) => l.c === 'migration-reverted').length).toBe(1);
+  });
+
+  test('_migRender — "पलटा हुआ" HQ को लाल चेतावनी के साथ अलग दिखाता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openMigModal());
+    await page.evaluate(() => {
+      _migRender([{ hq: 'आदेगांव', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, reverted: true } }]);
+    });
+    const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
+    expect(html).toContain('पलटा हुआ');
+    expect(html).toContain('अपने आप ठीक हो रही हैं');
+  });
+});
+
 test.describe('error logging', () => {
   test('logErr entry बनाता है और बिना पकड़ी error अपने आप log होती है', async ({ page }) => {
     await openApp(page);
