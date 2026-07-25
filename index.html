@@ -93,6 +93,7 @@
             <div class="logout-item" id="cash-menu-item" style="display:none;color:var(--green);" onclick="openCashModal()">&#128181; कैश लिस्ट</div>
             <div class="logout-item" id="backup-menu-item" style="display:none;color:var(--gold);" onclick="downloadFullBackup()">&#128190; पूरा बैकअप</div>
             <div class="logout-item" id="log-menu-item" style="display:none;color:var(--gold2);" onclick="openLogModal()">&#129534; एरर लॉग</div>
+            <div class="logout-item" id="mig-menu-item" style="display:none;color:#90a4ae;" onclick="openMigModal()">&#128736;&#65039; चरण 3 जांच</div>
             <div class="logout-item" onclick="doLogout(true)">&#128682; लॉगआउट करें</div>
           </div>
         </div>
@@ -378,6 +379,21 @@
   </div>
 </div>
 
+<!-- चरण 3 (per-record migration) — Dry-run जांच, सिर्फ पढ़ता है, कुछ नहीं लिखता (JE only) -->
+<div class="moverlay" id="mig-overlay" onclick="if(event.target===this)closeMigModal()">
+  <div class="msheet" style="max-height:92vh;">
+    <div class="mhandle"></div>
+    <div class="mtitle">&#128736;&#65039; चरण 3 — Dry-run जांच</div>
+    <div style="font-size:11px;color:var(--muted);padding:0 4px 10px;">यह सिर्फ पढ़ता है — Firebase में कुछ भी नहीं बदलता। मकसद: असली माइग्रेशन से पहले पक्का करना कि हर record का acc मौजूद, अलग-अलग और वैध है।</div>
+    <div id="mig-content"></div>
+    <div class="mfooter">
+      <button class="btn-cancel" id="mig-dl" style="display:none;" onclick="downloadMigReport()">&#128190; रिपोर्ट Excel</button>
+      <button class="btn-save" onclick="_migRunDryRun()">&#128260; दोबारा जांचें</button>
+      <button class="btn-save" onclick="closeMigModal()">बंद करें</button>
+    </div>
+  </div>
+</div>
+
 <!-- स्कोरकार्ड डिस्प्ले (JE only) — सभी HQ की सारांश तालिका, WhatsApp शेयर के लिए -->
 <div class="moverlay" id="wasc-overlay" onclick="if(event.target===this)closeWaScorecard()">
   <div class="msheet" style="max-height:92vh;">
@@ -422,6 +438,7 @@
 <script src="js/upload.js"></script>
 <script src="js/reports.js"></script>
 <script src="js/village.js"></script>
+<script src="js/migration.js"></script>
 <script src="js/home-scorecard.js"></script>
 <script src="js/main.js"></script>
 </body>
