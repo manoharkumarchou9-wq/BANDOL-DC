@@ -647,6 +647,56 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
   });
 });
 
+test.describe('Lineman PIN — सामान्य सुरक्षा-मज़बूती', () => {
+  test('HQ का PIN सेट हो तो गलत PIN से login रुकता है, सही PIN से चलता है', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => { HQ_PINS[hqKey('आदेगांव')] = '4321'; });
+    await page.click('#rc-lin');
+    await page.fill('#uname-inp', 'टेस्ट लाइनमैन');
+    await page.selectOption('#hq-sel', { label: 'आदेगांव' });
+    await page.fill('#lin-pin', '0000');
+    await page.click('.login-btn');
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => document.getElementById('app-screen').classList.contains('active'))).toBe(false);
+    await page.fill('#lin-pin', '4321');
+    await page.click('.login-btn');
+    await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
+  });
+
+  test('HQ का PIN सेट न हो तो बिना PIN login चलता रहता है (पुराना व्यवहार बरकरार)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    expect(await page.evaluate(() => document.getElementById('app-screen').classList.contains('active'))).toBe(true);
+  });
+
+  test('सिर्फ JE "Lineman PIN" खोल सकते हैं', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => openPinModal());
+    expect(await page.evaluate(() => document.getElementById('pin-overlay').classList.contains('open'))).toBe(false);
+  });
+
+  test('savePins — सही HQ-key से PIN payload बनता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openPinModal());
+    await page.fill('#pin-आदेगांव', '1111');
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      const real = window.fetch;
+      window.fetch = function (url, opts) {
+        if (String(url).indexOf('/HQ_PIN.json') > -1 && opts && opts.method === 'PUT') {
+          window.fetch = real;
+          resolve({ body: JSON.parse(opts.body), key: hqKey('आदेगांव') });
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(true) });
+        }
+        return real(url, opts);
+      };
+      savePins();
+    }));
+    expect(r.body[r.key]).toBe('1111');
+  });
+});
+
 test.describe('error logging', () => {
   test('logErr entry बनाता है और बिना पकड़ी error अपने आप log होती है', async ({ page }) => {
     await openApp(page);
