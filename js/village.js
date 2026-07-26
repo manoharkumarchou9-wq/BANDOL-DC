@@ -165,10 +165,13 @@ function _vgRenderList(){
   _vgRenderTable(el,filtered);
 }
 
+// स्कोरकार्ड डिस्प्ले जैसा ही — सभी 8 श्रेणियां ताज़ा करके तभी गिनना, वरना cross-category paid-map
+// (देखें _vgPaidMap) पुराने cache पर निर्भर रहकर कम वसूल दिखा सकता है (स्कोरकार्ड से मेल नहीं खाता)
 function _vgLoadAndRender(){
   var el=document.getElementById("vg-list");
   el.innerHTML="<div class='log-empty'>⏳ लोड हो रहा है...</div>";
-  fbGet(vgActiveHQ,CATS_DEFAULT[0],function(){
+  var hqs=CU.role==="supervisor"?HQS:[CU.hq];
+  _cashRefreshAll(hqs,function(){
     vgRows=_vgComputeRows(vgActiveHQ);
     _vgRenderList();
   });

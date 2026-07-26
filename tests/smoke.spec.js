@@ -193,6 +193,27 @@ test.describe('ग्राम-वार वसूली', () => {
     expect(linTabs).toBe(1);
   });
 
+  test('_vgLoadAndRender अब सभी 8 श्रेणियां ताज़ा करता है (स्कोरकार्ड जैसा) — सिर्फ मास्टर category नहीं', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => { vgActiveHQ = 'आदेगांव'; });
+    const jeHqs = await page.evaluate(() => new Promise((resolve) => {
+      window._cashRefreshAll = function (hqs, cb) { resolve(hqs.slice()); cb(); };
+      _vgLoadAndRender();
+    }));
+    expect(jeHqs.length).toBe(6); // JE — सभी HQ की सभी श्रेणियां ताज़ा हों (जैसा downloadVillageExcel में पहले से है)
+    expect(jeHqs).toContain('आदेगांव');
+
+    await page.evaluate(() => doLogout(false));
+    await loginLineman(page);
+    const linHqs = await page.evaluate(() => new Promise((resolve) => {
+      window._cashRefreshAll = function (hqs, cb) { resolve(hqs.slice()); cb(); };
+      vgActiveHQ = CU.hq;
+      _vgLoadAndRender();
+    }));
+    expect(linHqs).toEqual([await page.evaluate(() => CU.hq)]); // lineman — सिर्फ अपना HQ
+  });
+
   test('गांव-वार गिनती, खोज, राशि और योग — सीधे टेबल में सही बनते हैं', async ({ page }) => {
     await openApp(page);
     await loginJE(page);
