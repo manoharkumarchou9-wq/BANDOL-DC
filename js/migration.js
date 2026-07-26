@@ -49,6 +49,8 @@ function _migRunDryRun(){
         var a=_migAnalyzeList(d);
         // MIGRATED flag "हां" कहता है पर data अब भी array है — किसी पुराने device ने migration पलट दिया
         a.reverted=isMigrated(j.hq,j.cat)&&!a.alreadyObj;
+        // सही-सलामत migrated — flag भी "हां" और data भी per-record (object) है
+        a.migrated=isMigrated(j.hq,j.cat)&&a.alreadyObj;
         rows.push({hq:j.hq,cat:j.cat,a:a});
         fin();
       })
@@ -70,17 +72,27 @@ function _migRunDryRun(){
 
 function _migRender(rows){
   var el=document.getElementById("mig-content");
-  var gTot=0,gMiss=0,gDup=0,gIll=0,anyErr=false,anyReverted=false;
-  rows.forEach(function(r){gTot+=r.a.tot;gMiss+=r.a.missingAcc;gDup+=r.a.dupAcc;gIll+=r.a.illegalAcc;if(r.a.fetchErr)anyErr=true;if(r.a.reverted)anyReverted=true;});
+  var gTot=0,gMiss=0,gDup=0,gIll=0,anyErr=false,anyReverted=false,gMigrated=0,gEmpty=0;
+  rows.forEach(function(r){
+    gTot+=r.a.tot;gMiss+=r.a.missingAcc;gDup+=r.a.dupAcc;gIll+=r.a.illegalAcc;
+    if(r.a.fetchErr)anyErr=true;
+    if(r.a.reverted)anyReverted=true;
+    if(r.a.migrated)gMigrated++;
+    else if(r.a.tot===0&&!r.a.fetchErr)gEmpty++; // खाली श्रेणी — migrate करने को कुछ नहीं, गिनती में अड़चन नहीं
+  });
   var clean=(gMiss===0&&gDup===0&&gIll===0&&!anyErr&&!anyReverted);
+  var allMigrated=clean&&rows.length>0&&(gMigrated+gEmpty)===rows.length;
   var html="";
   if(anyReverted){
     html+="<div style='background:rgba(240,80,80,.1);border:1px solid rgba(240,80,80,.4);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--red);font-weight:700;'>🛠 कुछ HQ/श्रेणी में migration किसी पुराने device ने पलट दिया था — नीचे 'पलटा हुआ' दिख रहीं वो अपने आप ठीक हो रही हैं (या हो चुकी हैं); कुछ देर बाद दोबारा जांचें।</div>";
   }
   if(anyErr){
     html+="<div class='box-danger' style='background:#fdf0f1;border:1px solid #ecc8cc;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;'>⚠️ कुछ HQ/श्रेणी लोड नहीं हो पाईं (नेट/network) — दोबारा जांचें दबाएं।</div>";
+  } else if(allMigrated){
+    html+="<div style='background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green);font-weight:700;'>✅ यह ऐप पूरी तरह माइग्रेट हो चुका है — सभी "+gMigrated+" HQ/श्रेणी अब per-record फॉर्मेट में हैं। कुछ और करने की ज़रूरत नहीं।</div>";
   } else if(clean){
-    html+="<div style='background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green);font-weight:700;'>✅ सभी "+gTot+" records ठीक हैं — कोई acc missing/duplicate/illegal नहीं। माइग्रेशन के लिए तैयार।"+
+    var doneNote=gMigrated?(" ("+gMigrated+" पहले से माइग्रेट, बाकी बची हुई)"):"";
+    html+="<div style='background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green);font-weight:700;'>✅ सभी "+gTot+" records ठीक हैं — कोई acc missing/duplicate/illegal नहीं। माइग्रेशन के लिए तैयार।"+doneNote+
       "<div style='margin-top:8px;'><button class='btn-save' style='width:100%;background:#c0392b;' onclick='confirmAndRunMigration()'>🚀 अभी माइग्रेट करें (कम-ट्रैफिक समय पर)</button></div></div>";
   } else if(!anyReverted){
     html+="<div style='background:rgba(240,165,0,.08);border:1px solid rgba(240,165,0,.3);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--gold2);font-weight:700;'>⚠️ पहले इन समस्याओं को ठीक करें — Missing acc: "+gMiss+", Duplicate acc: "+gDup+", अवैध acc: "+gIll+"</div>";
@@ -88,7 +100,8 @@ function _migRender(rows){
   html+="<table class='wasc-table'><thead><tr><th>HQ</th><th>श्रेणी</th><th>कुल</th><th>Missing<br>acc</th><th>Duplicate<br>acc</th><th>अवैध<br>acc</th></tr></thead><tbody>";
   rows.forEach(function(r){
     var bad=r.a.missingAcc||r.a.dupAcc||r.a.illegalAcc||r.a.fetchErr||r.a.reverted;
-    html+="<tr"+(bad?" style='background:rgba(240,80,80,.06);'":"")+"><td class='wasc-hq'>"+escHtml(r.hq)+"</td><td>"+escHtml(r.cat)+(r.a.reverted?" <span style='color:var(--red);'>(पलटा हुआ)</span>":"")+"</td>"+
+    var tag=r.a.reverted?" <span style='color:var(--red);'>(पलटा हुआ)</span>":(r.a.migrated?" <span style='color:var(--green);'>&#10003; migrated</span>":"");
+    html+="<tr"+(bad?" style='background:rgba(240,80,80,.06);'":"")+"><td class='wasc-hq'>"+escHtml(r.hq)+"</td><td>"+escHtml(r.cat)+tag+"</td>"+
       "<td>"+r.a.tot+"</td><td>"+(r.a.fetchErr?"—":r.a.missingAcc)+"</td><td>"+(r.a.fetchErr?"—":r.a.dupAcc)+"</td><td>"+(r.a.fetchErr?"—":r.a.illegalAcc)+"</td></tr>";
   });
   html+="</tbody><tfoot><tr><td colspan='2'>योग</td><td>"+gTot+"</td><td>"+gMiss+"</td><td>"+gDup+"</td><td>"+gIll+"</td></tr></tfoot></table>";

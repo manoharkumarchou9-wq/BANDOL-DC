@@ -645,6 +645,37 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
     expect(html).toContain('पलटा हुआ');
     expect(html).toContain('अपने आप ठीक हो रही हैं');
   });
+
+  test('_migRender — सभी HQ/श्रेणी migrated हों तो "पूरी तरह माइग्रेट हो चुका है" दिखे, बटन नहीं', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openMigModal());
+    await page.evaluate(() => {
+      _migRender([
+        { hq: 'आदेगांव', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: true } },
+        { hq: 'आदेगांव', cat: 'व्यवसाय', a: { tot: 0, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: false } }, // खाली — गिनती में अड़चन नहीं
+      ]);
+    });
+    const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
+    expect(html).toContain('पूरी तरह माइग्रेट हो चुका है');
+    expect(html).not.toContain('अभी माइग्रेट करें');
+    expect(html).toContain('migrated');
+  });
+
+  test('_migRender — कुछ migrated, कुछ बाकी हों तो migrate बटन के साथ गिनती दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openMigModal());
+    await page.evaluate(() => {
+      _migRender([
+        { hq: 'आदेगांव', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: true } },
+        { hq: 'पिंडरई', cat: 'कुल उपभोक्ता', a: { tot: 3, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: false } },
+      ]);
+    });
+    const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
+    expect(html).toContain('अभी माइग्रेट करें');
+    expect(html).toContain('1 पहले से माइग्रेट');
+  });
 });
 
 test.describe('Lineman PIN — सामान्य सुरक्षा-मज़बूती', () => {
