@@ -138,6 +138,30 @@ function _fbPutPerRecord(hq,cat,prev,arr,cb){
   });
 }
 
+// _diffToPatch का उल्टा काम — server से SSE "patch" event में मिला delta (acc: नया/बदला record,
+// या acc: null यानी हटाया गया) local array पर लगाना, ताकि पूरी लिस्ट दोबारा मंगाने की ज़रूरत न पड़े
+function _applyPatchToArray(arr,patch){
+  var byAcc={};
+  (arr||[]).forEach(function(x,i){ if(x&&x.acc!=null) byAcc[String(x.acc)]=i; });
+  var out=(arr||[]).slice();
+  var removeIdx=[];
+  Object.keys(patch).forEach(function(k){
+    var val=patch[k];
+    if(val===null){
+      if(byAcc.hasOwnProperty(k)) removeIdx.push(byAcc[k]);
+    } else if(byAcc.hasOwnProperty(k)){
+      out[byAcc[k]]=val;
+    } else {
+      out.push(val);
+    }
+  });
+  if(removeIdx.length){
+    removeIdx.sort(function(a,b){return b-a;}); // पीछे से हटाएं ताकि बाकी index न बिगड़ें
+    removeIdx.forEach(function(i){ out.splice(i,1); });
+  }
+  return out;
+}
+
 function fbDel(hq,cat,cb){
   // हटाने से पहले paid records का backup — ताकि "हटाएं → अपलोड" में वसूली न उड़े
   try{
@@ -204,6 +228,23 @@ function startListen(hq,cat){
     setSyncStatus(true); updTime();
   }
 
+  // migrated (per-record) HQ/श्रेणी में "patch" event से मिला delta local array पर लगाना —
+  // पूरी लिस्ट दोबारा मंगाने की ज़रूरत नहीं (bandwidth बचत, वैसे ही जैसे "put" event के लिए ऊपर की गई)
+  // migration-revert जांच यहां ज़रूरी नहीं — "patch" event खुद सबूत है कि data अब भी सही per-record रूप में है
+  function applyPatchLocal(patchData){
+    var merged=_applyPatchToArray(cGet(hq,cat)||[],patchData);
+    var data=normList(merged);
+    overlayOps(hq,cat,data);
+    var prev=cGet(hq,cat);
+    var changed=JSON.stringify(data)!==JSON.stringify(prev);
+    cSet(hq,cat,data);
+    if(changed){
+      renderSummaryWith(data);
+      renderListWith(data);
+    }
+    setSyncStatus(true); updTime();
+  }
+
   function pollOnce(){
     if(isPending(hq,cat)){if(navigator.onLine)flushPending();return;}
     fetch(FB+"/"+fbPath(hq,cat)+".json?t="+Date.now())
@@ -232,7 +273,17 @@ function startListen(hq,cat){
         if(r.ok){ applyIncoming(r.data); return; }
         pollOnce(); // सुरक्षित fallback
       });
-      es.addEventListener("patch",function(){ if(!isPending(hq,cat)) pollOnce(); });
+      es.addEventListener("patch",function(ev){
+        if(isPending(hq,cat))return;
+        try{
+          var msg=JSON.parse(ev.data);
+          if(msg&&msg.path==="/"&&msg.data&&typeof msg.data==="object"){
+            applyPatchLocal(msg.data);
+            return;
+          }
+        }catch(e){}
+        pollOnce(); // सुरक्षित fallback
+      });
       es.onopen=function(){setSyncStatus(true);};
       es.onerror=function(){
         setSyncStatus(false);

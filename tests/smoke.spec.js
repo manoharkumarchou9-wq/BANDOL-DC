@@ -626,6 +626,33 @@ test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
     expect(r.patch).toBeTruthy();
     expect(r.patch['9']).toEqual(expect.objectContaining({ status: 'paid' }));
   });
+
+  test('_applyPatchToArray — SSE "patch" event का delta local array पर सही लगता है (update/नया/हटाना)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => {
+      const base = [
+        { acc: '1', status: 'pending', o: 0 },
+        { acc: '2', status: 'pending', o: 1 },
+        { acc: '3', status: 'paid', o: 2 },
+      ];
+      return {
+        updateOnly: _applyPatchToArray(base, { '1': { acc: '1', status: 'paid', o: 0 } }),
+        addNew: _applyPatchToArray(base, { '4': { acc: '4', status: 'pending', o: 3 } }),
+        removeOne: _applyPatchToArray(base, { '3': null }),
+        mixed: _applyPatchToArray(base, { '1': { acc: '1', status: 'paid', o: 0 }, '3': null, '5': { acc: '5', status: 'pending', o: 4 } }),
+      };
+    });
+    expect(r.updateOnly.find((x) => x.acc === '1').status).toBe('paid');
+    expect(r.updateOnly.length).toBe(3);
+    expect(r.addNew.length).toBe(4);
+    expect(r.addNew.find((x) => x.acc === '4')).toBeTruthy();
+    expect(r.removeOne.length).toBe(2);
+    expect(r.removeOne.find((x) => x.acc === '3')).toBeFalsy();
+    expect(r.mixed.length).toBe(3); // 3 base - 1 हटाया + 1 नया
+    expect(r.mixed.find((x) => x.acc === '1').status).toBe('paid');
+    expect(r.mixed.find((x) => x.acc === '3')).toBeFalsy();
+    expect(r.mixed.find((x) => x.acc === '5')).toBeTruthy();
+  });
 });
 
 test.describe('चरण 3 — migration-revert ऑटो-पहचान', () => {
