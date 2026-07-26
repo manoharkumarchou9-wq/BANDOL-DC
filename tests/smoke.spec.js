@@ -125,6 +125,23 @@ test.describe('रोल-आधारित UI', () => {
     expect(r.paidBold).toBe('1');
     expect(r.text).toContain('50.0%');
   });
+
+  test('स्कोरकार्ड — "कुल उपभोक्ता" में न हो ऐसे paid acc को न गिने (ग्राम-वार वसूली से मेल के लिए)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const row = await page.evaluate(() => {
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '1', addr: 'रामपुर', status: 'pending', amount: 100 },
+      ]);
+      // acc '99' किसी और श्रेणी में paid है पर "कुल उपभोक्ता" (मास्टर) में मौजूद ही नहीं — असली उपभोक्ता नहीं
+      cSet('आदेगांव', 'घरेलू', [
+        { acc: '99', status: 'paid', amount: 200 },
+      ]);
+      return _waScRow('आदेगांव');
+    });
+    expect(row.tot).toBe(1);
+    expect(row.paid).toBe(0); // acc '99' नहीं गिना जाना चाहिए — मास्टर सूची में नहीं है
+  });
 });
 
 test.describe('डेटा और वसूली', () => {
@@ -625,6 +642,33 @@ test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
     }));
     expect(r.patch).toBeTruthy();
     expect(r.patch['9']).toEqual(expect.objectContaining({ status: 'paid' }));
+  });
+
+  test('_applyPatchToArray — SSE "patch" event का delta local array पर सही लगता है (update/नया/हटाना)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => {
+      const base = [
+        { acc: '1', status: 'pending', o: 0 },
+        { acc: '2', status: 'pending', o: 1 },
+        { acc: '3', status: 'paid', o: 2 },
+      ];
+      return {
+        updateOnly: _applyPatchToArray(base, { '1': { acc: '1', status: 'paid', o: 0 } }),
+        addNew: _applyPatchToArray(base, { '4': { acc: '4', status: 'pending', o: 3 } }),
+        removeOne: _applyPatchToArray(base, { '3': null }),
+        mixed: _applyPatchToArray(base, { '1': { acc: '1', status: 'paid', o: 0 }, '3': null, '5': { acc: '5', status: 'pending', o: 4 } }),
+      };
+    });
+    expect(r.updateOnly.find((x) => x.acc === '1').status).toBe('paid');
+    expect(r.updateOnly.length).toBe(3);
+    expect(r.addNew.length).toBe(4);
+    expect(r.addNew.find((x) => x.acc === '4')).toBeTruthy();
+    expect(r.removeOne.length).toBe(2);
+    expect(r.removeOne.find((x) => x.acc === '3')).toBeFalsy();
+    expect(r.mixed.length).toBe(3); // 3 base - 1 हटाया + 1 नया
+    expect(r.mixed.find((x) => x.acc === '1').status).toBe('paid');
+    expect(r.mixed.find((x) => x.acc === '3')).toBeFalsy();
+    expect(r.mixed.find((x) => x.acc === '5')).toBeTruthy();
   });
 });
 
