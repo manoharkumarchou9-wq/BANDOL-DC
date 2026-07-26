@@ -381,13 +381,16 @@ function openWaScorecard(){
 function closeWaScorecard(){document.getElementById("wasc-overlay").classList.remove("open");}
 
 // एक HQ का सारांश — "कुल उपभोक्ता" श्रेणी को मास्टर सूची मानकर कुल/बकाया, बाकी सभी श्रेणियों से unique वसूल (जैसा मौजूदा स्कोरकार्ड करता है)
+// वसूल सिर्फ उन्हीं acc के लिए गिनें जो "कुल उपभोक्ता" (मास्टर) सूची में भी मौजूद हों — वरना ग्राम-वार वसूली
+// (जो सिर्फ मास्टर records पर आधारित है) से संख्या मेल नहीं खाती
 function _waScRow(hq){
   var master=cGet(hq,CATS_DEFAULT[0])||[];
-  var seenTot={},tot=0,bakaya=0;
+  var seenTot={},tot=0,bakaya=0,masterAcc={};
   master.forEach(function(x){
     if(!x)return;
     var key=x.acc?String(x.acc):("_t"+tot+Math.random());
     if(seenTot[key])return; seenTot[key]=1;
+    if(x.acc) masterAcc[String(x.acc)]=1;
     tot++;
     if(x.status!=="paid") bakaya+=Number(x.amount)||0;
   });
@@ -397,6 +400,7 @@ function _waScRow(hq){
     var d=cGet(hq,cat)||[];
     d.forEach(function(x){
       if(!x||x.status!=="paid")return;
+      if(x.acc&&!masterAcc[String(x.acc)])return; // "कुल उपभोक्ता" में न हो तो न गिनें
       var key=x.acc?String(x.acc):("_p"+paid+Math.random());
       if(seenPaid[key])return; seenPaid[key]=1;
       paid++; paidAmt+=Number(x.amount)||0;

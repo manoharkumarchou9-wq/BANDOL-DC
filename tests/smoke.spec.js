@@ -125,6 +125,23 @@ test.describe('रोल-आधारित UI', () => {
     expect(r.paidBold).toBe('1');
     expect(r.text).toContain('50.0%');
   });
+
+  test('स्कोरकार्ड — "कुल उपभोक्ता" में न हो ऐसे paid acc को न गिने (ग्राम-वार वसूली से मेल के लिए)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const row = await page.evaluate(() => {
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '1', addr: 'रामपुर', status: 'pending', amount: 100 },
+      ]);
+      // acc '99' किसी और श्रेणी में paid है पर "कुल उपभोक्ता" (मास्टर) में मौजूद ही नहीं — असली उपभोक्ता नहीं
+      cSet('आदेगांव', 'घरेलू', [
+        { acc: '99', status: 'paid', amount: 200 },
+      ]);
+      return _waScRow('आदेगांव');
+    });
+    expect(row.tot).toBe(1);
+    expect(row.paid).toBe(0); // acc '99' नहीं गिना जाना चाहिए — मास्टर सूची में नहीं है
+  });
 });
 
 test.describe('डेटा और वसूली', () => {
