@@ -121,6 +121,9 @@ function recOp(hq,acc,status,paydate,by,at,ts){
   _setOps(o);
 }
 var _opPushT={};
+// बकाया ≤0 auto-fix से बदले records — debounce window में जमा होकर migrated HQ/श्रेणी पर सिर्फ
+// इन्हीं का PATCH भेजा जाता है (पूरी array दोबारा नहीं) — हर hq|cat की अपनी अलग जमा-सूची
+var _autoFixPatch={}, _autoFixUnsafe={};
 function overlayOps(hq,cat,data){
   var o=_getOps(),applied=0;
   data.forEach(function(x){
@@ -132,7 +135,8 @@ function overlayOps(hq,cat,data){
       x.ts=op.ts;applied++;
     }
   });
-  // बकाया 0 या minus वाले पुराने records भी अपने आप वसूल (एक बार, फिर दोबारा नहीं)
+  var key=hq+"|"+cat;
+  // बकाया 0 या minus (advance) वाले records अपने आप वसूल — पुराने records पर भी, हमेशा जांचा जाता है
   data.forEach(function(x){
     if(!x||x.status==="paid")return;
     var amt=(x.amount===undefined||x.amount===null)?"":String(x.amount).trim();
@@ -141,28 +145,29 @@ function overlayOps(hq,cat,data){
       var now=new Date();
       x.status="paid";
       x.paydate=now.toLocaleDateString("hi-IN");
-      x.updatedBy="auto (बकाया ≤0)";
+      x.updatedBy="System (बकाया ≤0 auto)";
       x.updatedAt=now.toLocaleString("hi-IN");
       x.ts=Date.now();
       applied++;
-    }
-  });
-  // बकाया 0 या minus (advance) → अपने आप वसूल — पुराने records पर भी
-  data.forEach(function(x){
-    if(!x)return;
-    var amt=(x.amount===undefined||x.amount===null)?"":String(x.amount).trim();
-    if(x.status!=="paid"&&amt!==""&&!isNaN(amt)&&Number(amt)<=0){
-      x.status="paid";
-      if(!x.paydate)x.paydate=new Date().toLocaleDateString("hi-IN");
-      x.updatedBy="System (बकाया ≤0 auto)";
-      x.updatedAt=new Date().toLocaleString("hi-IN");
-      x.ts=Date.now();applied++;
+      if(x.acc){ _autoFixPatch[key]=_autoFixPatch[key]||{}; _autoFixPatch[key][String(x.acc)]=x; }
+      else _autoFixUnsafe[key]=true; // acc नहीं — patch-key नहीं बन सकता, सुरक्षित array-PUT पर वापस
     }
   });
   if(applied){
-    var key=hq+"|"+cat;
     clearTimeout(_opPushT[key]);
-    _opPushT[key]=setTimeout(function(){_fbPut(hq,cat,cGet(hq,cat),null);},1500);
+    _opPushT[key]=setTimeout(function(){
+      var patch=_autoFixPatch[key],unsafe=_autoFixUnsafe[key];
+      delete _autoFixPatch[key]; delete _autoFixUnsafe[key];
+      // migrated HQ/श्रेणी हो और सभी बदले records का acc मिल गया हो — सिर्फ उन्हीं को PATCH करें
+      // (पूरी array PUT करने से चरण 3 का migration यहीं से पलट सकता था — यही असली bug था)
+      if(isMigrated(hq,cat)&&!unsafe&&patch&&Object.keys(patch).length){
+        fetch(FB+"/"+fbPath(hq,cat)+".json",{
+          method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(patch)
+        }).catch(function(e){logErr("autopay-patch-fail",e,hq+"/"+cat);});
+      } else {
+        _fbPut(hq,cat,cGet(hq,cat),null);
+      }
+    },1500);
   }
   return applied;
 }
