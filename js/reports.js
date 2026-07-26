@@ -61,12 +61,14 @@ function buildScOverview(hqs){
     // कुल उपभोक्ता — सिर्फ CATS[0] से unique acc count
     var consData=cGet(hq,CATS[0]);
     consData.forEach(function(x){ if(x.acc) allAccs[hq+"||"+x.acc]=true; else totCons++; });
-    // paid — सभी categories से unique acc
+    // paid — सभी categories से unique acc, पर सिर्फ वही जो "कुल उपभोक्ता" (मास्टर) सूची में भी हों
+    // (वरना ग्राम-वार वसूली/स्कोरकार्ड डिस्प्ले से संख्या मेल नहीं खाती — देखें _waScRow का वही सुधार)
     CATS.forEach(function(cat){
       var d=cGet(hq,cat);
       d.forEach(function(x){
         if(x.status==="paid"){
           var key=hq+"||"+(x.acc||Math.random());
+          if(x.acc&&!allAccs[key])return;
           if(!allPaidAccs[key]){ allPaidAccs[key]=true; totAmt+=Number(x.amount)||0; }
         }
       });
@@ -128,8 +130,12 @@ function renderScDateTable(data){
   // Group paid records by paydate — unique acc only
   var byDate={};
   var seenAcc={}; // track unique acc across all dates
+  // सिर्फ वही acc गिनें जो "कुल उपभोक्ता" (मास्टर) सूची में भी हों — ग्राम-वार वसूली से मेल के लिए
+  var masterAcc={};
+  (cGet(scActiveHQ,CATS[0])||[]).forEach(function(m){ if(m&&m.acc) masterAcc[String(m.acc)]=1; });
   data.forEach(function(x){
     if(x.status==="paid"&&x.paydate){
+      if(x.acc&&!masterAcc[String(x.acc)]) return;
       var dt=normPayDate(x.paydate.trim());
       var accKey=x.acc||("__noAcc__"+x.name);
       if(seenAcc[accKey]) return; // duplicate acc — skip
@@ -189,8 +195,11 @@ function downloadScPDF(){
     var hqTotal=cGet(hq,CATS[0]).length||0;
     var byDate={};
     var seenAccPDF={};
+    var masterAccPDF={};
+    (cGet(hq,CATS[0])||[]).forEach(function(m){ if(m&&m.acc) masterAccPDF[String(m.acc)]=1; });
     combined.forEach(function(x){
       if(x.status==="paid"&&x.paydate){
+        if(x.acc&&!masterAccPDF[String(x.acc)]) return;
         var accKey=x.acc||("__noAcc__"+x.name);
         if(seenAccPDF[accKey]) return;
         seenAccPDF[accKey]=true;

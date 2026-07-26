@@ -142,6 +142,40 @@ test.describe('रोल-आधारित UI', () => {
     expect(row.tot).toBe(1);
     expect(row.paid).toBe(0); // acc '99' नहीं गिना जाना चाहिए — मास्टर सूची में नहीं है
   });
+
+  test('दिनांक-वार वसूली (buildScOverview) — "कुल उपभोक्ता" में न हो ऐसे paid acc को न गिने', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const txt = await page.evaluate(() => {
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '1', addr: 'रामपुर', status: 'pending', amount: 100 },
+      ]);
+      cSet('आदेगांव', 'घरेलू', [
+        { acc: '99', status: 'paid', amount: 200 },
+      ]);
+      buildScOverview(['आदेगांव']);
+      return document.getElementById('sc-overview').textContent;
+    });
+    expect(txt).toContain('1कुल उपभोक्ता');
+    expect(txt).toContain('0✅ वसूल');
+  });
+
+  test('दिनांक-वार वसूली (renderScDateTable) — "कुल उपभोक्ता" में न हो ऐसे paid acc को न गिने', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const txt = await page.evaluate(() => {
+      scActiveHQ = 'आदेगांव';
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '1', addr: 'रामपुर', status: 'pending', amount: 100 },
+      ]);
+      cSet('आदेगांव', 'घरेलू', [
+        { acc: '99', status: 'paid', amount: 200, paydate: '1/1/2026' },
+      ]);
+      renderScDateTable(cGet('आदेगांव', 'घरेलू'));
+      return document.getElementById('sc-body').textContent;
+    });
+    expect(txt).toContain('कोई वसूली नहीं'); // acc '99' मास्टर सूची में नहीं — कोई paid record नहीं बचना चाहिए
+  });
 });
 
 test.describe('डेटा और वसूली', () => {
