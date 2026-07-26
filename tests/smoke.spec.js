@@ -634,7 +634,7 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
     expect(logs.filter((l) => l.c === 'migration-reverted').length).toBe(1);
   });
 
-  test('_migRender — "पलटा हुआ" HQ को लाल चेतावनी के साथ अलग दिखाता है', async ({ page }) => {
+  test('_migRender — "पलटा हुआ" HQ को लाल चेतावनी के साथ अलग दिखाता है, और माइग्रेट बटन भी दिखता रहता है (मैन्युअल ठीक करने के लिए)', async ({ page }) => {
     await openApp(page);
     await loginJE(page);
     await page.evaluate(() => openMigModal());
@@ -643,7 +643,9 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
     });
     const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
     expect(html).toContain('पलटा हुआ');
-    expect(html).toContain('अपने आप ठीक हो रही हैं');
+    expect(html).toContain('अपने आप ठीक होने की कोशिश करती हैं');
+    // बग-फिक्स: पहले 'reverted' होने पर बटन पूरी तरह गायब हो जाता था — कोई मैन्युअल रास्ता नहीं बचता था
+    expect(html).toContain('अभी माइग्रेट करें');
   });
 
   test('_migRender — सभी HQ/श्रेणी migrated हों तो "पूरी तरह माइग्रेट हो चुका है" दिखे, बटन नहीं', async ({ page }) => {
