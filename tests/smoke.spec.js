@@ -745,6 +745,70 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
   });
 });
 
+test.describe('बकाया ≤0 अपने-आप वसूल — migration-aware push', () => {
+  test('overlayOps — amount<=0 वाले records एक ही बार paid बनते हैं (दोहराव नहीं)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => {
+      var data = [
+        { acc: '1', status: 'pending', amount: 0 },
+        { acc: '2', status: 'pending', amount: -50 },
+        { acc: '3', status: 'pending', amount: 100 },
+      ];
+      var applied = overlayOps('टेस्ट HQ1', 'कुल उपभोक्ता', data);
+      return { applied: applied, data: data };
+    });
+    expect(r.applied).toBe(2);
+    expect(r.data[0].status).toBe('paid');
+    expect(r.data[1].status).toBe('paid');
+    expect(r.data[2].status).toBe('pending');
+  });
+
+  test('migrated HQ पर सिर्फ बदले acc का PATCH भेजा जाता है — पूरी array नहीं (bug-fix — पहले यह चुपचाप migration पलट देता था)', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => {
+      MIGRATED[hqKey('टेस्ट HQ2')] = {}; MIGRATED[hqKey('टेस्ट HQ2')][catKey('कुल उपभोक्ता')] = true;
+    });
+    const call = await page.evaluate(() => new Promise((resolve) => {
+      const real = window.fetch;
+      window.fetch = function (url, opts) {
+        if (String(url).indexOf('टेस्ट_HQ2') > -1) {
+          window.fetch = real;
+          resolve({ method: opts.method, body: JSON.parse(opts.body) });
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(true) });
+        }
+        return real(url, opts);
+      };
+      var data = [
+        { acc: '5', status: 'pending', amount: 0 },
+        { acc: '6', status: 'pending', amount: 100 },
+      ];
+      overlayOps('टेस्ट HQ2', 'कुल उपभोक्ता', data);
+    }));
+    expect(call.method).toBe('PATCH');
+    expect(Object.keys(call.body)).toEqual(['5']); // सिर्फ बदला हुआ acc — '6' (जो नहीं बदला) शामिल नहीं
+    expect(call.body['5']).toEqual(expect.objectContaining({ status: 'paid' }));
+  });
+
+  test('migrated न हो तो पुराने तरीके से (पूरी array PUT) भेजा जाता है', async ({ page }) => {
+    await openApp(page);
+    const call = await page.evaluate(() => new Promise((resolve) => {
+      const real = window.fetch;
+      window.fetch = function (url, opts) {
+        if (String(url).indexOf('टेस्ट_HQ3') > -1) {
+          window.fetch = real;
+          resolve({ method: opts.method });
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(true) });
+        }
+        return real(url, opts);
+      };
+      cSet('टेस्ट HQ3', 'कुल उपभोक्ता', []);
+      var data = [{ acc: '7', status: 'pending', amount: 0 }];
+      overlayOps('टेस्ट HQ3', 'कुल उपभोक्ता', data);
+    }));
+    expect(call.method).toBe('PUT');
+  });
+});
+
 test.describe('Lineman PIN — सामान्य सुरक्षा-मज़बूती', () => {
   test('HQ का PIN सेट हो तो गलत PIN से login रुकता है, सही PIN से चलता है', async ({ page }) => {
     await openApp(page);
