@@ -995,6 +995,23 @@ test.describe('Firebase auth token — 401 पर force-refresh', () => {
   });
 });
 
+test.describe('अपडेट बैनर — नया version आने पर रीलोड prompt', () => {
+  test('_showUpdateBanner — बैनर दिखता है, दोबारा बुलाने पर डुप्लीकेट नहीं बनता, बटन रीलोड करता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => {
+      _showUpdateBanner();
+      _showUpdateBanner(); // दोबारा — डुप्लीकेट नहीं बनना चाहिए
+      const banners = document.querySelectorAll('#update-banner');
+      const btn = document.getElementById('update-banner-btn');
+      return { count: banners.length, text: document.getElementById('update-banner').textContent, hasBtn: !!btn, hasOnclick: typeof btn.onclick === 'function' };
+    });
+    expect(r.count).toBe(1);
+    expect(r.text).toContain('नया version');
+    expect(r.hasBtn).toBe(true);
+    expect(r.hasOnclick).toBe(true);
+  });
+});
+
 test.describe('error logging', () => {
   test('logErr entry बनाता है और बिना पकड़ी error अपने आप log होती है', async ({ page }) => {
     await openApp(page);
