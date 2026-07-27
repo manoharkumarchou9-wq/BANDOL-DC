@@ -60,20 +60,35 @@ function _fbOpts(opts){
   o.headers=h;
   return o;
 }
+// token पुराना (expired) हो तो Firebase 401 देता है — device लंबे समय background में पड़ा रहने पर
+// SDK का अपने-आप refresh timer देर से चलता है; इसलिए 401 मिलते ही token ज़बरदस्ती ताज़ा करके
+// एक बार दोबारा कोशिश करो (PUT/PATCH/DELETE/GET सभी idempotent हैं — दोबारा भेजना सुरक्षित है)
+function _fbFetchOnce(url,opts){ return _rawFetch(_withToken(url), _fbOpts(opts)); }
+function _fbFetchWithAuth(url,opts){
+  return _fbFetchOnce(url,opts).then(function(r){
+    if(r.status!==401) return r;
+    var u=firebase.auth().currentUser;
+    if(!u) return r;
+    return u.getIdToken(true).then(function(t){
+      ID_TOKEN=t;
+      return _fbFetchOnce(url,opts);
+    }).catch(function(){return r;});
+  });
+}
 window.fetch = function(url, opts){
   if(typeof url==="string" && url.indexOf(FB)===0){
-    if(ID_TOKEN && AC_READY) return _rawFetch(_withToken(url), _fbOpts(opts));
+    if(ID_TOKEN && AC_READY) return _fbFetchWithAuth(url,opts);
     if(!navigator.onLine) return _rawFetch(url, opts); // offline — तुरंत fail होकर offline-queue संभाले
     return new Promise(function(resolve){
       var done=false;
       var tm=setTimeout(function(){
         if(done)return; done=true;
-        resolve(_rawFetch(ID_TOKEN?_withToken(url):url, _fbOpts(opts)));
+        resolve(ID_TOKEN?_fbFetchWithAuth(url,opts):_rawFetch(url,opts));
       },4000);
       function check(){
         if(done||!ID_TOKEN||!AC_READY)return;
         done=true; clearTimeout(tm);
-        resolve(_rawFetch(_withToken(url), _fbOpts(opts)));
+        resolve(_fbFetchWithAuth(url,opts));
       }
       if(ID_TOKEN) check(); else _tokenWaiters.push(check);
       if(AC_READY) check(); else _acWaiters.push(check);
