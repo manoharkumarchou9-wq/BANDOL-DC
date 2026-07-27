@@ -943,6 +943,58 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
   });
 });
 
+test.describe('Firebase auth token — 401 पर force-refresh', () => {
+  test('_fbFetchWithAuth — 401 मिलने पर token force-refresh करके एक बार दोबारा कोशिश करता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      let calls = 0;
+      _rawFetch = function () {
+        calls++;
+        if (calls === 1) return Promise.resolve({ status: 401, ok: false });
+        return Promise.resolve({ status: 200, ok: true, json: () => Promise.resolve({ ok: true }) });
+      };
+      window.firebase = window.firebase || {};
+      window.firebase.auth = function () {
+        return { currentUser: { getIdToken: function () { ID_TOKEN = 'fresh-token'; return Promise.resolve('fresh-token'); } } };
+      };
+      _fbFetchWithAuth(FB + '/test.json', { method: 'GET' }).then((res) => {
+        resolve({ calls: calls, status: res.status, token: ID_TOKEN });
+      });
+    }));
+    expect(r.calls).toBe(2);
+    expect(r.status).toBe(200);
+    expect(r.token).toBe('fresh-token');
+  });
+
+  test('_fbFetchWithAuth — currentUser न हो तो 401 response वैसे ही लौटा देता है (दोबारा कोशिश नहीं, loop नहीं)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      let calls = 0;
+      _rawFetch = function () { calls++; return Promise.resolve({ status: 401, ok: false }); };
+      window.firebase = window.firebase || {};
+      window.firebase.auth = function () { return { currentUser: null }; };
+      _fbFetchWithAuth(FB + '/test.json', { method: 'GET' }).then((res) => {
+        resolve({ calls: calls, status: res.status });
+      });
+    }));
+    expect(r.calls).toBe(1);
+    expect(r.status).toBe(401);
+  });
+
+  test('_fbFetchWithAuth — सामान्य (non-401) response पर सिर्फ एक ही बार fetch करता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      let calls = 0;
+      _rawFetch = function () { calls++; return Promise.resolve({ status: 200, ok: true, json: () => Promise.resolve({ ok: true }) }); };
+      _fbFetchWithAuth(FB + '/test.json', { method: 'GET' }).then((res) => {
+        resolve({ calls: calls, status: res.status });
+      });
+    }));
+    expect(r.calls).toBe(1);
+    expect(r.status).toBe(200);
+  });
+});
+
 test.describe('error logging', () => {
   test('logErr entry बनाता है और बिना पकड़ी error अपने आप log होती है', async ({ page }) => {
     await openApp(page);
