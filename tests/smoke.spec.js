@@ -678,6 +678,56 @@ test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
     expect(r.patch['9']).toEqual(expect.objectContaining({ status: 'paid' }));
   });
 
+  test('_fbPut (legacy array-PUT rasta) migrated HQ/श्रेणी पर कभी raw array नहीं भेजता — acc-रहित record छोड़कर बाकी object फॉर्मेट में', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      MIGRATED['टेस्ट_HQ6'] = { 'कुल_उपभोक्ता': true };
+      let sentBody = null;
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ6/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PUT') {
+          sentBody = JSON.parse(opts.body);
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+        }
+        return orig(url, opts);
+      };
+      _fbPut('टेस्ट HQ6', 'कुल उपभोक्ता', [
+        { acc: '1', status: 'pending', o: 0 },
+        { status: 'pending' }, // acc नहीं — सुरक्षित रूप से छोड़ा जाना चाहिए
+        { acc: '2', status: 'paid', o: 1 },
+      ], function () {
+        window.fetch = orig;
+        resolve(sentBody);
+      });
+    }));
+    expect(Array.isArray(r)).toBe(false); // array नहीं — object होना चाहिए
+    expect(Object.keys(r).sort()).toEqual(['1', '2']);
+    expect(r['1'].status).toBe('pending');
+    expect(r['2'].status).toBe('paid');
+  });
+
+  test('_fbPut — migrated ही न हो तो हमेशा की तरह plain array भेजता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      let sentBody = null;
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ7/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PUT') {
+          sentBody = JSON.parse(opts.body);
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+        }
+        return orig(url, opts);
+      };
+      _fbPut('टेस्ट HQ7', 'कुल उपभोक्ता', [{ acc: '1', status: 'pending' }], function () {
+        window.fetch = orig;
+        resolve(sentBody);
+      });
+    }));
+    expect(Array.isArray(r)).toBe(true);
+  });
+
   test('_applyPatchToArray — SSE "patch" event का delta local array पर सही लगता है (update/नया/हटाना)', async ({ page }) => {
     await openApp(page);
     const r = await page.evaluate(() => {

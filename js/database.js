@@ -67,11 +67,28 @@ function fbSet(hq,cat,arr,cb){
   else _fbPut(hq,cat,arr,cb);
 }
 
+// पूरी array PUT करने वाला इकलौता (legacy) रास्ता — इसीलिए यहीं गारंटी दी गई है कि यह किसी
+// migrated (per-record/object) HQ/श्रेणी पर कभी raw array नहीं भेजेगा, चाहे कोई भी caller
+// (कोई भी 'acc missing' fallback वगैरह) इसे बुलाए — वरना माइग्रेशन चुपचाप पलट जाता (असली bug यही था)
 function _fbPut(hq,cat,arr,cb){
+  var body;
+  if(isMigrated(hq,cat)){
+    var obj={},skip=0;
+    (arr||[]).forEach(function(x,i){
+      if(!x||x.acc==null||String(x.acc).trim()===""){skip++;return;}
+      var rec=JSON.parse(JSON.stringify(x));
+      if(rec.o==null) rec.o=i;
+      obj[String(x.acc).trim()]=rec;
+    });
+    if(skip) logErr("mig-noacc-skip",skip+" record बिना acc के मिले — उन्हें सेव नहीं किया (मैन्युअल जांच ज़रूरी), बाकी सुरक्षित रूप से per-record फॉर्मेट में सेव किए",hq+"/"+cat);
+    body=JSON.stringify(obj);
+  } else {
+    body=JSON.stringify(arr);
+  }
   fetch(FB+"/"+fbPath(hq,cat)+".json",{
     method:"PUT",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(arr)
+    body:body
   }).then(function(r){
     if(!r.ok) throw new Error("HTTP "+r.status);
     clearPendingKey(cKey(hq,cat));

@@ -108,21 +108,16 @@ function flushPending(){
       return;
     }
     // put (पुराना array फॉर्मेट) — पहले server data लो, merge करो, फिर save — दोनों के बदलाव बचें
+    // (_fbPut को ही बुलाओ, सीधे fetch PUT नहीं — वही एक जगह है जो migrated श्रेणी पर raw array भेजने से बचाती है)
     fetch(FB+"/"+fbPath(it.hq,it.cat)+".json?t="+Date.now())
       .then(function(r){return r.json();})
       .then(function(d){
         var server=normList(d);
         var merged=mergeArrays(cGet(it.hq,it.cat),server);
-        return fetch(FB+"/"+fbPath(it.hq,it.cat)+".json",{
-          method:"PUT",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify(merged)
-        }).then(function(r2){
-          if(!r2.ok)throw new Error("HTTP "+r2.status);
-          cSet(it.hq,it.cat,merged);
-          clearPendingKey(k);
-          updTime();setSyncStatus(true);
-          if(CU&&it.hq===activeHQ&&it.cat===activeCat){renderSummaryWith(merged);renderListWith(merged);}
-          fin(true);
+        cSet(it.hq,it.cat,merged);
+        _fbPut(it.hq,it.cat,merged,function(ok){
+          if(ok&&CU&&it.hq===activeHQ&&it.cat===activeCat){renderSummaryWith(merged);renderListWith(merged);}
+          fin(!!ok);
         });
       })
       .catch(function(e){if(navigator.onLine)logErr("sync-put-fail",e,it.hq+"/"+it.cat);setSyncStatus(false);fin(false);});
