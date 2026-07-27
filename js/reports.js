@@ -304,8 +304,23 @@ function fallbackCopy(txt){
 }
 
 // PWA: GitHub Pages link offline भी खुले (file:// में अपने आप skip)
+// ── नया version आते ही चेतावनी: device लंबे समय खुला पड़ा रहे तो पुराना JS memory में ही रह जाता है
+// (sw.js खुद नए worker को activate/claim कर लेता है, पर पहले से खुले tab का चल रहा कोड नहीं बदलता) —
+// इसलिए यूज़र को साफ़ दिखाओ कि नया version आ गया है, रीलोड करने पर ताज़ा कोड मिलेगा
 if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
   navigator.serviceWorker.register("sw.js").catch(function(){});
+  navigator.serviceWorker.addEventListener("controllerchange",function(){
+    _showUpdateBanner();
+  });
+}
+function _showUpdateBanner(){
+  if(document.getElementById("update-banner")) return;
+  var b=document.createElement("div");
+  b.id="update-banner";
+  b.innerHTML="<span>🔄 ऐप का नया version आ गया है</span>"+
+    "<button id='update-banner-btn'>रीलोड करें</button>";
+  document.body.appendChild(b);
+  document.getElementById("update-banner-btn").onclick=function(){ location.reload(); };
 }
 
 
