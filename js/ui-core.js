@@ -121,15 +121,29 @@ function _checkJEHash(pw,cb){
   if(!h){cb(false,"पहली बार JE login के लिए इन्टरनेट ज़रूरी है");return;}
   _sha256("dcje|"+pw).then(function(x){cb(x===h,x===h?null:"गलत पासवर्ड!");}).catch(function(){cb(false,"यह ब्राउज़र offline JE login support नहीं करता");});
 }
+var JE_VERIFY_TIMEOUT_MS=6000; // टेस्ट में छोटा करके तेज़ जांच की जा सकती है
 function verifyJE(pw,cb){
   if(!pw){cb(false,"पासवर्ड डालें");return;}
   var fbAuthOk=false;
   try{fbAuthOk=typeof firebase!=="undefined"&&!!firebase.auth;}catch(e){}
   if(navigator.onLine&&fbAuthOk){
     showLoader("JE पासवर्ड जाँच रहे हैं...");
+    // navigator.onLine सही होते हुए भी सिग्नल कमज़ोर हो तो सर्वर जवाब देर से दे सकता है —
+    // तय समय में जवाब न आए तो हमेशा के लिए न अटकें, offline hash से आगे बढ़ जाएं
+    var settled=false;
+    var tm=setTimeout(function(){
+      if(settled)return; settled=true;
+      hideLoader();
+      _checkJEHash(pw,cb);
+    },JE_VERIFY_TIMEOUT_MS);
     firebase.auth().signInWithEmailAndPassword(JE_EMAIL,pw)
-      .then(function(){hideLoader();_saveJEHash(pw);cb(true,null);})
+      .then(function(){
+        _saveJEHash(pw); // भले cb timeout से जा चुका हो, hash फिर भी ताज़ा रख दो
+        if(settled)return; settled=true; clearTimeout(tm);
+        hideLoader();cb(true,null);
+      })
       .catch(function(e){
+        if(settled)return; settled=true; clearTimeout(tm);
         hideLoader();
         if(e&&e.code==="auth/network-request-failed"){_checkJEHash(pw,cb);return;} // नेट बीच में टूटा — offline hash से
         cb(false,"गलत पासवर्ड!");

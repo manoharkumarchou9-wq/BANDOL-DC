@@ -995,6 +995,49 @@ test.describe('Firebase auth token — 401 पर force-refresh', () => {
   });
 });
 
+test.describe('लॉगिन और डेटा-लोड — कमज़ोर नेटवर्क पर हमेशा के लिए न अटकें', () => {
+  test('verifyJE — online सर्वर जवाब न दे तो timeout के बाद offline hash से login हो जाता है', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate((p) => new Promise((res) => {
+      _sha256('dcje|' + p).then((h) => { try { localStorage.setItem('dc_jeh', h); } catch (e) {} res(); });
+    }), 'Test#123');
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      JE_VERIFY_TIMEOUT_MS = 200;
+      window.firebase = window.firebase || {};
+      window.firebase.auth = function () {
+        return { signInWithEmailAndPassword: function () { return new Promise(() => {}); } }; // कभी जवाब नहीं
+      };
+      const start = Date.now();
+      verifyJE('Test#123', function (ok, msg) {
+        resolve({ ok: ok, msg: msg, ms: Date.now() - start });
+      });
+    }));
+    expect(r.ok).toBe(true);
+    expect(r.ms).toBeLessThan(2000);
+  });
+
+  test('fbGet — cache खाली हो और नेटवर्क धीमा हो तो timeout के बाद खाली लिस्ट के साथ आगे बढ़ता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      FB_GET_TIMEOUT_MS = 200;
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ9/घरेलू') > -1) {
+          return new Promise(() => {}); // कभी resolve नहीं — अटकी हुई श्रेणी
+        }
+        return orig(url, opts);
+      };
+      const start = Date.now();
+      fbGet('टेस्ट HQ9', 'घरेलू', function (data) {
+        window.fetch = orig;
+        resolve({ ms: Date.now() - start, len: data.length });
+      });
+    }));
+    expect(r.ms).toBeLessThan(2000);
+    expect(r.len).toBe(0);
+  });
+});
+
 test.describe('_cashRefreshAll — कमज़ोर नेटवर्क पर एक अटकी श्रेणी पूरी स्क्रीन को न रोके', () => {
   test('एक श्रेणी का fetch कभी जवाब न दे तो भी timeout के बाद पुरानी cache के साथ आगे बढ़ता है, बाकी अपडेट होती हैं', async ({ page }) => {
     await openApp(page);

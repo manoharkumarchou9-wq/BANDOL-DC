@@ -16,6 +16,7 @@ function normList(d){
   return arr;
 }
 
+var FB_GET_TIMEOUT_MS=8000; // टेस्ट में छोटा करके तेज़ जांच की जा सकती है
 function fbGet(hq,cat,cb){
   var cached=cGet(hq,cat);
   // pending offline बदलाव हैं तो server data से overwrite मत करो — पहले sync
@@ -40,7 +41,14 @@ function fbGet(hq,cat,cb){
       }).catch(function(){setSyncStatus(false);});
     return;
   }
-  // Cache empty — network से load
+  // Cache empty — network से load; कमज़ोर नेटवर्क पर हमेशा के लिए न अटकें —
+  // तय समय (8 सेकंड) में जवाब न आए तो खाली लिस्ट के साथ आगे बढ़ो, UI न रुके
+  var settled=false;
+  var tm=setTimeout(function(){
+    if(settled)return; settled=true;
+    cb([]);
+    setSyncStatus(false);
+  },FB_GET_TIMEOUT_MS);
   fetch(FB+"/"+fbPath(hq,cat)+".json?t="+Date.now())
     .then(function(r){return r.json();})
     .then(function(d){
@@ -48,10 +56,17 @@ function fbGet(hq,cat,cb){
       var data=normList(d);
       overlayOps(hq,cat,data);
       cSet(hq,cat,data);
+      if(settled){
+        // देर से जवाब आया — अगर अभी भी यही list खुली है तो ताज़ा data दिखा दो
+        if(typeof CU!=="undefined"&&CU&&hq===activeHQ&&cat===activeCat){renderSummaryWith(data);renderListWith(data);}
+        return;
+      }
+      settled=true; clearTimeout(tm);
       cb(data);
       setSyncStatus(true);
     })
     .catch(function(){
+      if(settled)return; settled=true; clearTimeout(tm);
       cb([]);
       setSyncStatus(false);
     });
