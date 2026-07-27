@@ -995,6 +995,38 @@ test.describe('Firebase auth token — 401 पर force-refresh', () => {
   });
 });
 
+test.describe('_cashRefreshAll — कमज़ोर नेटवर्क पर एक अटकी श्रेणी पूरी स्क्रीन को न रोके', () => {
+  test('एक श्रेणी का fetch कभी जवाब न दे तो भी timeout के बाद पुरानी cache के साथ आगे बढ़ता है, बाकी अपडेट होती हैं', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      _CASH_REFRESH_TIMEOUT_MS = 200; // टेस्ट में तेज़ जांच के लिए छोटा
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ8/घरेलू') > -1) {
+          return new Promise(() => {}); // कभी resolve/reject नहीं होगा — अटकी हुई श्रेणी
+        }
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ8') > -1) {
+          return Promise.resolve({ json: () => Promise.resolve([{ acc: '1', status: 'pending' }]) });
+        }
+        return orig(url, opts);
+      };
+      cSet('टेस्ट HQ8', 'घरेलू', [{ acc: 'OLD', status: 'pending' }]); // अटकी श्रेणी की पुरानी cache
+      const start = Date.now();
+      _cashRefreshAll(['टेस्ट HQ8'], function () {
+        window.fetch = orig;
+        resolve({
+          ms: Date.now() - start,
+          stuckStillOld: cGet('टेस्ट HQ8', 'घरेलू')[0].acc === 'OLD',
+          othersUpdated: cGet('टेस्ट HQ8', 'कुल उपभोक्ता')[0].acc === '1',
+        });
+      });
+    }));
+    expect(r.ms).toBeLessThan(2000);
+    expect(r.stuckStillOld).toBe(true);
+    expect(r.othersUpdated).toBe(true);
+  });
+});
+
 test.describe('अपडेट बैनर — नया version आने पर रीलोड prompt', () => {
   test('_showUpdateBanner — बैनर दिखता है, दोबारा बुलाने पर डुप्लीकेट नहीं बनता, बटन रीलोड करता है', async ({ page }) => {
     await openApp(page);

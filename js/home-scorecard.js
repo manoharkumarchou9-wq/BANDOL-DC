@@ -281,6 +281,7 @@ function cashCollect(cells){
   document.getElementById("cash-apply").style.display="";
 }
 // apply से पहले सभी लिस्ट server से ताज़ा लाओ — cache अधूरा/पुराना हो तो भी कोई IVRS न छूटे
+var _CASH_REFRESH_TIMEOUT_MS=8000; // टेस्ट में छोटा करके तेज़ जांच की जा सकती है
 function _cashRefreshAll(hqs,cb){
   if(!navigator.onLine){cb();return;}
   var jobs=[];
@@ -293,16 +294,22 @@ function _cashRefreshAll(hqs,cb){
   if(!jobs.length){cb();return;}
   var done=0;
   function fin(){done++;if(done>=jobs.length)cb();}
+  // कमज़ोर नेटवर्क पर एक भी HQ/श्रेणी अटक जाए तो पूरी स्क्रीन हमेशा के लिए "लोड हो रहा है" पर न रुके —
+  // 8 सेकंड में जवाब न आए तो उस एक की पुरानी cache से आगे बढ़ो; असली जवाब देर से भी आए तो cache फिर भी अपडेट होगा
   jobs.forEach(function(j){
+    var finned=false;
+    function safeFin(){ if(finned)return; finned=true; fin(); }
+    var tm=setTimeout(safeFin,_CASH_REFRESH_TIMEOUT_MS);
     fetch(FB+"/"+fbPath(j.hq,j.cat)+".json?t="+Date.now())
       .then(function(r){return r.json();})
       .then(function(d){
+        clearTimeout(tm);
         var data=normList(d);
         overlayOps(j.hq,j.cat,data);
         cSet(j.hq,j.cat,data);
-        fin();
+        safeFin();
       })
-      .catch(function(){fin();}); // fetch fail — उस tab के लिए cache से ही चलेगा
+      .catch(function(){clearTimeout(tm);safeFin();}); // fetch fail — उस tab के लिए cache से ही चलेगा
   });
 }
 
