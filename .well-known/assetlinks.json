@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.adegaondc.vasulitracker",
+        "sha256_cert_fingerprints": ["35:84:F4:76:CA:F0:E5:7A:3A:67:8C:9B:03:6D:F2:63:E2:BA:90:87:29:68:57:BF:05:AF:39:3B:50:D7:2A:EE"]
+      }
+    }]
