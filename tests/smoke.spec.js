@@ -909,6 +909,72 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
     await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
   });
 
+  test('सही PIN पर उस HQ के असली Firebase account से sign-in होता है (email + PIN से बना password)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      HQ_PINS[hqKey('आदेगांव')] = '4321';
+      window.firebase = window.firebase || {};
+      window.firebase.auth = function () {
+        return {
+          currentUser: null,
+          signInWithEmailAndPassword: function (email, pw) {
+            resolve({ email: email, pw: pw });
+            return Promise.resolve({});
+          },
+        };
+      };
+      selectRole('lineman');
+      document.getElementById('uname-inp').value = 'टेस्ट लाइनमैन';
+      document.getElementById('hq-sel').value = 'आदेगांव';
+      document.getElementById('lin-pin').value = '4321';
+      doLogin();
+    }));
+    expect(r.email).toBe('hq-adegaon@adegaondc.internal');
+    expect(r.pw).toBe('vasuli-4321');
+    await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
+  });
+
+  test('HQ sign-in reject (गलत password/server) हो तो login रुक जाता है', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => {
+      HQ_PINS[hqKey('आदेगांव')] = '4321';
+      window.firebase = window.firebase || {};
+      window.firebase.auth = function () {
+        return {
+          currentUser: null,
+          signInWithEmailAndPassword: function () { return Promise.reject({ code: 'auth/wrong-password' }); },
+        };
+      };
+      selectRole('lineman');
+      document.getElementById('uname-inp').value = 'टेस्ट लाइनमैन';
+      document.getElementById('hq-sel').value = 'आदेगांव';
+      document.getElementById('lin-pin').value = '4321';
+      doLogin();
+    });
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => document.getElementById('app-screen').classList.contains('active'))).toBe(false);
+  });
+
+  test('HQ sign-in के बीच नेट टूटे तो भी login आगे बढ़ जाता है (offline-सहनशील)', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => {
+      HQ_PINS[hqKey('आदेगांव')] = '4321';
+      window.firebase = window.firebase || {};
+      window.firebase.auth = function () {
+        return {
+          currentUser: null,
+          signInWithEmailAndPassword: function () { return Promise.reject({ code: 'auth/network-request-failed' }); },
+        };
+      };
+      selectRole('lineman');
+      document.getElementById('uname-inp').value = 'टेस्ट लाइनमैन';
+      document.getElementById('hq-sel').value = 'आदेगांव';
+      document.getElementById('lin-pin').value = '4321';
+      doLogin();
+    });
+    await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
+  });
+
   test('HQ का PIN सेट न हो तो बिना PIN login चलता रहता है (पुराना व्यवहार बरकरार)', async ({ page }) => {
     await openApp(page);
     await loginLineman(page);

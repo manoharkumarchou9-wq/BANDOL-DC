@@ -213,10 +213,35 @@ function doLogin(){
   var hq=document.getElementById("hq-sel").value;
   if(!hq){toast("HQ चुनें","err");return;}
   var expectedPin=HQ_PINS[hqKey(hq)];
-  if(expectedPin&&document.getElementById("lin-pin").value.trim()!==expectedPin){
+  var typedPin=document.getElementById("lin-pin").value.trim();
+  if(expectedPin&&typedPin!==expectedPin){
     toast("गलत PIN! JE से सही PIN लें","err");return;
   }
-  // lineman: अगर इस device पर JE का Firebase session बचा हो तो हटा दें (anonymous पर लौटें)
+  // PIN सही है और उस HQ का असली Firebase account मौजूद है — anonymous की जगह उसी से sign-in करें
+  // (Security Rules अब सिर्फ़ यही असली पहचान जांचती हैं — असली access-control server से)
+  var hqEmail=HQ_AUTH_EMAIL[hq];
+  var fbAuthOk=false;
+  try{fbAuthOk=typeof firebase!=="undefined"&&!!firebase.auth;}catch(e){}
+  if(expectedPin&&hqEmail&&navigator.onLine&&fbAuthOk){
+    showLoader("लॉगिन हो रहा है...");
+    firebase.auth().signInWithEmailAndPassword(hqEmail,_hqAuthPassword(typedPin))
+      .then(function(){
+        hideLoader();
+        CU={role:"lineman",name:name,hq:hq};
+        _finishLogin(name);
+      })
+      .catch(function(e){
+        hideLoader();
+        if(e&&e.code==="auth/network-request-failed"){ // नेट बीच में टूटा — पुराने session/cache पर आगे बढ़ें
+          CU={role:"lineman",name:name,hq:hq};
+          _finishLogin(name);
+          return;
+        }
+        toast("गलत PIN या सर्वर से जुड़ नहीं पाया — दोबारा कोशिश करें","err");
+      });
+    return;
+  }
+  // PIN सेट नहीं है इस HQ का, या ऑफलाइन हैं — पुराने (anonymous) तरीके से आगे बढ़ें
   try{
     var u=firebase.auth().currentUser;
     if(u&&u.email) firebase.auth().signOut();
@@ -224,6 +249,9 @@ function doLogin(){
   CU={role:"lineman",name:name,hq:hq};
   _finishLogin(name);
 }
+// PIN से Firebase password बनाना — कम से कम 6 अक्षर चाहिए, इसलिए आगे एक तय prefix जोड़ते हैं
+// (असली secret PIN ही है, यह prefix कोई गोपनीयता नहीं जोड़ता, सिर्फ़ Firebase की न्यूनतम लंबाई पूरी करता है)
+function _hqAuthPassword(pin){ return "vasuli-"+pin; }
 
 function _finishLogin(name){
   activeHQ=CU.hq; activeFilter="all";
