@@ -20,13 +20,13 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="org-banner">&#9889; आदेगांव बिजली वितरण केंद्र</div>
 <div class="loading-overlay" id="loader">
   <div class="spinner"></div>
   <div class="loading-text" id="loader-text">लोड हो रहा है...</div>
 </div>
 
 <div id="login-screen" class="screen">
+  <div class="org-banner" style="position:fixed;top:0;left:0;right:0;z-index:50;">&#9889; आदेगांव बिजली वितरण केंद्र</div>
   <img class="login-logo" src="icons/icon-512.png" alt="logo" onerror="this.outerHTML='<div style=\'font-size:60px;margin-bottom:10px\'>&#9889;</div>'">
   <div class="login-title">आदेगांव DC वसूली ट्रैकर</div>
   <div class="login-sub">लखनादौन डिवीजन सिवनी सर्कल</div>
@@ -73,14 +73,17 @@
 
 <div id="app-screen" class="screen">
   <div class="sync-bar">
-    <div class="sdot" id="sdot"></div>
-    <span class="stxt" id="stxt">Live Sync</span>
-    <span class="stime" id="stime"></span>
+    <div class="sb-org">&#9889; आदेगांव बिजली वितरण केंद्र</div>
+    <div class="sb-sync">
+      <div class="sdot" id="sdot"></div>
+      <span class="stxt" id="stxt">Live Sync</span>
+      <span class="stime" id="stime"></span>
+    </div>
   </div>
   <div class="app-header">
     <div class="hdr1">
       <div class="hdr-left">
-        <button id="back-btn" onclick="goBack()" style="background:none;border:none;color:#f0a500;font-size:26px;cursor:pointer;padding:0 6px;line-height:1;font-weight:bold;">&#8592;</button>
+        <button id="back-btn" onclick="goBack()" style="background:none;border:none;color:#a34d00;font-size:26px;cursor:pointer;padding:0 6px;line-height:1;font-weight:bold;">&#8592;</button>
         <div class="hdr-icon">&#9889;</div>
         <div>
           <div class="hdr-title">वसूली ट्रैकर</div>
@@ -97,14 +100,14 @@
           <span style="font-size:10px;color:var(--muted);margin-left:2px;">&#9660;</span>
           <div class="logout-menu" id="logout-menu">
             <div class="user-info-item" id="user-info-menu">---</div>
-            <div class="logout-item" id="hsc-menu-item" style="display:none;color:#c58af9;" onclick="openHscModal()">&#128421; होम पेज डिस्प्ले बोर्ड</div>
-            <div class="logout-item" id="wasc-menu-item" style="display:none;color:#4db6ac;" onclick="openWaScorecard()">&#128202; स्कोरकार्ड डिस्प्ले</div>
-            <div class="logout-item" id="village-menu-item" style="color:#ffb74d;" onclick="openVillageModal()">&#127961; ग्राम-वार वसूली</div>
+            <div class="logout-item" id="hsc-menu-item" style="display:none;color:#7b3fd1;" onclick="openHscModal()">&#128421; होम पेज डिस्प्ले बोर्ड</div>
+            <div class="logout-item" id="wasc-menu-item" style="display:none;color:#00695c;" onclick="openWaScorecard()">&#128202; स्कोरकार्ड डिस्प्ले</div>
+            <div class="logout-item" id="village-menu-item" style="color:#a34d00;" onclick="openVillageModal()">&#127961; ग्राम-वार वसूली</div>
             <div class="logout-item" id="cash-menu-item" style="display:none;color:var(--green);" onclick="openCashModal()">&#128181; कैश लिस्ट</div>
             <div class="logout-item" id="backup-menu-item" style="display:none;color:var(--gold);" onclick="downloadFullBackup()">&#128190; पूरा बैकअप</div>
             <div class="logout-item" id="log-menu-item" style="display:none;color:var(--gold2);" onclick="openLogModal()">&#129534; एरर लॉग</div>
-            <div class="logout-item" id="mig-menu-item" style="display:none;color:#90a4ae;" onclick="openMigModal()">&#128736;&#65039; चरण 3 जांच</div>
-            <div class="logout-item" id="pin-menu-item" style="display:none;color:#ef9a9a;" onclick="openPinModal()">&#128274; Lineman PIN</div>
+            <div class="logout-item" id="mig-menu-item" style="display:none;color:#455a64;" onclick="openMigModal()">&#128736;&#65039; चरण 3 जांच</div>
+            <div class="logout-item" id="pin-menu-item" style="display:none;color:#c41f3d;" onclick="openPinModal()">&#128274; Lineman PIN</div>
             <div class="logout-item" onclick="doLogout(true)">&#128682; लॉगआउट करें</div>
           </div>
         </div>
@@ -165,7 +168,7 @@
       </label>
     </div>
     <!-- COUNTER BOX -->
-    <div id="cat-hint" style="display:none;background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.2);border-radius:9px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#4db6ac;"></div>
+    <div id="cat-hint" style="display:none;background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.2);border-radius:9px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#086b52;"></div>
     <div class="up-counter-box" id="up-counter-box">
       <div class="up-counter-row" id="up-counter-row">
         <div class="up-counter-item"><div class="up-counter-label">मौजूद</div><div class="up-counter-val exist" id="cnt-exist">0</div></div>
