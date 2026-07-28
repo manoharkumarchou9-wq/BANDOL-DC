@@ -3,7 +3,18 @@ var CATS = ["कुल उपभोक्ता","घरेलू","व्यव
 var CICO = ["👥","🏠","🏪","🌾","🏛️","🏭","📋","📌"];
 // JE का पासवर्ड अब code में नहीं — Firebase Authentication से verify होता है (देखें ui-core.js: verifyJE)
 var JE_EMAIL = "pradeepks2015@gmail.com";
-var APP_VER = "9.36"; // हर अपडेट पर यह नंबर बढ़ाएं
+// हर HQ का अपना असली (गुमनाम नहीं) Firebase account — Security Rules अब सिर्फ़ इसी HQ के account
+// (या JE) को उस HQ का data पढ़ने/लिखने देती हैं। password नहीं है यहां — वो लाइनमैन के टाइप किए
+// PIN से बनता है (देखें ui-core.js: _hqAuthPassword), ताकि कोड में कोई असली secret न रहे।
+var HQ_AUTH_EMAIL = {
+  "आदेगांव":"hq-adegaon@adegaondc.internal",
+  "पिंडरई":"hq-pindrai@adegaondc.internal",
+  "जोबा":"hq-joba@adegaondc.internal",
+  "पाटन":"hq-patan@adegaondc.internal",
+  "बीबी":"hq-bibi@adegaondc.internal",
+  "मढ़ी":"hq-madhi@adegaondc.internal"
+};
+var APP_VER = "9.37"; // हर अपडेट पर यह नंबर बढ़ाएं
 document.getElementById("ver-badge").textContent="Version "+APP_VER+" • Offline + Auto Sync";
 var MAX_RECORDS = 1000;
 // Per-category limits: "कुल उपभोक्ता"=3500, others=1000
