@@ -1059,6 +1059,45 @@ test.describe('Firebase auth token — 401 पर force-refresh', () => {
     expect(r.calls).toBe(1);
     expect(r.status).toBe(200);
   });
+
+  test('_fbFetchWithAuth — 403 मिलने पर App Check token force-refresh करके एक बार दोबारा कोशिश करता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      let calls = 0;
+      _rawFetch = function () {
+        calls++;
+        if (calls === 1) return Promise.resolve({ status: 403, ok: false });
+        return Promise.resolve({ status: 200, ok: true, json: () => Promise.resolve({ ok: true }) });
+      };
+      window.firebase = window.firebase || {};
+      window.firebase.appCheck = function () {
+        return { getToken: function () { AC_TOKEN = 'fresh-ac-token'; return Promise.resolve({ token: 'fresh-ac-token' }); } };
+      };
+      _fbFetchWithAuth(FB + '/test.json', { method: 'GET' }).then((res) => {
+        resolve({ calls: calls, status: res.status, token: AC_TOKEN });
+      });
+    }));
+    expect(r.calls).toBe(2);
+    expect(r.status).toBe(200);
+    expect(r.token).toBe('fresh-ac-token');
+  });
+
+  test('_fbFetchWithAuth — 403 पर retry भी असफल रहे (असली permission-denied) तो वही response लौटाता है, loop नहीं', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      let calls = 0;
+      _rawFetch = function () { calls++; return Promise.resolve({ status: 403, ok: false }); };
+      window.firebase = window.firebase || {};
+      window.firebase.appCheck = function () {
+        return { getToken: function () { return Promise.resolve({ token: 'x' }); } };
+      };
+      _fbFetchWithAuth(FB + '/test.json', { method: 'GET' }).then((res) => {
+        resolve({ calls: calls, status: res.status });
+      });
+    }));
+    expect(r.calls).toBe(2);
+    expect(r.status).toBe(403);
+  });
 });
 
 test.describe('लॉगिन और डेटा-लोड — कमज़ोर नेटवर्क पर हमेशा के लिए न अटकें', () => {
