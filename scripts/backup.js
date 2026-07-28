@@ -1,14 +1,20 @@
 // ── स्वचालित बैकअप (GitHub Actions से रोज़ चलता है) ──────────────────────────
 // सभी HQ × श्रेणी + डिस्प्ले बोर्ड को एक Excel फ़ाइल में इकट्ठा करता है — बिल्कुल वैसे ही जैसे
 // ऐप का मैन्युअल "पूरा बैकअप" बटन (js/reports.js: downloadFullBackup) बनाता है।
-// Firebase Admin SDK इस्तेमाल होता है — यह Security Rules/App Check दोनों को bypass करता है
-// (एक privileged, सर्वर-साइड-सिर्फ़ पहुंच), इसलिए client ऐप के access-control से यह अलग/independent है।
+// सादा REST (fetch + OAuth2 token) इस्तेमाल होता है — Firebase Admin SDK का "Realtime Database"
+// हिस्सा एक लगातार खुला WebSocket कनेक्शन बनाता है, जो GitHub Actions के runner से कभी-कभी अटक
+// जाता है (पहली बार चलाने पर ठीक यही हुआ — 10 मिनट में timeout)। सादा HTTPS request ज़्यादा
+// भरोसेमंद है — हर request की अपनी सीमा है, कोई कनेक्शन देर तक खुला नहीं रहता।
+// service account का token Security Rules/App Check दोनों को bypass करता है (privileged,
+// सर्वर-साइड-सिर्फ़ पहुंच) — client ऐप के access-control से यह अलग/independent है।
 // फ़ाइल कहीं भी Firebase/Google Cloud storage में सेव नहीं होती — सिर्फ़ इसी run की GitHub Actions
 // artifact के तौर पर बनती है (देखें .github/workflows/backup.yml की retention-days सेटिंग)।
 const admin = require("firebase-admin");
 const XLSX = require("xlsx");
 const fs = require("fs");
 
+const DB_URL = "https://adegaon-dc-top-50-default-rtdb.firebaseio.com";
+const REQ_TIMEOUT_MS = 20000; // एक request ज़्यादा से ज़्यादा 20 सेकंड — कभी भी हमेशा के लिए न अटके
 const HQS = ["आदेगांव", "पिंडरई", "जोबा", "पाटन", "बीबी", "मढ़ी"];
 const CATS_DEFAULT = ["कुल उपभोक्ता", "घरेलू", "व्यवसाय", "कृषि", "गवर्नमेंट", "इंडस्ट्रियल", "सूची-2", "सूची-3"];
 
@@ -23,16 +29,29 @@ function normList(d) {
   return arr;
 }
 
+async function fbGet(path, token) {
+  var ctrl = new AbortController();
+  var tm = setTimeout(function () { ctrl.abort(); }, REQ_TIMEOUT_MS);
+  try {
+    var res = await fetch(DB_URL + "/" + path + ".json", {
+      headers: { Authorization: "Bearer " + token },
+      signal: ctrl.signal,
+    });
+    if (!res.ok) throw new Error("Firebase पढ़ने में गड़बड़ (" + path + "): HTTP " + res.status);
+    return await res.json();
+  } finally {
+    clearTimeout(tm);
+  }
+}
+
 async function main() {
   var serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://adegaon-dc-top-50-default-rtdb.firebaseio.com",
-  });
-  var db = admin.database();
+  var cred = admin.credential.cert(serviceAccount);
+  var tokenResult = await cred.getAccessToken();
+  var token = tokenResult.access_token;
+  console.log("Firebase access token मिल गया, data पढ़ना शुरू...");
 
-  var catNamesSnap = await db.ref("CAT_NAMES").once("value");
-  var catNames = catNamesSnap.val() || {};
+  var catNames = (await fbGet("CAT_NAMES", token)) || {};
   function getCatName(hq, i) {
     var hk = hqKey(hq);
     return (catNames[hk] && catNames[hk][i] != null) ? catNames[hk][i] : CATS_DEFAULT[i];
@@ -47,8 +66,9 @@ async function main() {
     var hq = HQS[h];
     for (var i = 0; i < CATS_DEFAULT.length; i++) {
       var cat = i >= 4 ? getCatName(hq, i) : CATS_DEFAULT[i];
-      var snap = await db.ref(pathKey(hq) + "/" + pathKey(cat)).once("value");
-      var d = normList(snap.val());
+      console.log("पढ़ रहे हैं: " + hq + " / " + cat);
+      var raw = await fbGet(pathKey(hq) + "/" + pathKey(cat), token);
+      var d = normList(raw);
       if (!d.length) continue;
       var paid = 0, pendAmt = 0;
       var rows = [head];
@@ -80,8 +100,7 @@ async function main() {
   XLSX.utils.book_append_sheet(wb, wsSum, "सारांश");
   wb.SheetNames.unshift(wb.SheetNames.pop()); // सारांश को पहली sheet बनाओ
 
-  var hscSnap = await db.ref("HOME_SCORECARD").once("value");
-  var hsc = hscSnap.val();
+  var hsc = await fbGet("HOME_SCORECARD", token);
   if (hsc) {
     var hb = [["Field", "Value"]];
     Object.keys(hsc).forEach(function (k) { hb.push([k, String(hsc[k])]); });
