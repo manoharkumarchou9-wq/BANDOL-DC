@@ -1,10 +1,15 @@
-var CACHE_NAME="adegaon-dc-v55";
+var CACHE_NAME="adegaon-dc-v56";
 var CDN=[
   "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js",
+  "./manifest.json",
+  "./icons/icon-192.png",
+  "./icons/icon-512.png",
+  "./icons/icon-maskable-512.png",
+  "./icons/apple-touch-icon.png",
   "./css/style.css",
   "./js/config.js",
   "./js/logger.js",

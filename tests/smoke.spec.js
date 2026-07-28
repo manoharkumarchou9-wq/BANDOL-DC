@@ -1192,6 +1192,30 @@ test.describe('अपडेट बैनर — नया version आने प�
   });
 });
 
+test.describe('PWA installable — manifest + icons', () => {
+  test('index.html में manifest लिंक है और manifest.json सही/मान्य है', async ({ page }) => {
+    await openApp(page);
+    const href = await page.evaluate(() => document.querySelector('link[rel="manifest"]')?.getAttribute('href'));
+    expect(href).toBe('manifest.json');
+    const manifest = await page.evaluate(() => fetch('manifest.json').then((r) => r.json()));
+    expect(manifest.name).toContain('वसूली ट्रैकर');
+    expect(manifest.display).toBe('standalone');
+    expect(manifest.icons.length).toBeGreaterThanOrEqual(2);
+    for (const icon of manifest.icons) {
+      const res = await page.evaluate((src) => fetch(src).then((r) => r.status), icon.src);
+      expect(res).toBe(200);
+    }
+  });
+
+  test('apple-touch-icon लिंक मौजूद है और फ़ाइल लोड होती है', async ({ page }) => {
+    await openApp(page);
+    const href = await page.evaluate(() => document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href'));
+    expect(href).toBeTruthy();
+    const status = await page.evaluate((src) => fetch(src).then((r) => r.status), href);
+    expect(status).toBe(200);
+  });
+});
+
 test.describe('error logging', () => {
   test('logErr entry बनाता है और बिना पकड़ी error अपने आप log होती है', async ({ page }) => {
     await openApp(page);
