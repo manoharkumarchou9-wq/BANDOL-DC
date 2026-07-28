@@ -1,5 +1,6 @@
-/* अर्जेंटीना (Albiceleste) थीम — आसमानी + सफेद + गहरा नेवी; --gold नाम पुराना है पर अब मुख्य आसमानी रंग रखता है */
-:root{--bg:#081625;--surface:#0d2136;--card:#12293f;--border:#1f4265;--gold:#6cb1e1;--gold2:#a9d6f5;--blue:#2196f3;--green:#00c896;--red:#ff4d6d;--orange:#ff8c42;--text:#eaf3fb;--muted:#7c96b4;--radius:14px;}
+/* हल्का (light) थीम — सफेद/हल्का नीला पृष्ठभूमि; --gold नाम पुराना है पर अब मुख्य गहरा-नीला accent रंग रखता है */
+:root{--bg:#eef2f7;--surface:#ffffff;--card:#ffffff;--border:#d7e0ea;--gold:#1f6fb2;--gold2:#124971;--blue:#2196f3;--green:#0f9d78;--red:#e0334f;--orange:#e8710a;--text:#1c2b3a;--muted:#5b6b7d;--radius:14px;--banner-bg:#f4c2cc;--banner-text:#5c1a2b;}
+.org-banner{background:var(--banner-bg);color:var(--banner-text);text-align:center;font-size:13px;font-weight:800;padding:7px 10px;letter-spacing:.3px;font-family:"Baloo 2",cursive;}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 .screen{display:none;min-height:100vh;flex-direction:column;}
@@ -14,7 +15,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .sel-wrap{position:relative;margin-bottom:14px;}
 .sel-wrap .f-select{margin-bottom:0;}
 .sel-wrap::after{content:"▾";position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
-.login-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),#2f74ad);color:#0a0e1a;font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px;}
+.login-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),#134a75);color:#fff;font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px;}
 .role-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
 .role-card{padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all .2s;}
 .role-card.selected{border-color:var(--gold);background:rgba(108,177,225,.10);}
@@ -25,7 +26,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .pw-wrap{position:relative;margin-bottom:14px;}
 .pw-wrap .f-input{margin-bottom:0;padding-right:40px;}
 .pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:16px;border:none;background:none;}
-.sync-bar{background:#0a1f0a;border-bottom:1px solid #1a3a1a;padding:5px 14px;display:flex;align-items:center;gap:7px;font-size:11px;}
+.sync-bar{background:#e3f7ef;border-bottom:1px solid #b9e5d3;padding:5px 14px;display:flex;align-items:center;gap:7px;font-size:11px;}
 .sdot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
 .sdot.off{background:var(--red);animation:none;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
@@ -51,7 +52,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .hdr-left{display:flex;align-items:center;gap:6px;}
 .hdr-right{display:flex;align-items:center;gap:5px;}
-.hdr-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#2f74ad);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.hdr-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--gold),#134a75);display:flex;align-items:center;justify-content:center;font-size:17px;}
 .hdr-title{font-family:"Baloo 2",cursive;font-size:14px;font-weight:800;color:var(--gold2);}
 .hdr-sub{font-size:10px;color:var(--muted);}
 .hbtn{border:none;border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
@@ -63,13 +64,13 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .logout-item{padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--red);}
 .logout-item:hover{background:rgba(255,77,109,.1);}
 .udot{width:24px;height:24px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
-.udot.sup{background:linear-gradient(135deg,var(--gold),#2f74ad);color:#000;}
+.udot.sup{background:linear-gradient(135deg,var(--gold),#134a75);color:#fff;}
 .udot.lin{background:linear-gradient(135deg,var(--blue),#0d6efd);color:#fff;}
 .uname{font-size:11px;font-weight:600;}
 .hq-scroll{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px;}
 .hq-scroll::-webkit-scrollbar{display:none;}
 .hq-tab{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;white-space:nowrap;}
-.hq-tab.active{background:var(--gold);color:#0a0e1a;border-color:var(--gold);}
+.hq-tab.active{background:var(--gold);color:#fff;border-color:var(--gold);}
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 12px;}
 .sbox{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:9px 6px;text-align:center;}
 .snum{font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;line-height:1;}
@@ -137,13 +138,13 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .cc-rmk-by{font-size:9px;color:#2a4060;font-style:normal;white-space:nowrap;flex-shrink:0;}
 .cc-updby{font-size:9px;color:#2a4060;margin-top:2px;}
 .cc-paydate{font-size:10px;color:var(--green);}
-.cc-upload-info{font-size:10px;color:#a8c8f0;font-style:normal;font-weight:600;}
+.cc-upload-info{font-size:10px;color:#0f4c81;font-style:normal;font-weight:600;}
 .empty{text-align:center;padding:48px 20px;}
 .empty-ico{font-size:42px;margin-bottom:10px;}
 .empty-t{font-size:15px;font-weight:600;color:var(--muted);margin-bottom:5px;}
 .empty-s{font-size:11px;color:var(--border);}
 .main-scroll{flex:1;overflow-y:auto;}
-.loading-overlay{position:fixed;inset:0;z-index:900;background:rgba(7,14,28,.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.loading-overlay{position:fixed;inset:0;z-index:900;background:rgba(238,242,247,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 .loading-overlay.hidden{display:none;}
 .spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;}
 .loading-text{font-size:13px;color:var(--muted);}
@@ -164,7 +165,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .topt.sel-blue{background:rgba(33,150,243,.15);border-color:var(--blue);color:var(--blue);}
 .mfooter{display:flex;gap:8px;margin-top:16px;}
 .btn-cancel{flex:1;padding:12px;border-radius:11px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;font-size:13px;font-weight:600;}
-.btn-save{flex:2;padding:12px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--gold),#2f74ad);color:#0a0e1a;cursor:pointer;font-family:"Baloo 2",cursive;font-size:14px;font-weight:800;}
+.btn-save{flex:2;padding:12px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--gold),#134a75);color:#fff;cursor:pointer;font-family:"Baloo 2",cursive;font-size:14px;font-weight:800;}
 .btn-green{background:linear-gradient(135deg,#00c896,#007a5e);color:#fff;}
 /* Upload counter box */
 .up-counter-box{background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.2);border-radius:10px;padding:10px 13px;margin-bottom:10px;font-size:11px;}
@@ -172,11 +173,11 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .up-counter-item{display:flex;flex-direction:column;gap:1px;}
 .up-counter-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
 .up-counter-val{font-family:"Baloo 2",cursive;font-size:15px;font-weight:800;}
-.up-counter-val.exist{color:#64b5f6;}
+.up-counter-val.exist{color:#1565c0;}
 .up-counter-val.avail{color:var(--green);}
 .up-counter-val.file{color:var(--gold);}
 .up-counter-val.warn{color:var(--red);}
-.up-info-box{background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.2);border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:11px;color:#90caf9;line-height:1.7;}
+.up-info-box{background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.2);border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:11px;color:#0f4c81;line-height:1.7;}
 .up-sel2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
 .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;background:var(--card);margin-bottom:12px;}
 .upload-zone.drag{border-color:var(--blue);}
@@ -266,7 +267,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .sc-tabs{display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;}
 .sc-tabs::-webkit-scrollbar{display:none;}
 .sc-tab{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;}
-.sc-tab.active{background:var(--gold);color:#0a0e1a;border-color:var(--gold);}
+.sc-tab.active{background:var(--gold);color:#fff;border-color:var(--gold);}
 .sc-loading{text-align:center;padding:24px;color:var(--muted);font-size:12px;}
 .sc-overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:14px;}
 .sc-ov-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
