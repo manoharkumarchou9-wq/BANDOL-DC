@@ -64,15 +64,32 @@ function _fbOpts(opts){
 // SDK का अपने-आप refresh timer देर से चलता है; इसलिए 401 मिलते ही token ज़बरदस्ती ताज़ा करके
 // एक बार दोबारा कोशिश करो (PUT/PATCH/DELETE/GET सभी idempotent हैं — दोबारा भेजना सुरक्षित है)
 function _fbFetchOnce(url,opts){ return _rawFetch(_withToken(url), _fbOpts(opts)); }
+// App Check "enforce" मोड में कमज़ोर नेटवर्क पर reCAPTCHA token समय पर न बन पाए तो 403 आ सकता है —
+// ऐसे में भी ज़बरदस्ती नया App Check token लेकर एक बार दोबारा कोशिश करो। अगर असली वजह Security
+// Rules से permission-denied हो, तो retry भी वैसे ही 403 देगा — कोई नुकसान नहीं, सिर्फ़ एक अतिरिक्त कोशिश
+function _acForceRefresh(){
+  try{
+    return firebase.appCheck().getToken(true)
+      .then(function(t){AC_TOKEN=(t&&t.token)||null;})
+      .catch(function(){});
+  }catch(e){return Promise.resolve();}
+}
 function _fbFetchWithAuth(url,opts){
   return _fbFetchOnce(url,opts).then(function(r){
-    if(r.status!==401) return r;
-    var u=firebase.auth().currentUser;
-    if(!u) return r;
-    return u.getIdToken(true).then(function(t){
-      ID_TOKEN=t;
-      return _fbFetchOnce(url,opts);
-    }).catch(function(){return r;});
+    if(r.status===401){
+      var u=firebase.auth().currentUser;
+      if(!u) return r;
+      return u.getIdToken(true).then(function(t){
+        ID_TOKEN=t;
+        return _fbFetchOnce(url,opts);
+      }).catch(function(){return r;});
+    }
+    if(r.status===403){
+      return _acForceRefresh().then(function(){
+        return _fbFetchOnce(url,opts);
+      });
+    }
+    return r;
   });
 }
 window.fetch = function(url, opts){
