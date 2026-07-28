@@ -1,0 +1,32 @@
+name: Scheduled Backup
+
+# रोज़ रात ~2:00 AM IST (UTC 20:30 पिछले दिन) अपने-आप चलता है; "workflow_dispatch" से
+# GitHub की "Actions" टैब से भी कभी भी मैन्युअली चलाया जा सकता है
+on:
+  schedule:
+    - cron: '30 20 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install backup dependencies
+        run: npm install --no-save firebase-admin xlsx
+      - name: Run backup
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node scripts/backup.js
+      # Firebase/Google Cloud storage में कुछ भी सेव नहीं होता — फ़ाइल सिर्फ़ यहीं (GitHub
+      # Actions artifact) बनती है, और तय दिनों बाद अपने-आप मिट जाती है — storage कभी नहीं बढ़ता
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adegaon-backup-${{ github.run_id }}
+          path: backup-output/*.xlsx
+          retention-days: 30
