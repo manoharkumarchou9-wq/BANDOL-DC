@@ -1,6 +1,8 @@
 /* हल्का (light) थीम — सफेद/हल्का नीला पृष्ठभूमि; --gold नाम पुराना है पर अब मुख्य गहरा-नीला accent रंग रखता है */
-:root{--bg:#eef2f7;--surface:#ffffff;--card:#ffffff;--border:#d7e0ea;--gold:#1f6fb2;--gold2:#124971;--blue:#2196f3;--green:#0f9d78;--red:#e0334f;--orange:#e8710a;--text:#1c2b3a;--muted:#5b6b7d;--radius:14px;--banner-bg:#f4c2cc;--banner-text:#5c1a2b;}
-.org-banner{background:var(--banner-bg);color:var(--banner-text);text-align:center;font-size:13px;font-weight:800;padding:7px 10px;letter-spacing:.3px;font-family:"Baloo 2",cursive;}
+/* रंग-संयोजन WCAG AA/AAA कंट्रास्ट के हिसाब से चुने गए हैं — कमज़ोर दृष्टि वाले उपयोगकर्ता भी आसानी से पढ़ सकें */
+:root{--bg:#eef2f7;--surface:#ffffff;--card:#ffffff;--border:#d7e0ea;--gold:#1f6fb2;--gold2:#124971;--blue:#1565c0;--green:#086b52;--red:#c41f3d;--orange:#a34d00;--text:#1c2b3a;--muted:#3d4b5c;--radius:14px;--shadow-sm:0 1px 3px rgba(18,73,113,.08),0 1px 2px rgba(18,73,113,.05);--shadow-md:0 4px 14px rgba(18,73,113,.10);}
+/* संस्था-पट्टी — login screen पर केंद्रित, app screen पर sync-status के साथ (देखें .sync-bar) */
+.org-banner{background:linear-gradient(120deg,var(--gold) 0%,#134a75 100%);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;font-family:"Baloo 2",cursive;font-weight:800;font-size:14px;letter-spacing:.2px;box-shadow:var(--shadow-md);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 .screen{display:none;min-height:100vh;flex-direction:column;}
@@ -9,7 +11,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .login-logo{width:90px;height:90px;object-fit:contain;margin-bottom:10px;}
 .login-title{font-family:"Baloo 2",cursive;font-size:20px;font-weight:800;color:var(--gold2);text-align:center;line-height:1.2;margin-bottom:3px;}
 .login-sub{font-size:11px;color:var(--muted);text-align:center;margin-bottom:22px;}
-.login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;width:100%;max-width:360px;}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;width:100%;max-width:360px;box-shadow:var(--shadow-md);}
 .f-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;}
 .f-input,.f-select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-family:"Noto Sans Devanagari",sans-serif;font-size:14px;margin-bottom:14px;outline:none;appearance:none;}
 .sel-wrap{position:relative;margin-bottom:14px;}
@@ -17,7 +19,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .sel-wrap::after{content:"▾";position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
 .login-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),#134a75);color:#fff;font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;cursor:pointer;margin-top:4px;}
 .role-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
-.role-card{padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all .2s;}
+.role-card{padding:14px 10px;border-radius:12px;border:2px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;transition:all .2s;box-shadow:var(--shadow-sm);}
 .role-card.selected{border-color:var(--gold);background:rgba(108,177,225,.10);}
 .role-card-icon{font-size:26px;margin-bottom:5px;}
 .role-card-icon svg{width:56px;height:56px;display:block;margin:0 auto;}
@@ -26,9 +28,11 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .pw-wrap{position:relative;margin-bottom:14px;}
 .pw-wrap .f-input{margin-bottom:0;padding-right:40px;}
 .pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:16px;border:none;background:none;}
-.sync-bar{background:#e3f7ef;border-bottom:1px solid #b9e5d3;padding:5px 14px;display:flex;align-items:center;gap:7px;font-size:11px;}
-.sdot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-.sdot.off{background:var(--red);animation:none;}
+.sync-bar{background:linear-gradient(120deg,var(--gold) 0%,#134a75 100%);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:var(--shadow-md);position:relative;z-index:101;}
+.sb-org{font-family:"Baloo 2",cursive;font-weight:800;font-size:13px;color:#fff;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px;}
+.sb-sync{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;flex-shrink:0;}
+.sdot{width:8px;height:8px;border-radius:50%;background:#5eead4;box-shadow:0 0 0 3px rgba(94,234,212,.28);animation:pulse 2s infinite;}
+.sdot.off{background:#ff9d9d;box-shadow:0 0 0 3px rgba(255,157,157,.28);animation:none;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 @keyframes sp{to{transform:rotate(360deg);}}
 @media (max-width:480px){
@@ -45,10 +49,10 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
   .role-card{padding:10px 6px;}
   .role-card-icon svg{width:44px;height:44px;}
 }
-.stxt{color:var(--green);}
-.stxt.off{color:var(--red);}
-.stime{margin-left:auto;color:var(--muted);font-size:10px;}
-.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px;position:sticky;top:0;z-index:100;}
+.stxt{color:#fff;}
+.stxt.off{color:#ffe3e3;}
+.stime{color:rgba(255,255,255,.88);font-size:10px;}
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(18,73,113,.05);}
 .hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .hdr-left{display:flex;align-items:center;gap:6px;}
 .hdr-right{display:flex;align-items:center;gap:5px;}
@@ -72,7 +76,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .hq-tab{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;white-space:nowrap;}
 .hq-tab.active{background:var(--gold);color:#fff;border-color:var(--gold);}
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 12px;}
-.sbox{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:9px 6px;text-align:center;}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:9px 6px;text-align:center;box-shadow:var(--shadow-sm);}
 .snum{font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;line-height:1;}
 .slbl{font-size:9px;color:var(--muted);margin-top:2px;}
 .sbox:nth-child(2) .snum{color:var(--green);}
@@ -108,28 +112,30 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .filter-btn.active-paid{background:rgba(0,200,150,.15);color:var(--green);border-color:var(--green);}
 .filter-btn.active-pending{background:rgba(255,77,109,.12);color:var(--red);border-color:var(--red);}
 .con-list{padding:0 12px 80px;}
-.con-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:9px;border-left:3px solid var(--border);}
-.con-card.paid{border-left-color:var(--green);}
-.con-card.pending{border-left-color:var(--red);}
-.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
-.cc-name{font-family:"Baloo 2",cursive;font-size:14px;font-weight:700;}
-.cc-rank{font-size:9px;min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface);color:var(--muted);}
-.cc-amt{font-family:"Baloo 2",cursive;font-size:18px;font-weight:800;color:var(--gold);margin-bottom:6px;}
-.cc-amt span{font-size:11px;color:var(--muted);font-weight:400;}
-.cc-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
-.chip{font-size:10px;padding:2px 7px;border-radius:12px;}
-.chip-acc{background:#a9d6f5;color:#081625;cursor:pointer;font-size:14px;font-weight:800;letter-spacing:1px;padding:4px 10px;border-radius:8px;border:1px solid #6cb1e1;font-family:Consolas,"Courier New",monospace;}
-.chip-ph{background:rgba(0,200,150,.1);color:var(--green);}
-.chip-addr{background:rgba(255,255,255,.05);color:var(--muted);}
-.cc-extra{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
-.cc-bot{display:flex;align-items:center;justify-content:space-between;}
-.sbadge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:14px;}
-.sb-paid{background:rgba(0,200,150,.15);color:var(--green);border:1px solid rgba(0,200,150,.3);}
-.sb-pending{background:rgba(255,77,109,.12);color:var(--red);border:1px solid rgba(255,77,109,.2);}
-.act-btns{display:flex;gap:5px;}
-.abtn{padding:4px 10px;border-radius:7px;font-size:10px;font-weight:600;border:none;cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;}
-.abtn-pay{background:rgba(0,200,150,.2);color:var(--green);border:1px solid rgba(0,200,150,.3);}
-.abtn-rmk{background:rgba(255,140,66,.15);color:var(--orange);border:1px solid rgba(255,140,66,.25);}
+.con-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:13px 14px;margin-bottom:11px;border-left:4px solid var(--border);box-shadow:var(--shadow-md);transition:transform .12s;}
+.con-card:active{transform:scale(.99);}
+.con-card.paid{border-left-color:var(--green);background:linear-gradient(180deg,rgba(8,107,82,.05) 0%,var(--card) 60px);}
+.con-card.pending{border-left-color:var(--red);background:linear-gradient(180deg,rgba(196,31,61,.05) 0%,var(--card) 60px);}
+.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.cc-name{font-family:"Baloo 2",cursive;font-size:14.5px;font-weight:700;letter-spacing:.1px;}
+.cc-rank{font-size:9px;font-weight:700;min-width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--gold);border:1px solid var(--border);flex-shrink:0;}
+.cc-amt{font-family:"Baloo 2",cursive;font-size:21px;font-weight:800;color:var(--gold);margin-bottom:7px;letter-spacing:.2px;}
+.cc-amt span{font-size:11px;color:var(--muted);font-weight:600;}
+.cc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px;}
+.chip{font-size:10px;padding:3px 8px;border-radius:12px;box-shadow:0 1px 2px rgba(18,73,113,.06);}
+.chip-acc{background:linear-gradient(135deg,#c3e3fa,#a9d6f5);color:#081625;cursor:pointer;font-size:14px;font-weight:800;letter-spacing:1px;padding:5px 11px;border-radius:9px;border:1px solid #8ec6ef;font-family:Consolas,"Courier New",monospace;box-shadow:0 1px 3px rgba(18,73,113,.10);}
+.chip-ph{background:rgba(8,107,82,.10);color:var(--green);font-weight:600;}
+.chip-addr{background:rgba(61,75,92,.08);color:var(--muted);}
+.cc-extra{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px;}
+.cc-bot{display:flex;align-items:center;justify-content:space-between;padding-top:2px;}
+.sbadge{font-size:11px;font-weight:700;padding:5px 12px;border-radius:14px;letter-spacing:.1px;}
+.sb-paid{background:rgba(8,107,82,.12);color:var(--green);border:1px solid rgba(8,107,82,.28);}
+.sb-pending{background:rgba(196,31,61,.10);color:var(--red);border:1px solid rgba(196,31,61,.22);}
+.act-btns{display:flex;gap:6px;}
+.abtn{padding:6px 13px;border-radius:9px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;box-shadow:0 1px 3px rgba(18,73,113,.08);transition:transform .1s;}
+.abtn:active{transform:scale(.95);}
+.abtn-pay{background:linear-gradient(135deg,#0a8c68,var(--green));color:#fff;}
+.abtn-rmk{background:linear-gradient(135deg,#c2650a,var(--orange));color:#fff;}
 .cc-info{font-size:10px;margin-top:4px;padding-top:4px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
 /* NEW: remarks list on card */
 .cc-rmk-list{margin-top:4px;padding-top:4px;border-top:1px solid var(--border);}
@@ -142,7 +148,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .empty{text-align:center;padding:48px 20px;}
 .empty-ico{font-size:42px;margin-bottom:10px;}
 .empty-t{font-size:15px;font-weight:600;color:var(--muted);margin-bottom:5px;}
-.empty-s{font-size:11px;color:var(--border);}
+.empty-s{font-size:11px;color:var(--muted);}
 .main-scroll{flex:1;overflow-y:auto;}
 .loading-overlay{position:fixed;inset:0;z-index:900;background:rgba(238,242,247,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 .loading-overlay.hidden{display:none;}
@@ -247,10 +253,10 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 .toast.ok{border-color:var(--green);color:var(--green);}
 .toast.err{border-color:var(--red);color:var(--red);}
-.toast.inf{border-color:var(--blue);color:#64b5f6;}
+.toast.inf{border-color:var(--blue);color:var(--blue);}
 /* SCORECARD */
 .sc-hq-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
-.sc-hq-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px 11px;cursor:pointer;transition:border-color .2s;}
+.sc-hq-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:10px 11px;cursor:pointer;transition:border-color .2s;box-shadow:var(--shadow-sm);}
 .sc-hq-card.active{border-color:var(--gold);}
 .sc-hq-name{font-family:"Baloo 2",cursive;font-size:13px;font-weight:700;margin-bottom:5px;}
 .sc-hq-row{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px;}
@@ -270,7 +276,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .sc-tab.active{background:var(--gold);color:#fff;border-color:var(--gold);}
 .sc-loading{text-align:center;padding:24px;color:var(--muted);font-size:12px;}
 .sc-overview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:14px;}
-.sc-ov-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+.sc-ov-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;box-shadow:var(--shadow-sm);}
 .sc-ov-num{font-family:"Baloo 2",cursive;font-size:18px;font-weight:800;}
 .sc-ov-lbl{font-size:9px;color:var(--muted);margin-top:2px;}
 .log-sec-hdr{font-size:11px;font-weight:700;color:var(--gold2);margin:10px 2px 6px;text-transform:uppercase;letter-spacing:.4px;}
