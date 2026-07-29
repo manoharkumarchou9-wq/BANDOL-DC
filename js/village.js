@@ -182,6 +182,23 @@ function _vgRefresh(){
   _vgLoadAndRender();
 }
 
+// हर कॉलम की चौड़ाई असल content के हिसाब से — नहीं तो नाम/गांव के अक्षर कट जाते या संख्या "###" दिखती
+// (SheetJS का free version alignment/style सेव नहीं करता — पर चौड़ाई सही होने से कुछ भी कटेगा नहीं,
+// और खाली जगह न बचने से हर कॉलम एक-सा साफ़/सीधा दिखेगा)
+function _autoColWidths(rows,minW,maxW){
+  minW=minW||6; maxW=maxW||60;
+  var widths=[];
+  rows.forEach(function(row){
+    row.forEach(function(cell,ci){
+      var s=(cell==null)?"":String(cell);
+      var hasDev=/[ऀ-ॿ]/.test(s); // देवनागरी अक्षर लैटिन से चौड़े रेंडर होते हैं
+      var w=s.length*(hasDev?1.4:1)+2;
+      if(!widths[ci]||w>widths[ci]) widths[ci]=w;
+    });
+  });
+  return widths.map(function(w){return {wch:Math.max(minW,Math.min(maxW,Math.round(w||minW)))};});
+}
+
 // गांव-वार सुधरी Excel — JE: सभी HQ | Lineman: सिर्फ अपना HQ (report जैसी ही scoping)
 // मिलते-जुलते गांव-नाम VILLAGE_ALIASES से मर्ज होकर दिखेंगे (असली data नहीं बदलती)
 function downloadVillageExcel(){
@@ -211,18 +228,18 @@ function downloadVillageExcel(){
           var va=dispByCanon[a.canon]||"",vb=dispByCanon[b.canon]||"";
           return va.localeCompare(vb,"hi");
         });
-        var detRows=[["क्र.","गांव","नाम","पिता/पति","Consumer No","बकाया","Mobile","स्थिति"]];
+        var detRows=[["क्र.","गांव","नाम","पिता/पति","Consumer No","टैरिफ","बकाया","Mobile","स्थिति"]];
         enriched.forEach(function(e,i){
           var x=e.rec;
           var isPaid=x.acc&&paidMap.hasOwnProperty(String(x.acc))?true:(x.status==="paid");
-          detRows.push([i+1,dispByCanon[e.canon]||x.addr||"",x.name||"",x.father||"",x.acc||"",Number(x.amount)||0,x.phone||"",isPaid?"वसूल":"बाकी"]);
+          detRows.push([i+1,dispByCanon[e.canon]||x.addr||"",x.name||"",x.father||"",x.acc||"",x.tariff||"",Number(x.amount)||0,x.phone||"",isPaid?"वसूल":"बाकी"]);
         });
         var ws=XLSX.utils.aoa_to_sheet(detRows);
-        ws["!cols"]=[{wch:4},{wch:16},{wch:20},{wch:18},{wch:14},{wch:10},{wch:13},{wch:8}];
+        ws["!cols"]=_autoColWidths(detRows);
         XLSX.utils.book_append_sheet(wb,ws,_bkSheetName(hq));
       });
       var wsSum=XLSX.utils.aoa_to_sheet(sumRows);
-      wsSum["!cols"]=[{wch:12},{wch:16},{wch:10},{wch:10},{wch:8},{wch:10},{wch:10}];
+      wsSum["!cols"]=_autoColWidths(sumRows);
       XLSX.utils.book_append_sheet(wb,wsSum,"सारांश");
       wb.SheetNames.unshift(wb.SheetNames.pop()); // सारांश पहली sheet
       var now=new Date();
