@@ -1228,3 +1228,61 @@ test.describe('error logging', () => {
     expect(logs.some((l) => l.c === 'js-error' && l.m.indexOf('uncaught') > -1)).toBe(true);
   });
 });
+
+test.describe('प्रोफ़ाइल — बॉटम नेव, एवतार रंग, फ़ोटो अपलोड', () => {
+  test('login के बाद बॉटम नेव के 4 बटन दिखते हैं', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    const labels = await page.locator('.bnav-item .bnav-lbl').allTextContents();
+    expect(labels).toEqual(['Home', 'स्कोरकार्ड', 'Profile', 'Support']);
+  });
+
+  test('प्रोफ़ाइल मॉडल सही नाम/भूमिका/HQ दिखाता है, बिना फ़ोटो के रंगीन शुरुआती-अक्षर एवतार दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page, 'राधा शर्मा');
+    await page.evaluate(() => document.getElementById('update-banner')?.remove());
+    await page.click('button[onclick="openProfileModal()"]');
+    await expect(page.locator('#profile-name')).toHaveText('राधा शर्मा');
+    expect(await page.locator('#profile-meta').textContent()).toContain('लाइनमैन');
+    // कोई फ़ोटो नहीं है (server offline) — शुरुआती अक्षर दिखना चाहिए
+    await page.waitForTimeout(200);
+    expect(await page.locator('#profile-avatar-wrap').textContent()).toBe('र');
+  });
+
+  test('सहायता मॉडल JE का ईमेल दिखाता है', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => document.getElementById('update-banner')?.remove());
+    await page.click('button[onclick="openSupportModal()"]');
+    expect(await page.locator('#support-je-email').textContent()).toContain('@');
+  });
+
+  test('फ़ोटो चुनने पर compress होकर PROFILE_PHOTOS पर PUT होती है (आकार छोटा हो)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => document.getElementById('update-banner')?.remove());
+
+    let captured = null;
+    await page.route('**/PROFILE_PHOTOS/**', async (route) => {
+      captured = route.request().postData();
+      await route.fulfill({ status: 200, body: '{}' });
+    });
+
+    await page.click('button[onclick="openProfileModal()"]');
+    // 100x100 का लाल वर्ग वाली छोटी JPEG बनाकर अपलोड करें
+    const jpegBuffer = Buffer.from(
+      '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCABkAGQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDk6KKK8I/VgooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD//Z',
+      'base64'
+    );
+    await page.setInputFiles('#profile-photo-inp', { name: 'test.jpg', mimeType: 'image/jpeg', buffer: jpegBuffer });
+    await page.waitForFunction(() => !!captured, null, { timeout: 8000 }).catch(() => {});
+    // Firebase SDK offline में तुरंत उपलब्ध नहीं होता — fetch wrapper 4s बाद raw fetch पर गिरता है
+    await page.waitForTimeout(5000);
+
+    expect(captured).toBeTruthy();
+    const body = JSON.parse(captured);
+    expect(body.photo).toMatch(/^data:image\/jpeg;base64,/);
+    const approxBytes = Math.floor(body.photo.split(',')[1].length * 0.75);
+    expect(approxBytes).toBeLessThan(60 * 1024); // compressed होने पर बहुत छोटा रहना चाहिए
+  });
+});

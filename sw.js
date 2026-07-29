@@ -1,4 +1,4 @@
-var CACHE_NAME="adegaon-dc-v61";
+var CACHE_NAME="adegaon-dc-v62";
 var CDN=[
   "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
@@ -10,6 +10,8 @@ var CDN=[
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
   "./icons/apple-touch-icon.png",
+  "./icons/tower-decoration.svg",
+  "./icons/scorecard-icon.svg",
   "./css/style.css",
   "./js/config.js",
   "./js/logger.js",
@@ -23,6 +25,7 @@ var CDN=[
   "./js/village.js",
   "./js/migration.js",
   "./js/home-scorecard.js",
+  "./js/profile.js",
   "./js/main.js"
 ];
 self.addEventListener("install",function(e){

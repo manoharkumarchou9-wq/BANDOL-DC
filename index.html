@@ -81,6 +81,7 @@
     </div>
   </div>
   <div class="app-header">
+    <img class="hdr-tower-deco" src="icons/tower-decoration.svg" alt="" aria-hidden="true">
     <div class="hdr1">
       <div class="hdr-left">
         <button id="back-btn" onclick="goBack()" style="background:none;border:none;color:#a34d00;font-size:26px;cursor:pointer;padding:0 6px;line-height:1;font-weight:bold;">&#8592;</button>
@@ -91,7 +92,7 @@
         </div>
       </div>
       <div class="hdr-right">
-        <button class="hbtn" style="background:#6a1b9a;color:#fff;" onclick="openScorecard()">&#127942; स्कोरकार्ड</button>
+        <button class="hbtn" style="background:#6a1b9a;color:#fff;" onclick="openScorecard()"><img src="icons/scorecard-icon.svg" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"> स्कोरकार्ड</button>
         <button class="hbtn" style="background:#c62828;color:#fff;" onclick="downloadPDF()">&#128196; PDF</button>
         <button class="hbtn" style="background:#2e7d32;color:#fff;" onclick="downloadExcel()">&#128202; Excel</button>
         <div class="user-pill" onclick="toggleUserMenu(event)">
@@ -133,6 +134,56 @@
       <button class="filter-btn" data-f="paid" onclick="setFilter(this)">&#10004; वसूल</button>
     </div>
     <div class="con-list" id="con-list"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="bnav-item active" onclick="_bnavHome()">
+      <span class="bnav-ico">&#127968;</span><span class="bnav-lbl">Home</span>
+    </button>
+    <button class="bnav-item" onclick="openScorecard()">
+      <img class="bnav-ico-img" src="icons/scorecard-icon.svg" alt="">
+      <span class="bnav-lbl">स्कोरकार्ड</span>
+    </button>
+    <button class="bnav-item" onclick="openProfileModal()">
+      <span class="bnav-ico">&#128100;</span><span class="bnav-lbl">Profile</span>
+    </button>
+    <button class="bnav-item" onclick="openSupportModal()">
+      <span class="bnav-ico">&#10067;</span><span class="bnav-lbl">Support</span>
+    </button>
+  </div>
+</div>
+
+<!-- PROFILE (फ़ोटो अपलोड सहित) -->
+<div class="moverlay" id="profile-overlay" onclick="if(event.target===this)closeProfileModal()">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">&#128100; प्रोफ़ाइल</div>
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px;">
+      <div id="profile-avatar-wrap" style="width:88px;height:88px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;margin-bottom:10px;box-shadow:var(--shadow-md);"></div>
+      <button class="btn-cancel" style="width:auto;padding:8px 16px;" onclick="document.getElementById('profile-photo-inp').click()">&#128247; फ़ोटो बदलें</button>
+      <input type="file" id="profile-photo-inp" accept="image/*" style="display:none;" onchange="onPhotoSelected(this)">
+    </div>
+    <div class="rmk-info">
+      <div class="rmk-name" id="profile-name">-</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="profile-meta">-</div>
+    </div>
+    <div class="mfooter">
+      <button class="btn-save" onclick="closeProfileModal()">बंद करें</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUPPORT -->
+<div class="moverlay" id="support-overlay" onclick="if(event.target===this)closeSupportModal()">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">&#10067; सहायता</div>
+    <div class="rmk-info" style="line-height:1.8;">
+      <div style="font-size:13px;">किसी भी तकनीकी समस्या या सुझाव के लिए अपने कनिष्ठ अभियंता (JE) से संपर्क करें।</div>
+      <div style="font-size:13px;margin-top:10px;" id="support-je-email">-</div>
+    </div>
+    <div class="mfooter">
+      <button class="btn-save" onclick="closeSupportModal()">बंद करें</button>
+    </div>
   </div>
 </div>
 
@@ -243,7 +294,7 @@
 <div class="moverlay" id="sc-overlay" onclick="closeScOutside(event)">
   <div class="msheet" style="max-height:95vh;">
     <div class="mhandle"></div>
-    <div class="mtitle">&#127942; DC स्कोरकार्ड</div>
+    <div class="mtitle"><img src="icons/scorecard-icon.svg" alt="" style="width:18px;height:18px;vertical-align:-4px;margin-right:3px;"> DC स्कोरकार्ड</div>
     <!-- HQ overview grid -->
     <div class="sc-overview-grid" id="sc-overview"></div>
     <!-- HQ tabs -->
@@ -473,6 +524,7 @@
 <script src="js/village.js"></script>
 <script src="js/migration.js"></script>
 <script src="js/home-scorecard.js"></script>
+<script src="js/profile.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

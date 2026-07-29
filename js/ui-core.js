@@ -295,10 +295,23 @@ function doLogout(askConfirm){
   if(m) m.classList.remove("open");
 }
 
+// नाम से तय रंग — बिना किसी फ़ोटो/स्टोरेज के हर व्यक्ति का अपना अलग एवतार रंग
+var AVATAR_PALETTE=[
+  ["#1f6fb2","#134a75"],["#0d6efd","#0a4fb5"],["#086b52","#054d3a"],
+  ["#a34d00","#7a3900"],["#7b3fd1","#5a2ba0"],["#c41f3d","#8f1630"],
+  ["#00695c","#004d43"],["#455a64","#2c3d45"]
+];
+function _avatarColor(name){
+  var h=0;
+  for(var i=0;i<(name||"").length;i++) h=(h*31+name.charCodeAt(i))>>>0;
+  var pair=AVATAR_PALETTE[h%AVATAR_PALETTE.length];
+  return "linear-gradient(135deg,"+pair[0]+","+pair[1]+")";
+}
 function buildUI(){
   var dot=document.getElementById("udot");
   dot.textContent=CU.name[0].toUpperCase();
-  dot.className="udot "+(CU.role==="supervisor"?"sup":"lin");
+  dot.className="udot";
+  dot.style.background=_avatarColor(CU.name);
   document.getElementById("uname-disp").textContent=CU.name;
   document.getElementById("hdr-sub").textContent=CU.role==="supervisor"?"JE | सभी HQ":"Lineman | "+CU.hq;
   var info=document.getElementById("user-info-menu");
@@ -308,6 +321,7 @@ function buildUI(){
     if(el) el.style.display=CU.role==="supervisor"?"flex":"none";
   });
   buildHQTabs(); buildCatTabs(); buildActionBtns();
+  _profilePhotoCache=null; loadProfilePhoto();
 }
 
 function buildHQTabs(){
