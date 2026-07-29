@@ -179,6 +179,7 @@ function propagateStatus(acc,srcCat,status,paydate,dtStr,ts){
     if(cat===srcCat) continue;
     var d=cGet(activeHQ,cat);
     if(!d||!d.length) continue;
+    var prevSnap=JSON.parse(JSON.stringify(d));
     var changed=false;
     d.forEach(function(x){
       if(x&&x.acc&&String(x.acc).trim()===String(acc).trim()&&x.status!==status){
@@ -188,7 +189,7 @@ function propagateStatus(acc,srcCat,status,paydate,dtStr,ts){
         changed=true;
       }
     });
-    if(changed){ cSet(activeHQ,cat,d); fbSet(activeHQ,cat,d,null); }
+    if(changed){ cSet(activeHQ,cat,d); fbSet(activeHQ,cat,d,prevSnap,null); }
   }
 }
 
@@ -209,6 +210,7 @@ function reconcileHQ(hq){
   var fixed=0;
   cats.forEach(function(cat){
     var d=cGet(hq,cat); var changed=false;
+    var prevSnap=JSON.parse(JSON.stringify(d));
     d.forEach(function(x){
       if(x&&x.acc&&x.status!=="paid"&&paidMap[String(x.acc).trim()]){
         var pm=paidMap[String(x.acc).trim()];
@@ -218,7 +220,7 @@ function reconcileHQ(hq){
         changed=true; fixed++;
       }
     });
-    if(changed){ cSet(hq,cat,d); fbSet(hq,cat,d,null); }
+    if(changed){ cSet(hq,cat,d); fbSet(hq,cat,d,prevSnap,null); }
   });
   return fixed;
 }
@@ -239,6 +241,7 @@ function markPaid(idx,acc){
   var d=cGet(activeHQ,activeCat);
   idx=_findRecordIdx(d,idx,acc);
   if(idx<0){toast("यह रिकॉर्ड अब सूची में नहीं मिला — सूची ताज़ा हो गई होगी, दोबारा कोशिश करें","err");return;}
+  var prevSnap=JSON.parse(JSON.stringify(d));
   var now=new Date();
   var dateStr=now.toLocaleDateString("hi-IN");
   var dtStr=now.toLocaleString("hi-IN");
@@ -250,7 +253,7 @@ function markPaid(idx,acc){
   cSet(activeHQ,activeCat,d);
   renderSummaryWith(d); renderListWith(d);
   toast("✅ वसूली दर्ज! (हर tab में अपडेट)","ok");
-  fbSet(activeHQ,activeCat,d,null);
+  fbSet(activeHQ,activeCat,d,prevSnap,null);
   propagateStatus(d[idx].acc,activeCat,"paid",dateStr,dtStr,d[idx].ts);
 }
 
@@ -259,6 +262,7 @@ function markUnpaid(idx,acc){
   var d=cGet(activeHQ,activeCat);
   idx=_findRecordIdx(d,idx,acc);
   if(idx<0){toast("यह रिकॉर्ड अब सूची में नहीं मिला — सूची ताज़ा हो गई होगी, दोबारा कोशिश करें","err");return;}
+  var prevSnap=JSON.parse(JSON.stringify(d));
   var dtStr=new Date().toLocaleString("hi-IN");
   d[idx].status="pending";
   d[idx].paydate="";
@@ -268,7 +272,7 @@ function markUnpaid(idx,acc){
   cSet(activeHQ,activeCat,d);
   renderSummaryWith(d); renderListWith(d);
   toast("↩ वापस बाकी किया — "+d[idx].name+" (हर tab में)","inf");
-  fbSet(activeHQ,activeCat,d,null);
+  fbSet(activeHQ,activeCat,d,prevSnap,null);
   propagateStatus(d[idx].acc,activeCat,"pending","",dtStr,d[idx].ts);
 }
 
@@ -344,6 +348,7 @@ function saveRmk(){
   // या पूरी तरह चुपचाप fail होने का खतरा था — असली bug यही था)
   idx=_findRecordIdx(d,idx,acc);
   if(idx<0){toast("⚠ यह रिकॉर्ड अब सूची में नहीं मिला — मोडल बंद करके दोबारा कोशिश करें","err");return;}
+  var prevSnap=JSON.parse(JSON.stringify(d));
   d[idx]=migrateRemarks(d[idx]);
   var now=new Date();
   var dtStr=now.toLocaleString("hi-IN");
@@ -374,7 +379,7 @@ function saveRmk(){
   renderSummaryWith(d); renderListWith(d);
   var total=(d[idx].remarksArr||[]).length;
   toast("✅ रिमार्क सेव! (कुल "+total+")","ok");
-  fbSet(activeHQ,activeCat,d,null);
+  fbSet(activeHQ,activeCat,d,prevSnap,null);
   propagateStatus(d[idx].acc,activeCat,rmkStatus,d[idx].paydate||"",dtStr,d[idx].ts);
 }
 

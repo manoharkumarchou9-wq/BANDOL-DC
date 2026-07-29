@@ -302,6 +302,8 @@ function confirmUpload(){
 }
 
 function _doSave(hq,cat,arr){
+  // fbSet को असली पुराना data चाहिए (patch-diff के लिए) — नीचे cSet से पहले ही निकाल लें
+  var prevSnap=JSON.parse(JSON.stringify(cGet(hq,cat)||[]));
   // 1. Cache में save करें
   cSet(hq,cat,arr);
   // 2. Active HQ/Cat set करें
@@ -320,7 +322,7 @@ function _doSave(hq,cat,arr){
   startListen(activeHQ,activeCat);
   // 7. Firebase background save
   setTimeout(function(){
-    fbSet(hq,cat,arr,function(ok){
+    fbSet(hq,cat,arr,prevSnap,function(ok){
       if(!ok) toast("⚠️ Firebase sync pending","inf");
     });
   },300);
