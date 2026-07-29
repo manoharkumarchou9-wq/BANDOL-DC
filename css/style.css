@@ -52,7 +52,9 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .stxt{color:#fff;}
 .stxt.off{color:#ffe3e3;}
 .stime{color:rgba(255,255,255,.88);font-size:10px;}
-.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(18,73,113,.05);}
+.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(18,73,113,.05);overflow:hidden;}
+.hdr-tower-deco{position:absolute;top:-14px;right:-6px;width:92px;height:auto;opacity:.12;pointer-events:none;z-index:0;}
+.app-header>.hdr1,.app-header>.hq-scroll{position:relative;z-index:1;}
 .hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .hdr-left{display:flex;align-items:center;gap:6px;}
 .hdr-right{display:flex;align-items:center;gap:5px;}
@@ -67,9 +69,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .user-info-item{padding:8px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px;}
 .logout-item{padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--red);}
 .logout-item:hover{background:rgba(255,77,109,.1);}
-.udot{width:24px;height:24px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
-.udot.sup{background:linear-gradient(135deg,var(--gold),#134a75);color:#fff;}
-.udot.lin{background:linear-gradient(135deg,var(--blue),#0d6efd);color:#fff;}
+.udot{width:24px;height:24px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;}
 .uname{font-size:11px;font-weight:600;}
 .hq-scroll{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px;}
 .hq-scroll::-webkit-scrollbar{display:none;}
@@ -200,6 +200,12 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .limit-warn-box{font-size:11px;color:var(--red);background:rgba(255,77,109,.08);border:1px solid rgba(255,77,109,.2);border-radius:8px;padding:8px 11px;margin-bottom:10px;}
 .tmpl-btn{width:100%;padding:9px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:"Noto Sans Devanagari",sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px;}
 /* Remark modal - history section */
+.bottom-nav{display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--border);padding:7px 4px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -2px 8px rgba(18,73,113,.06);flex-shrink:0;}
+.bnav-item{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--muted);font-family:"Noto Sans Devanagari",sans-serif;font-size:10px;font-weight:600;padding:4px 10px;cursor:pointer;flex:1;}
+.bnav-item.active{color:var(--gold);}
+.bnav-ico{font-size:19px;line-height:1;}
+.bnav-ico-img{width:19px;height:19px;object-fit:contain;}
+.bottom-nav .bnav-item.active .bnav-ico-img{filter:none;}
 .rmk-info{background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
 .rmk-name{font-family:"Baloo 2",cursive;font-size:15px;font-weight:700;margin-bottom:3px;}
 .rmk-amt{font-size:13px;color:var(--gold);font-weight:700;}
