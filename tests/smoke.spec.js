@@ -1408,4 +1408,27 @@ test.describe('प्रोफ़ाइल — बॉटम नेव, एवत
     const approxBytes = Math.floor(body.photo.split(',')[1].length * 0.75);
     expect(approxBytes).toBeLessThan(60 * 1024); // compressed होने पर बहुत छोटा रहना चाहिए
   });
+
+  test('डार्क मोड टॉगल — html[data-theme] बदलता है, localStorage में याद रहता है, दोबारा खोलने पर बना रहता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openProfileModal());
+    const before = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    expect(before).not.toBe('dark');
+    await page.evaluate(() => toggleTheme());
+    const after = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+    expect(after).toBe('dark');
+    expect(await page.evaluate(() => localStorage.getItem('dc_theme'))).toBe('dark');
+    await expect(page.locator('#theme-switch-btn')).toHaveClass(/\bon\b/);
+    // reload — theme flash न हो, तुरंत dark लागू हो
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById('login-screen').classList.contains('active'), null, { timeout: 15000 });
+    expect(await page.evaluate(() => document.documentElement.getAttribute('data-theme'))).toBe('dark');
+    // वापस light पर टॉगल करने पर साफ़ हो जाए
+    await loginJE(page);
+    await page.evaluate(() => openProfileModal());
+    await page.evaluate(() => toggleTheme());
+    expect(await page.evaluate(() => document.documentElement.getAttribute('data-theme'))).toBe('light');
+    expect(await page.evaluate(() => localStorage.getItem('dc_theme'))).toBe('light');
+  });
 });
