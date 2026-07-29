@@ -571,6 +571,61 @@ test.describe('गांव-वार सुधरी Excel', () => {
     expect(r.sheets).toContain(myHQ);
     expect(r.sheets).not.toContain('जोबा');
   });
+
+  test('HQ-वार sheet में टैरिफ श्रेणी का कॉलम भी शामिल होता है', async ({ page }) => {
+    test.setTimeout(90000);
+    await openApp(page);
+    await loginJE(page);
+    await page.waitForTimeout(2000);
+    await page.evaluate(() => {
+      cSet('जोबा', 'कुल उपभोक्ता', [
+        { acc: '1', addr: 'PIPARIYA', name: 'राम', status: 'paid', amount: 100, tariff: 'LV1.1' },
+      ]);
+    });
+    const r = await page.evaluate(() => new Promise((res) => {
+      var sheets = [];
+      window.XLSX = {
+        utils: {
+          book_new: function () { return { SheetNames: [], Sheets: {} }; },
+          aoa_to_sheet: function (a) { return { rows: a }; },
+          book_append_sheet: function (wb, ws, nm) { wb.SheetNames.push(nm); wb.Sheets[nm] = ws; sheets.push({ name: nm, rows: ws.rows }); },
+        },
+        writeFile: function (wb) { res({ sheets: sheets }); },
+      };
+      downloadVillageExcel();
+    }));
+    const jobaSheet = r.sheets.find((s) => s.name === 'जोबा');
+    const tariffCol = jobaSheet.rows[0].indexOf('टैरिफ');
+    expect(tariffCol).toBeGreaterThan(-1);
+    expect(jobaSheet.rows[1][tariffCol]).toBe('LV1.1');
+  });
+
+  test('लंबे नाम/गांव के लिए कॉलम अपने-आप चौड़ा होता है — अक्षर कटने न पाएं', async ({ page }) => {
+    test.setTimeout(90000);
+    await openApp(page);
+    await loginJE(page);
+    await page.waitForTimeout(2000);
+    const longName = 'राजेन्द्र कुमार शर्मा विश्वकर्मा पुत्र स्वर्गीय';
+    await page.evaluate((n) => {
+      cSet('जोबा', 'कुल उपभोक्ता', [{ acc: '1', addr: 'PIPARIYA', name: n, status: 'pending', amount: 100 }]);
+    }, longName);
+    const r = await page.evaluate(() => new Promise((res) => {
+      var sheets = [];
+      window.XLSX = {
+        utils: {
+          book_new: function () { return { SheetNames: [], Sheets: {} }; },
+          aoa_to_sheet: function (a) { return { rows: a }; },
+          book_append_sheet: function (wb, ws, nm) { wb.SheetNames.push(nm); wb.Sheets[nm] = ws; sheets.push({ name: nm, cols: ws['!cols'], rows: ws.rows }); },
+        },
+        writeFile: function (wb) { res({ sheets: sheets }); },
+      };
+      downloadVillageExcel();
+    }));
+    const jobaSheet = r.sheets.find((s) => s.name === 'जोबा');
+    const nameCol = jobaSheet.rows[0].indexOf('नाम');
+    // कॉलम की चौड़ाई नाम की लंबाई से काफ़ी कम न रहे (Consumer No/तारीख जैसे narrow कॉलम की गलती न दोहराए)
+    expect(jobaSheet.cols[nameCol].wch).toBeGreaterThan(longName.length * 0.9);
+  });
 });
 
 test.describe('data format (चरण 1 — दोनों ढांचे)', () => {
