@@ -72,13 +72,18 @@ function fbGet(hq,cat,cb){
     });
 }
 
-function fbSet(hq,cat,arr,cb){
-  var prev=cGet(hq,cat)||[];
+// prevArr हमेशा caller को खुद देना होगा (mutation से *पहले* का deep-clone snapshot) —
+// यहां cGet(hq,cat) से prev निकालना ग़लत होगा, क्योंकि caller अक्सर वही array reference
+// mutate करके पहले ही cSet कर चुका होता है, तो cGet यहां तक आते-आते नया (already-mutated) data
+// ही लौटाता — prev===arr बन जाता और _diffToPatch को कभी कोई फ़र्क़ नहीं दिखता (patch हमेशा खाली,
+// यानी मौजूदा record में कोई भी बदलाव — रिमार्क, वसूली वगैरह — Firebase पर कभी जाता ही नहीं था,
+// सिर्फ़ स्थानीय cache में दिखता रहता और अगली असली sync में ग़ायब हो जाता — असली bug यही था)
+function fbSet(hq,cat,arr,prevArr,cb){
   cSet(hq,cat,arr);
   if(arr.length>200){
     toast("⏳ "+arr.length+" records सेव हो रहे हैं...","inf");
   }
-  if(isMigrated(hq,cat)) _fbPutPerRecord(hq,cat,prev,arr,cb);
+  if(isMigrated(hq,cat)) _fbPutPerRecord(hq,cat,prevArr||[],arr,cb);
   else _fbPut(hq,cat,arr,cb);
 }
 

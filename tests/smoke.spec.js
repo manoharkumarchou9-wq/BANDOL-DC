@@ -243,6 +243,40 @@ test.describe('डेटा और वसूली', () => {
     await expect(page.locator('#toast')).toContainText('अब सूची में नहीं मिला');
   });
 
+  test('रिमार्क सेव migrated (per-record) HQ पर वाकई Firebase को PATCH भेजे — सिर्फ़ local cache में दिखकर न रह जाए (prev/arr reference-aliasing bug)', async ({ page }) => {
+    // असली production bug: cGet() जो array लौटाता है वही object cSet() में वापस स्टोर होता है, तो
+    // fbSet() के अंदर पुराना cGet()-आधारित prev capture हमेशा नई (already-mutated) value ही देखता था —
+    // यानी prev === arr, और _diffToPatch को कभी कोई फ़र्क़ नहीं दिखता — patch हमेशा खाली, PATCH भेजा
+    // ही नहीं जाता। रिमार्क सिर्फ़ local cache/localStorage में दिखता, अगली असली server sync में गायब
+    // हो जाता — user को लगता "सेव हुआ" पर असल में कभी Firebase तक पहुंचा ही नहीं।
+    await openApp(page);
+    await page.evaluate(() => {
+      MIGRATED[hqKey('आदेगांव')] = {};
+      MIGRATED[hqKey('आदेगांव')][catKey('कुल उपभोक्ता')] = true;
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '555666', name: 'गीता देवी', status: 'pending', amount: 300, o: 0 },
+      ]);
+    });
+    await loginLineman(page);
+    await expect(page.locator('.con-card').first()).toContainText('गीता देवी', { timeout: 15000 });
+    const sentBody = await page.evaluate(() => new Promise((resolve) => {
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('आदेगांव/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PATCH') {
+          resolve(JSON.parse(opts.body));
+        }
+        return orig(url, opts);
+      };
+      openRmkModal(0, '555666');
+      document.getElementById('rmk-text').value = 'बकाया माफ़ी की मांग';
+      saveRmk();
+      setTimeout(() => resolve(null), 5500);
+    }));
+    expect(sentBody).toBeTruthy(); // PATCH भेजा ही नहीं गया तो यहीं fail होगा
+    expect(sentBody['555666']).toBeTruthy();
+    expect(sentBody['555666'].remarksArr[0].text).toBe('बकाया माफ़ी की मांग');
+  });
+
   test('कैश लिस्ट: नया-पुराना timestamp नियम (बोर्ड टकराव)', async ({ page }) => {
     await openApp(page);
     const r = await page.evaluate(() => new Promise((res) => {
@@ -717,7 +751,7 @@ test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
     });
     const r = await page.evaluate(() => new Promise((resolve) => {
       cSet('टेस्ट HQ', 'कुल उपभोक्ता', [{ acc: '9', status: 'pending', o: 0 }]);
-      fbSet('टेस्ट HQ', 'कुल उपभोक्ता', [{ acc: '9', status: 'paid', o: 0 }], function () {
+      fbSet('टेस्ट HQ', 'कुल उपभोक्ता', [{ acc: '9', status: 'paid', o: 0 }], [{ acc: '9', status: 'pending', o: 0 }], function () {
         var p = getPending()['टेस्ट HQ_कुल उपभोक्ता'];
         resolve(p);
       });

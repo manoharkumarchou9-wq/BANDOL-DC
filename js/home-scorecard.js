@@ -332,6 +332,7 @@ function _applyCashMatched(hqs){
       var cat=(i>=4)?getCatName(hq,i):CATS_DEFAULT[i];
       var d=cGet(hq,cat);
       if(!d||!d.length)continue;
+      var prevSnap=JSON.parse(JSON.stringify(d));
       var changed=false;
       d.forEach(function(x){
         if(!x||!x.acc)return;
@@ -344,7 +345,7 @@ function _applyCashMatched(hqs){
         recOp(hq,acc,"paid",dateStr,CU.name+" (कैश लिस्ट)",dtStr,ts);
         newly++;changed=true;
       });
-      if(changed){fbSet(hq,cat,d,null);tabsChanged++;}
+      if(changed){fbSet(hq,cat,d,prevSnap,null);tabsChanged++;}
     }
   });
   var mCount=Object.keys(matched).length,noMatch=CASH_IVRS.length-mCount;
