@@ -46,8 +46,26 @@ function openProfileModal(){
   _renderAvatarInto(av);
   document.getElementById("profile-name").textContent=CU.name;
   document.getElementById("profile-meta").textContent=(CU.role==="supervisor"?"कनिष्ठ अभियंता (JE)":"लाइनमैन")+" | "+CU.hq;
+  _syncThemeSwitch();
 }
 function closeProfileModal(){ document.getElementById("profile-overlay").classList.remove("open"); }
+
+// ─── डार्क मोड: सिर्फ़ CSS वेरिएबल स्विच (html[data-theme=dark]) — कमज़ोर रोशनी/रात में आँखों को आराम,
+// device की system setting से नहीं जोड़ा (उपयोगकर्ता खुद चुने) — localStorage में याद रहता है
+function _syncThemeSwitch(){
+  var isDark=document.documentElement.getAttribute("data-theme")==="dark";
+  var btn=document.getElementById("theme-switch-btn");
+  if(btn) btn.className="theme-switch"+(isDark?" on":"");
+}
+function toggleTheme(){
+  var isDark=document.documentElement.getAttribute("data-theme")==="dark";
+  var next=!isDark;
+  document.documentElement.setAttribute("data-theme", next?"dark":"light");
+  try{ localStorage.setItem("dc_theme", next?"dark":"light"); }catch(e){}
+  var mc=document.getElementById("meta-theme-color");
+  if(mc) mc.setAttribute("content", next?"#0d1520":"#eef2f7");
+  _syncThemeSwitch();
+}
 
 function onPhotoSelected(input){
   var file=input.files && input.files[0];

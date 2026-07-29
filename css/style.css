@@ -1,6 +1,25 @@
 /* हल्का (light) थीम — सफेद/हल्का नीला पृष्ठभूमि; --gold नाम पुराना है पर अब मुख्य गहरा-नीला accent रंग रखता है */
 /* रंग-संयोजन WCAG AA/AAA कंट्रास्ट के हिसाब से चुने गए हैं — कमज़ोर दृष्टि वाले उपयोगकर्ता भी आसानी से पढ़ सकें */
 :root{--bg:#eef2f7;--surface:#ffffff;--card:#ffffff;--border:#d7e0ea;--gold:#1f6fb2;--gold2:#124971;--blue:#1565c0;--green:#086b52;--red:#c41f3d;--orange:#a34d00;--text:#1c2b3a;--muted:#3d4b5c;--radius:14px;--shadow-sm:0 1px 3px rgba(18,73,113,.08),0 1px 2px rgba(18,73,113,.05);--shadow-md:0 4px 14px rgba(18,73,113,.10);}
+/* डार्क थीम — रंग अलग से WCAG AA के हिसाब से चुने गए (सिर्फ़ हल्के थीम को उल्टा नहीं किया), ताकि
+   गहरे पृष्ठभूमि पर भी टेक्स्ट का कंट्रास्ट कमज़ोर न पड़े — Profile मोडल के toggle से चालू होती है */
+:root[data-theme="dark"]{--bg:#0d1520;--surface:#16202c;--card:#1a2532;--border:#2c3947;--gold:#3b82c9;--gold2:#7cc4f5;--blue:#4a90d9;--green:#1fa980;--red:#d6455a;--orange:#c26a1a;--text:#e6edf5;--muted:#9fb0c2;--shadow-sm:0 1px 3px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3);--shadow-md:0 4px 14px rgba(0,0,0,.5);}
+/* हल्के थीम के लिए ट्यून किए गए कुछ low-opacity रंगीन chip background डार्क कार्ड पर फीके पड़ जाते —
+   इसलिए opacity थोड़ी बढ़ाई गई है ताकि पेड/पेंडिंग जैसे chip साफ़ दिखें */
+:root[data-theme="dark"] .filter-btn.active-paid,:root[data-theme="dark"] .topt.sel-paid{background:rgba(31,169,128,.22);}
+:root[data-theme="dark"] .filter-btn.active-pending,:root[data-theme="dark"] .topt.sel-pending{background:rgba(214,69,90,.20);}
+:root[data-theme="dark"] .con-card.paid{background:linear-gradient(180deg,rgba(31,169,128,.10) 0%,var(--card) 60px);}
+:root[data-theme="dark"] .con-card.pending{background:linear-gradient(180deg,rgba(214,69,90,.10) 0%,var(--card) 60px);}
+:root[data-theme="dark"] .chip-ph{background:rgba(31,169,128,.16);}
+:root[data-theme="dark"] .sb-paid{background:rgba(31,169,128,.18);border-color:rgba(31,169,128,.35);}
+:root[data-theme="dark"] .sb-pending{background:rgba(214,69,90,.16);border-color:rgba(214,69,90,.32);}
+:root[data-theme="dark"] .warn-box{background:rgba(194,106,26,.14);border-color:rgba(194,106,26,.3);}
+:root[data-theme="dark"] .limit-warn-box{background:rgba(214,69,90,.14);border-color:rgba(214,69,90,.3);}
+:root[data-theme="dark"] .prev-rmk-hdr span{background:rgba(194,106,26,.28);}
+:root[data-theme="dark"] .log-ctx{background:rgba(214,69,90,.18);}
+:root[data-theme="dark"] .role-card.selected{background:rgba(59,130,201,.16);}
+:root[data-theme="dark"] .sc-date-table th{background:rgba(59,130,201,.20);}
+:root[data-theme="dark"] .sc-total-row td{background:rgba(59,130,201,.12);}
 /* संस्था-पट्टी — login screen पर केंद्रित, app screen पर sync-status के साथ (देखें .sync-bar) */
 .org-banner{background:linear-gradient(120deg,var(--gold) 0%,#134a75 100%);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;font-family:"Baloo 2",cursive;font-weight:800;font-size:14px;letter-spacing:.2px;box-shadow:var(--shadow-md);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -208,6 +227,11 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .bottom-nav .bnav-item.active .bnav-ico-img{filter:none;}
 .rmk-info{background:var(--card);border-radius:10px;padding:10px 12px;margin-bottom:12px;}
 .rmk-name{font-family:"Baloo 2",cursive;font-size:15px;font-weight:700;margin-bottom:3px;}
+.theme-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:12.5px;font-weight:600;}
+.theme-switch{width:46px;height:26px;border-radius:14px;background:var(--border);border:none;position:relative;cursor:pointer;padding:0;flex-shrink:0;transition:background .2s;}
+.theme-switch.on{background:var(--gold);}
+.theme-switch-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s;}
+.theme-switch.on .theme-switch-knob{transform:translateX(20px);}
 .rmk-amt{font-size:13px;color:var(--gold);font-weight:700;}
 .prev-rmk-section{margin-bottom:12px;}
 .prev-rmk-hdr{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}

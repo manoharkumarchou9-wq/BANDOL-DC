@@ -5,7 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>वसूली ट्रैकर | आदेगांव DC</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#eef2f7">
+<meta name="theme-color" content="#eef2f7" id="meta-theme-color">
+<script>
+// पेज दिखने से *पहले* ही theme लगाएं — वरना पहले हल्का (light) फ्लैश दिखकर फिर dark में बदलेगा
+try{
+  if(localStorage.getItem("dc_theme")==="dark") document.documentElement.setAttribute("data-theme","dark");
+}catch(e){}
+</script>
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -165,6 +171,10 @@
     <div class="rmk-info">
       <div class="rmk-name" id="profile-name">-</div>
       <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="profile-meta">-</div>
+    </div>
+    <div class="theme-row">
+      <span>&#127769; डार्क मोड <span style="font-weight:400;color:var(--muted);">(कम रोशनी में आँखों को आराम)</span></span>
+      <button class="theme-switch" id="theme-switch-btn" onclick="toggleTheme()" aria-label="डार्क मोड टॉगल करें"><span class="theme-switch-knob"></span></button>
     </div>
     <div class="mfooter">
       <button class="btn-save" onclick="closeProfileModal()">बंद करें</button>
