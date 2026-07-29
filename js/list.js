@@ -94,9 +94,9 @@ function renderListWith(data){
       "</div>"+
       "<div class='cc-bot'><span class='sbadge "+(isPaid?"sb-paid":"sb-pending")+"'>"+(isPaid?"✅ वसूल":"⏳ बाकी")+"</span>"+
       "<div class='act-btns'>"+
-        "<button class='abtn abtn-rmk' onclick='openRmkModal("+oi+")'>✏️ रिमार्क</button>"+
-        (!isPaid?"<button class='abtn abtn-pay' onclick='markPaid("+oi+")'>✓ वसूल</button>":
-                 "<button class='abtn' style='background:rgba(255,77,109,.12);color:var(--red);border:1px solid rgba(255,77,109,.2);' onclick='markUnpaid("+oi+")'>↩ वापस बाकी</button>")+
+        "<button class='abtn abtn-rmk' onclick=\"openRmkModal("+oi+",'"+escHtml(x.acc||"")+"')\">✏️ रिमार्क</button>"+
+        (!isPaid?"<button class='abtn abtn-pay' onclick=\"markPaid("+oi+",'"+escHtml(x.acc||"")+"')\">✓ वसूल</button>":
+                 "<button class='abtn' style='background:rgba(255,77,109,.12);color:var(--red);border:1px solid rgba(255,77,109,.2);' onclick=\"markUnpaid("+oi+",'"+escHtml(x.acc||"")+"')\">↩ वापस बाकी</button>")+
       "</div></div>"+
       "<div class='cc-info'>"+prevPayInfo+payDateInfo+uploadInfo+"</div>"+
       rmkHtml+"</div>";
@@ -223,9 +223,22 @@ function reconcileHQ(hq){
   return fixed;
 }
 
-function markPaid(idx){
+// idx सिर्फ़ पिछले render के वक्त की स्थिति है — इस बीच background sync से लिस्ट बदल/छोटी हो सकती है
+// (जैसे रिमार्क मोडल खुला रहते हुए टाइप करने में लगने वाला वक्त)। इसलिए acc (स्थिर पहचान) से
+// पहले ढूंढें, सिर्फ़ acc न मिले (जैसे acc-रहित पुराना record) तभी idx पर भरोसा करें
+function _findRecordIdx(d,idx,acc){
+  if(acc){
+    for(var i=0;i<d.length;i++){
+      if(d[i]&&d[i].acc!=null&&String(d[i].acc).trim()===String(acc).trim()) return i;
+    }
+    return -1; // acc दिया गया था पर अब लिस्ट में नहीं मिला — पुराने idx पर भरोसा करना और खतरनाक होगा
+  }
+  return d[idx]?idx:-1;
+}
+function markPaid(idx,acc){
   var d=cGet(activeHQ,activeCat);
-  if(!d[idx])return;
+  idx=_findRecordIdx(d,idx,acc);
+  if(idx<0){toast("यह रिकॉर्ड अब सूची में नहीं मिला — सूची ताज़ा हो गई होगी, दोबारा कोशिश करें","err");return;}
   var now=new Date();
   var dateStr=now.toLocaleDateString("hi-IN");
   var dtStr=now.toLocaleString("hi-IN");
@@ -241,10 +254,11 @@ function markPaid(idx){
   propagateStatus(d[idx].acc,activeCat,"paid",dateStr,dtStr,d[idx].ts);
 }
 
-function markUnpaid(idx){
+function markUnpaid(idx,acc){
   if(!confirm("क्या वाकई इस उपभोक्ता की वसूली वापस 'बाकी' करनी है?")) return;
   var d=cGet(activeHQ,activeCat);
-  if(!d[idx])return;
+  idx=_findRecordIdx(d,idx,acc);
+  if(idx<0){toast("यह रिकॉर्ड अब सूची में नहीं मिला — सूची ताज़ा हो गई होगी, दोबारा कोशिश करें","err");return;}
   var dtStr=new Date().toLocaleString("hi-IN");
   d[idx].status="pending";
   d[idx].paydate="";
@@ -266,11 +280,14 @@ function clearList(){
   fbDel(activeHQ,activeCat,null);
 }
 
-function openRmkModal(idx){
+function openRmkModal(idx,acc){
   var d=cGet(activeHQ,activeCat);
+  idx=_findRecordIdx(d,idx,acc);
+  if(idx<0){toast("यह रिकॉर्ड अब सूची में नहीं मिला — सूची ताज़ा हो गई होगी, दोबारा कोशिश करें","err");return;}
   var x=d[idx]; if(!x)return;
   x=migrateRemarks(x);
   document.getElementById("rmk-key").value=idx;
+  document.getElementById("rmk-acc-key").value=x.acc||"";
   document.getElementById("rmk-name").textContent=x.name;
   document.getElementById("rmk-amt").textContent="₹"+Number(x.amount).toLocaleString("hi-IN")+" बकाया";
   document.getElementById("rmk-acc").textContent="Consumer No: "+x.acc+(x.father?" | पिता/पति: "+x.father:"");
@@ -320,8 +337,13 @@ function setRmkStatus(s){
 }
 function saveRmk(){
   var idx=parseInt(document.getElementById("rmk-key").value);
+  var acc=document.getElementById("rmk-acc-key").value;
   var d=cGet(activeHQ,activeCat);
-  if(!d[idx])return;
+  // मोडल खुला रहते हुए (टाइप करने के दौरान) background sync से लिस्ट बदल/छोटी हो सकती थी —
+  // acc से दोबारा सही record ढूंढें, सिर्फ़ idx पर भरोसा न करें (वरना गलत record में सेव होने
+  // या पूरी तरह चुपचाप fail होने का खतरा था — असली bug यही था)
+  idx=_findRecordIdx(d,idx,acc);
+  if(idx<0){toast("⚠ यह रिकॉर्ड अब सूची में नहीं मिला — मोडल बंद करके दोबारा कोशिश करें","err");return;}
   d[idx]=migrateRemarks(d[idx]);
   var now=new Date();
   var dtStr=now.toLocaleString("hi-IN");
