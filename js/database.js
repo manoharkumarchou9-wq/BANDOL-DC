@@ -113,9 +113,21 @@ function _fbPut(hq,cat,arr,cb){
     if(navigator.onLine) logErr("save-fail",e,hq+"/"+cat); // ऑनलाइन होते हुए save fail — असली गड़बड़
     markPending(hq,cat,"put");
     setSyncStatus(false);
-    toast("📴 ऑफलाइन — बदलाव device पर save है, नेट आते ही अपने आप sync होगा","inf");
+    _saveFailToast(e);
     if(cb) cb(false);
   });
+}
+
+// "ऑफलाइन" कहना तभी सही है जब असली वजह नेटवर्क हो — 401/403 का मतलब है login session ही
+// अमान्य हो गया (जैसे PIN बदल गया या token का auto-refresh नाकाम रहा), वहां गुमराह करने वाला
+// "ऑफलाइन" न दिखाकर साफ़ बताएं कि दोबारा login चाहिए, ताकि यूज़र को असली समस्या पता चले
+function _saveFailToast(e){
+  var msg=(e&&e.message)||"";
+  if(/HTTP (401|403)/.test(msg)){
+    toast("🔐 सेव नहीं हुआ — login session खत्म हो गया लगता है। Logout करके दोबारा login करें","err");
+  } else {
+    toast("📴 ऑफलाइन — बदलाव device पर save है, नेट आते ही अपने आप sync होगा","inf");
+  }
 }
 
 // migrated (per-record) HQ/श्रेणी के लिए — prev/arr में जो record बदले/जुड़े/हटे हों सिर्फ उन्हें PATCH करना,
@@ -165,7 +177,7 @@ function _fbPutPerRecord(hq,cat,prev,arr,cb){
     if(navigator.onLine) logErr("save-fail",e,hq+"/"+cat);
     markPending(hq,cat,"put",patch);
     setSyncStatus(false);
-    toast("📴 ऑफलाइन — बदलाव device पर save है, नेट आते ही अपने आप sync होगा","inf");
+    _saveFailToast(e);
     if(cb) cb(false);
   });
 }

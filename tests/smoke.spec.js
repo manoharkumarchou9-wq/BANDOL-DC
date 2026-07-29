@@ -195,6 +195,54 @@ test.describe('डेटा और वसूली', () => {
     expect(st).toBe('paid');
   });
 
+  test('रिमार्क मोडल खुला रहते हुए लिस्ट का क्रम बदल जाए (background sync) — फिर भी सही record में सेव हो, acc से मिलान करके', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => {
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '111222', name: 'राम कुमार', status: 'pending', amount: 500 },
+        { acc: '333444', name: 'श्याम लाल', status: 'pending', amount: 700 },
+      ]);
+    });
+    await loginLineman(page);
+    await expect(page.locator('.con-card').first()).toContainText('राम कुमार', { timeout: 15000 });
+    // राम कुमार (idx 0, acc 111222) का रिमार्क मोडल खोलें
+    await page.evaluate(() => openRmkModal(0, '111222'));
+    await expect(page.locator('#rmk-name')).toHaveText('राम कुमार');
+    // मोडल खुला रहते हुए — background sync ने क्रम पलट दिया, अब idx 0 पर श्याम लाल है
+    await page.evaluate(() => {
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '333444', name: 'श्याम लाल', status: 'pending', amount: 700 },
+        { acc: '111222', name: 'राम कुमार', status: 'pending', amount: 500 },
+      ]);
+    });
+    await page.fill('#rmk-text', 'टेस्ट रिमार्क');
+    await page.evaluate(() => saveRmk());
+    await page.waitForTimeout(300);
+    const data = await page.evaluate(() => cGet('आदेगांव', 'कुल उपभोक्ता'));
+    const ram = data.find((x) => x.acc === '111222');
+    const shyam = data.find((x) => x.acc === '333444');
+    expect(ram.remarksArr && ram.remarksArr[0].text).toBe('टेस्ट रिमार्क'); // सही व्यक्ति (राम) पर लगा
+    expect(shyam.remarksArr).toBeFalsy(); // गलती से श्याम पर नहीं लगा
+  });
+
+  test('रिमार्क मोडल खुला रहते हुए वह record ही हट जाए — चुपचाप fail न हो, साफ़ error दिखे', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => {
+      cSet('आदेगांव', 'कुल उपभोक्ता', [
+        { acc: '111222', name: 'राम कुमार', status: 'pending', amount: 500 },
+      ]);
+    });
+    await loginLineman(page);
+    await expect(page.locator('.con-card').first()).toContainText('राम कुमार', { timeout: 15000 });
+    await page.evaluate(() => openRmkModal(0, '111222'));
+    // background sync ने वह record ही हटा दिया (जैसे JE ने लिस्ट दोबारा अपलोड कर दी हो)
+    await page.evaluate(() => { cSet('आदेगांव', 'कुल उपभोक्ता', []); });
+    await page.fill('#rmk-text', 'टेस्ट रिमार्क');
+    await page.evaluate(() => saveRmk());
+    await page.waitForTimeout(300);
+    await expect(page.locator('#toast')).toContainText('अब सूची में नहीं मिला');
+  });
+
   test('कैश लिस्ट: नया-पुराना timestamp नियम (बोर्ड टकराव)', async ({ page }) => {
     await openApp(page);
     const r = await page.evaluate(() => new Promise((res) => {
@@ -726,6 +774,47 @@ test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
       });
     }));
     expect(Array.isArray(r)).toBe(true);
+  });
+
+  test('_fbPut — save 401 पर रुके तो "ऑफलाइन" नहीं, साफ़ "दोबारा login करें" वाला toast दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => new Promise((resolve) => {
+      Object.defineProperty(navigator, 'onLine', { get: () => true });
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ8/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PUT') {
+          return Promise.resolve({ ok: false, status: 401, json: () => Promise.resolve({}) });
+        }
+        return orig(url, opts);
+      };
+      _fbPut('टेस्ट HQ8', 'कुल उपभोक्ता', [{ acc: '1', status: 'pending' }], function () {
+        window.fetch = orig;
+        resolve();
+      });
+    }));
+    await expect(page.locator('#toast')).toContainText('login session');
+    await expect(page.locator('#toast')).not.toContainText('ऑफलाइन');
+  });
+
+  test('_fbPut — नेटवर्क fail (जैसा offline में होता है) हो तो पुराना "ऑफलाइन" वाला toast ही दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => new Promise((resolve) => {
+      Object.defineProperty(navigator, 'onLine', { get: () => true });
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ9/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PUT') {
+          return Promise.reject(new TypeError('Failed to fetch'));
+        }
+        return orig(url, opts);
+      };
+      _fbPut('टेस्ट HQ9', 'कुल उपभोक्ता', [{ acc: '1', status: 'pending' }], function () {
+        window.fetch = orig;
+        resolve();
+      });
+    }));
+    await expect(page.locator('#toast')).toContainText('ऑफलाइन');
   });
 
   test('_applyPatchToArray — SSE "patch" event का delta local array पर सही लगता है (update/नया/हटाना)', async ({ page }) => {
