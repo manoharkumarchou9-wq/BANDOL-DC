@@ -690,6 +690,32 @@ test.describe('चरण 3 माइग्रेशन — Dry-run जांच'
     expect(r.empty).toEqual(expect.objectContaining({ tot: 0 }));
   });
 
+  test('_migAnalyzeList — acc खाली वाले record की नाम/पता/मोबाइल से पहचान (missingAccSamples) देता है', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => _migAnalyzeList([
+      { acc: '1', name: 'राम कुमार' },
+      { name: 'श्याम लाल', addr: 'PIPARIYA', phone: '9876543210' }, // acc ही नहीं
+    ]));
+    expect(r.missingAcc).toBe(1);
+    expect(r.missingAccSamples).toEqual([{ name: 'श्याम लाल', addr: 'PIPARIYA', phone: '9876543210' }]);
+  });
+
+  test('_migRender — "समस्या वाले records" सूची में नाम/पता दिखाकर JE को ढूंढना आसान बनाता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openMigModal());
+    await page.evaluate(() => {
+      _migRender([
+        { hq: 'पाटन', cat: 'घरेलू', a: { tot: 5, missingAcc: 1, missingAccSamples: [{ name: 'श्याम लाल', addr: 'PIPARIYA', phone: '' }], dupAcc: 0, illegalAcc: 0 } },
+      ]);
+    });
+    const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
+    expect(html).toContain('समस्या वाले records');
+    expect(html).toContain('श्याम लाल');
+    expect(html).toContain('PIPARIYA');
+    expect(html).toContain('Consumer No खाली');
+  });
+
   test('सिर्फ JE "चरण 3 जांच" खोल सकते हैं', async ({ page }) => {
     await openApp(page);
     await loginLineman(page);
