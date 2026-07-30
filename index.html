@@ -448,7 +448,8 @@ try{
     <div class="log-list" id="log-local"></div>
     <div class="log-sec-hdr">&#127760; सभी डिवाइस (पिछले 2 दिन)</div>
     <div class="log-list" id="log-srv"></div>
-    <div class="mfooter">
+    <div class="mfooter" style="flex-wrap:wrap;">
+      <button class="btn-cancel" style="flex-basis:100%;color:var(--red);" onclick="clearServerLogs()">&#128465; सभी डिवाइस लॉग साफ़ करें</button>
       <button class="btn-cancel" onclick="clearLocalLogs()">&#128465; लोकल साफ़ करें</button>
       <button class="btn-save" onclick="closeLogModal()">बंद करें</button>
     </div>
