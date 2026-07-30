@@ -16,11 +16,35 @@ function cSet(hq,cat,d){
 
 // ── OFFLINE SYNC QUEUE: offline बदलाव queue में, नेट आते ही अपने आप Firebase sync ──
 var PENDING_KEY="dc_pending3";
+// 401/403 का मतलब है यह account/device उस HQ/श्रेणी के डेटा के लिए अधिकृत ही नहीं (जैसे किसी और
+// HQ का लाइनमैन बना device जिस पर पहले किसी और HQ का काम बचा रह गया था) — नेटवर्क वापस आने पर भी
+// दोबारा कोशिश करते रहने से कभी सफलता नहीं मिलेगी, इसलिए इतनी बार लगातार 401/403 के बाद हर 20 सेकंड
+// वाला auto-retry रोक दो (असली production log में यही 401 महीनों घंटों तक हर 20 सेकंड दोहराता मिला)।
+// डेटा device पर सुरक्षित रहता है, बस चुपचाप हैमर करना बंद — और एक बार साफ़ चेतावनी दिखा दो।
+var STUCK_AUTH_MAX=3;
 function getPending(){try{return JSON.parse(localStorage.getItem(PENDING_KEY))||{};}catch(e){return {};}}
 function setPendingObj(p){try{localStorage.setItem(PENDING_KEY,JSON.stringify(p));}catch(e){}}
+function _bumpAuthFail(k,err){
+  var p=getPending();
+  var entry=p[k];
+  if(!entry) return;
+  var msg=(err&&err.message)||"";
+  if(/HTTP (401|403)/.test(msg)){
+    entry.authFailCount=(entry.authFailCount||0)+1;
+    if(entry.authFailCount===STUCK_AUTH_MAX){
+      logErr("pending-stuck-auth","लगातार "+STUCK_AUTH_MAX+" बार 401/403 — यह account/device "+entry.hq+"/"+entry.cat+" के लिए अधिकृत नहीं लगता, auto-retry रोका। डेटा device पर सुरक्षित है — सही account से login करें या JE को बताएं",entry.hq+"/"+entry.cat);
+      toast("⚠️ "+entry.hq+"/"+entry.cat+" के बदलाव भेजे नहीं जा पा रहे (login/account समस्या) — JE को बताएं","err");
+    }
+  } else {
+    entry.authFailCount=0; // असली network-fail वापस आया तो पुरानी auth-fail गिनती मायने नहीं रखती
+  }
+  p[k]=entry;
+  setPendingObj(p);
+}
 // patch दिया हो (migrated HQ/श्रेणी की per-record बचत) तो पहले से पेंडिंग patch के साथ जोड़ें —
 // ताकि नेट आने पर सिर्फ असल बदले records ही PATCH हों, पूरी लिस्ट नहीं
-function markPending(hq,cat,type,patch){
+// err दिया हो (असल सेव-प्रयास की fetch error) तो उसी से auth-fail गिनती अपडेट होती है
+function markPending(hq,cat,type,patch,err){
   var p=getPending();
   var k=cKey(hq,cat);
   var entry=p[k]||{hq:hq,cat:cat,type:type||"put"};
@@ -32,6 +56,7 @@ function markPending(hq,cat,type,patch){
   p[k]=entry;
   setPendingObj(p);
   setSyncStatus(navigator.onLine);
+  if(err!==undefined) _bumpAuthFail(k,err);
 }
 function clearPendingKey(k){var p=getPending();delete p[k];setPendingObj(p);}
 function pendingCount(){return Object.keys(getPending()).length;}
@@ -87,10 +112,15 @@ function flushPending(){
   }
   keys.forEach(function(k){
     var it=p[k];
+    if((it.authFailCount||0)>=STUCK_AUTH_MAX){
+      // permanently रुका हुआ (देखें _bumpAuthFail) — डेटा सुरक्षित है, बस बार-बार hammer करना बंद
+      fin(false);
+      return;
+    }
     if(it.type==="del"){
       fetch(FB+"/"+fbPath(it.hq,it.cat)+".json",{method:"DELETE"})
-        .then(function(r){if(!r.ok)throw 0;clearPendingKey(k);setSyncStatus(true);fin(true);})
-        .catch(function(e){if(navigator.onLine)logErr("sync-del-fail",e,it.hq+"/"+it.cat);setSyncStatus(false);fin(false);});
+        .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);clearPendingKey(k);setSyncStatus(true);fin(true);})
+        .catch(function(e){if(navigator.onLine)logErr("sync-del-fail",e,it.hq+"/"+it.cat);_bumpAuthFail(k,e);setSyncStatus(false);fin(false);});
       return;
     }
     if(it.patch){
@@ -104,7 +134,7 @@ function flushPending(){
         updTime();setSyncStatus(true);
         if(CU&&it.hq===activeHQ&&it.cat===activeCat){var d=cGet(it.hq,it.cat);renderSummaryWith(d);renderListWith(d);}
         fin(true);
-      }).catch(function(e){if(navigator.onLine)logErr("sync-patch-fail",e,it.hq+"/"+it.cat);setSyncStatus(false);fin(false);});
+      }).catch(function(e){if(navigator.onLine)logErr("sync-patch-fail",e,it.hq+"/"+it.cat);_bumpAuthFail(k,e);setSyncStatus(false);fin(false);});
       return;
     }
     // put (पुराना array फॉर्मेट) — पहले server data लो, merge करो, फिर save — दोनों के बदलाव बचें
@@ -120,7 +150,7 @@ function flushPending(){
           fin(!!ok);
         });
       })
-      .catch(function(e){if(navigator.onLine)logErr("sync-put-fail",e,it.hq+"/"+it.cat);setSyncStatus(false);fin(false);});
+      .catch(function(e){if(navigator.onLine)logErr("sync-put-fail",e,it.hq+"/"+it.cat);_bumpAuthFail(k,e);setSyncStatus(false);fin(false);});
   });
   if(needCat){
     var reqs=Object.keys(CAT_NAMES).map(function(hq){
