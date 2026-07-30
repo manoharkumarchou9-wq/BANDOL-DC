@@ -287,6 +287,7 @@ function doLogout(askConfirm){
   document.getElementById("uname-inp").value="";
   document.getElementById("sup-pw").value="";
   document.getElementById("hq-sel").value="";
+  document.getElementById("lin-pin").value=""; // वरना shared device पर अगला लाइनमैन पुराने PIN से ही login कोशिश करता रह जाता (PIN mismatch से login fail — दिखता है जैसे logout ने कुछ किया ही नहीं)
   document.getElementById("rc-sup").classList.remove("selected");
   document.getElementById("rc-lin").classList.remove("selected");
   document.getElementById("sup-fields").style.display="none";

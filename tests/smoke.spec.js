@@ -1087,6 +1087,21 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
     await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
   });
 
+  test('logout पर PIN फ़ील्ड भी साफ़ हो जाए — वरना shared device पर अगले लाइनमैन को पुराने PIN से login fail दिखता (गड़बड़ी जो "logout ठीक से काम नहीं करता" जैसी दिखती थी)', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => { HQ_PINS[hqKey('आदेगांव')] = '4321'; });
+    await page.click('#rc-lin');
+    await page.fill('#uname-inp', 'टेस्ट लाइनमैन');
+    await page.selectOption('#hq-sel', { label: 'आदेगांव' });
+    await page.fill('#lin-pin', '4321');
+    await page.click('.login-btn');
+    await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
+    await page.evaluate(() => doLogout(false));
+    expect(await page.locator('#lin-pin').inputValue()).toBe('');
+    expect(await page.locator('#uname-inp').inputValue()).toBe('');
+    expect(await page.locator('#hq-sel').inputValue()).toBe('');
+  });
+
   test('सही PIN पर उस HQ के असली Firebase account से sign-in होता है (email + PIN से बना password)', async ({ page }) => {
     await openApp(page);
     const r = await page.evaluate(() => new Promise((resolve) => {
