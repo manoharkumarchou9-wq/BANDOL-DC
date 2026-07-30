@@ -15,19 +15,25 @@ function openMigModal(){
 function closeMigModal(){document.getElementById("mig-overlay").classList.remove("open");}
 
 // एक HQ/श्रेणी की raw list (array या पहले से object) का विश्लेषण — कुछ भी नहीं लिखता
+// missingAccSamples: acc खाली होने पर कोई और पहचान (नंबर) नहीं होती, इसलिए नाम/पता/मोबाइल से पहचान दी जाती है —
+// ताकि JE आसानी से ढूंढ सके कि ठीक किसे करना है (देखें _migRender — "समस्या वाले records" सूची)
 function _migAnalyzeList(raw){
-  if(!raw) return {tot:0,missingAcc:0,dupAcc:0,dupSamples:[],illegalAcc:0,illegalSamples:[],alreadyObj:false};
+  if(!raw) return {tot:0,missingAcc:0,missingAccSamples:[],dupAcc:0,dupSamples:[],illegalAcc:0,illegalSamples:[],alreadyObj:false};
   var isArr=Array.isArray(raw);
   var arr=(isArr?raw:Object.keys(raw).map(function(k){return raw[k];})).filter(Boolean);
-  var seen={},dupSamples=[],illegalSamples=[],missingAcc=0,dupAcc=0,illegalAcc=0;
+  var seen={},dupSamples=[],illegalSamples=[],missingAccSamples=[],missingAcc=0,dupAcc=0,illegalAcc=0;
   arr.forEach(function(x){
     var acc=(x&&x.acc!=null)?String(x.acc).trim():"";
-    if(!acc){missingAcc++;return;}
+    if(!acc){
+      missingAcc++;
+      if(missingAccSamples.length<5) missingAccSamples.push({name:(x&&x.name)||"",addr:(x&&x.addr)||"",phone:(x&&x.phone)||""});
+      return;
+    }
     if(/[.#$\[\]\/]/.test(acc)){illegalAcc++; if(illegalSamples.length<5)illegalSamples.push(acc);}
     if(seen[acc]){dupAcc++; if(dupSamples.length<5)dupSamples.push(acc);}
     else seen[acc]=1;
   });
-  return {tot:arr.length,missingAcc:missingAcc,dupAcc:dupAcc,dupSamples:dupSamples,illegalAcc:illegalAcc,illegalSamples:illegalSamples,alreadyObj:!isArr};
+  return {tot:arr.length,missingAcc:missingAcc,missingAccSamples:missingAccSamples,dupAcc:dupAcc,dupSamples:dupSamples,illegalAcc:illegalAcc,illegalSamples:illegalSamples,alreadyObj:!isArr};
 }
 
 function _migRunDryRun(){
@@ -55,7 +61,7 @@ function _migRunDryRun(){
         fin();
       })
       .catch(function(){
-        rows.push({hq:j.hq,cat:j.cat,a:{tot:0,missingAcc:0,dupAcc:0,dupSamples:[],illegalAcc:0,illegalSamples:[],alreadyObj:false,fetchErr:true}});
+        rows.push({hq:j.hq,cat:j.cat,a:{tot:0,missingAcc:0,missingAccSamples:[],dupAcc:0,dupSamples:[],illegalAcc:0,illegalSamples:[],alreadyObj:false,fetchErr:true}});
         fin();
       });
   });
@@ -107,6 +113,30 @@ function _migRender(rows){
       "<td>"+r.a.tot+"</td><td>"+(r.a.fetchErr?"—":r.a.missingAcc)+"</td><td>"+(r.a.fetchErr?"—":r.a.dupAcc)+"</td><td>"+(r.a.fetchErr?"—":r.a.illegalAcc)+"</td></tr>";
   });
   html+="</tbody><tfoot><tr><td colspan='2'>योग</td><td>"+gTot+"</td><td>"+gMiss+"</td><td>"+gDup+"</td><td>"+gIll+"</td></tr></tfoot></table>";
+  // Missing/duplicate/illegal acc वाले असल records — नाम/पता/मोबाइल से पहचान (acc खुद तो missing है,
+  // इसलिए कोई और तरीका ही ठीक करने के लिए ढूंढने का ज़रिया है) — ताकि JE बिना Excel डाउनलोड किए भी
+  // सीधे यहीं देख सके कि किसे ठीक करना है
+  var probRows=[];
+  rows.forEach(function(r){
+    (r.a.missingAccSamples||[]).forEach(function(s){
+      probRows.push({hq:r.hq,cat:r.cat,issue:"Consumer No खाली",detail:(s.name||"(नाम नहीं)")+(s.addr?" — "+s.addr:"")+(s.phone?" — "+s.phone:"")});
+    });
+    (r.a.dupSamples||[]).forEach(function(acc){
+      probRows.push({hq:r.hq,cat:r.cat,issue:"Duplicate Consumer No",detail:acc});
+    });
+    (r.a.illegalSamples||[]).forEach(function(acc){
+      probRows.push({hq:r.hq,cat:r.cat,issue:"अवैध Consumer No (. # $ [ ] / नहीं चलेगा)",detail:acc});
+    });
+  });
+  if(probRows.length){
+    var moreNote=(gMiss+gDup+gIll)>probRows.length?" (हर HQ/श्रेणी के पहले 5 नमूने ही)":"";
+    html+="<div style='margin-top:14px;font-size:12px;font-weight:700;color:var(--gold2);'>🔍 समस्या वाले records (ठीक करने के लिए)"+moreNote+"</div>";
+    html+="<table class='wasc-table' style='margin-top:6px;'><thead><tr><th>HQ</th><th>श्रेणी</th><th>समस्या</th><th>पहचान</th></tr></thead><tbody>";
+    probRows.forEach(function(pr){
+      html+="<tr><td class='wasc-hq'>"+escHtml(pr.hq)+"</td><td>"+escHtml(pr.cat)+"</td><td>"+escHtml(pr.issue)+"</td><td>"+escHtml(pr.detail)+"</td></tr>";
+    });
+    html+="</tbody></table>";
+  }
   el.innerHTML=html;
   document.getElementById("mig-dl").style.display=rows.length?"":"none";
 }
@@ -233,12 +263,13 @@ function downloadMigReport(){
   if(!MIG_REPORT||!MIG_REPORT.length){toast("पहले जांच चलाएं","err");return;}
   ensureXLSX(function(ok){
     if(!ok){toast("📴 Excel के लिए इन्टरनेट चाहिए","err");return;}
-    var rows=[["HQ","श्रेणी","कुल","Missing acc","Duplicate acc","अवैध acc","Duplicate नमूने","अवैध नमूने"]];
+    var rows=[["HQ","श्रेणी","कुल","Missing acc","Missing acc नमूने (नाम — पता — मोबाइल)","Duplicate acc","Duplicate नमूने","अवैध acc","अवैध नमूने"]];
     MIG_REPORT.forEach(function(r){
-      rows.push([r.hq,r.cat,r.a.tot,r.a.missingAcc,r.a.dupAcc,r.a.illegalAcc,(r.a.dupSamples||[]).join(", "),(r.a.illegalSamples||[]).join(", ")]);
+      var missSamp=(r.a.missingAccSamples||[]).map(function(s){return (s.name||"(नाम नहीं)")+(s.addr?" — "+s.addr:"")+(s.phone?" — "+s.phone:"");}).join(" | ");
+      rows.push([r.hq,r.cat,r.a.tot,r.a.missingAcc,missSamp,r.a.dupAcc,(r.a.dupSamples||[]).join(", "),r.a.illegalAcc,(r.a.illegalSamples||[]).join(", ")]);
     });
     var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws["!cols"]=[{wch:12},{wch:16},{wch:8},{wch:10},{wch:12},{wch:10},{wch:24},{wch:24}];
+    ws["!cols"]=[{wch:12},{wch:16},{wch:8},{wch:10},{wch:34},{wch:12},{wch:24},{wch:10},{wch:24}];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"चरण3 Dry-run");
     XLSX.writeFile(wb,"ADEGAON_charan3_dryrun_"+new Date().toLocaleDateString("en-IN").replace(/\//g,"-")+".xlsx");
