@@ -116,7 +116,7 @@ function _fbPut(hq,cat,arr,cb){
     if(cb) cb(true);
   }).catch(function(e){
     if(navigator.onLine) logErr("save-fail",e,hq+"/"+cat); // ऑनलाइन होते हुए save fail — असली गड़बड़
-    markPending(hq,cat,"put");
+    markPending(hq,cat,"put",null,e);
     setSyncStatus(false);
     _saveFailToast(e);
     if(cb) cb(false);
@@ -180,7 +180,7 @@ function _fbPutPerRecord(hq,cat,prev,arr,cb){
     if(cb) cb(true);
   }).catch(function(e){
     if(navigator.onLine) logErr("save-fail",e,hq+"/"+cat);
-    markPending(hq,cat,"put",patch);
+    markPending(hq,cat,"put",patch,e);
     setSyncStatus(false);
     _saveFailToast(e);
     if(cb) cb(false);
@@ -222,8 +222,8 @@ function fbDel(hq,cat,cb){
   }catch(e){}
   cSet(hq,cat,[]);
   fetch(FB+"/"+fbPath(hq,cat)+".json",{method:"DELETE"})
-    .then(function(r){if(!r.ok)throw 0;clearPendingKey(cKey(hq,cat));if(cb)cb();})
-    .catch(function(e){if(navigator.onLine)logErr("delete-fail",e,hq+"/"+cat);markPending(hq,cat,"del");toast("📴 ऑफलाइन — नेट आने पर लिस्ट सभी के लिए हटेगी","inf");if(cb)cb();});
+    .then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);clearPendingKey(cKey(hq,cat));if(cb)cb();})
+    .catch(function(e){if(navigator.onLine)logErr("delete-fail",e,hq+"/"+cat);markPending(hq,cat,"del",null,e);toast("📴 ऑफलाइन — नेट आने पर लिस्ट सभी के लिए हटेगी","inf");if(cb)cb();});
 }
 
 // Migrate old single-string remarks to array format

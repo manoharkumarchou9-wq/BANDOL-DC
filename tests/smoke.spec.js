@@ -906,6 +906,48 @@ test.describe('चरण 3 — per-record write-path (_diffToPatch)', () => {
     await expect(page.locator('#toast')).toContainText('ऑफलाइन');
   });
 
+  test('लगातार 401 (गलत HQ/account का device) — कुछ बार के बाद auto-retry रुक जाए, हमेशा के लिए hammer न करे', async ({ page }) => {
+    // असली production log में यह exact पैटर्न मिला: एक लाइनमैन के device पर किसी और HQ का pending
+    // बदलाव बचा रह गया था, जो कभी सफल नहीं हो सकता था (401 permission-denied) — फिर भी हर 20 सेकंड
+    // दोबारा कोशिश होती रही, घंटों तक। यह टेस्ट पुष्टि करता है कि STUCK_AUTH_MAX बार बाद रुक जाए।
+    await openApp(page);
+    await loginJE(page);
+    // toast() को असली login-welcome toast के साथ रेस से बचाने के लिए यहीं (उसी evaluate के अंदर,
+    // बिना किसी async gap के) toast का टेक्स्ट भी capture कर लेते हैं — polling assert में देर होने पर
+    // बाद में आया कोई और (असंबंधित, जैसे देर से आया login-welcome) toast बीच में overwrite कर सकता था
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      Object.defineProperty(navigator, 'onLine', { get: () => true });
+      let count = 0;
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ10/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PATCH') {
+          count++;
+          return Promise.resolve({ ok: false, status: 401, json: () => Promise.resolve({}) });
+        }
+        return orig(url, opts);
+      };
+      // असली बदलाव जैसा — कोई मौजूदा record बदला (नया/हटाया record नहीं, ताकि PATCH-path भी सही exercise हो)
+      MIGRATED[hqKey('टेस्ट HQ10')] = {}; MIGRATED[hqKey('टेस्ट HQ10')][catKey('कुल उपभोक्ता')] = true;
+      cSet('टेस्ट HQ10', 'कुल उपभोक्ता', [{ acc: '1', status: 'pending', o: 0 }]);
+      fbSet('टेस्ट HQ10', 'कुल उपभोक्ता', [{ acc: '1', status: 'paid', o: 0 }], [{ acc: '1', status: 'pending', o: 0 }], function () {
+        // पहला असल-save-attempt फेल हुआ, अब जान-बूझकर कई बार flushPending बुलाओ (जैसे हर 20 सेकंड वाला टाइमर करता)
+        function loop(n) {
+          if (n <= 0) {
+            window.fetch = orig;
+            resolve({ count: count, toastText: document.getElementById('toast').textContent });
+            return;
+          }
+          flushPending();
+          setTimeout(function () { loop(n - 1); }, 50);
+        }
+        loop(6);
+      });
+    }));
+    // 1 असली save-attempt + STUCK_AUTH_MAX तक पहुंचने के लिए ज़रूरी retries — उसके बाद कोई नया PATCH नहीं जाना चाहिए
+    expect(r.count).toBe(3);
+    expect(r.toastText).toContain('भेजे नहीं जा पा रहे');
+  });
+
   test('_applyPatchToArray — SSE "patch" event का delta local array पर सही लगता है (update/नया/हटाना)', async ({ page }) => {
     await openApp(page);
     const r = await page.evaluate(() => {
