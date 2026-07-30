@@ -1488,6 +1488,29 @@ test.describe('error logging', () => {
     expect(logs.some((l) => l.c === 'test-ctx' && l.m.indexOf('जांच') > -1)).toBe(true);
     expect(logs.some((l) => l.c === 'js-error' && l.m.indexOf('uncaught') > -1)).toBe(true);
   });
+
+  test('clearServerLogs — "सभी डिवाइस" वाले (server) logs को DELETE करता है, ताकि JE पुराने ढेर से छुटकारा पा सके', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => openLogModal());
+    const deletedPaths = await page.evaluate(() => new Promise((resolve) => {
+      const deleted = [];
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('/LOGS/') > -1 && opts && opts.method === 'DELETE') {
+          deleted.push(url);
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(null) });
+        }
+        return orig(url, opts);
+      };
+      window.confirm = () => true;
+      clearServerLogs();
+      setTimeout(() => { window.fetch = orig; resolve(deleted); }, 300);
+    }));
+    // आज + कल — दोनों दिन के server logs हटने चाहिए (fetchServerLogs जिन 2 दिन को दिखाता है, वही)
+    expect(deletedPaths.length).toBe(2);
+    await expect(page.locator('#toast')).toContainText('साफ़ हो गए');
+  });
 });
 
 test.describe('प्रोफ़ाइल — बॉटम नेव, एवतार रंग, फ़ोटो अपलोड', () => {

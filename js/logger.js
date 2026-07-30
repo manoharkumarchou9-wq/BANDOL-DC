@@ -158,3 +158,18 @@ function clearLocalLogs(){
   document.getElementById("log-local").innerHTML=logRowsHtml([]);
   toast("इस डिवाइस के लॉग साफ़ हो गए","ok");
 }
+
+// "सभी डिवाइस" वाला हिस्सा (fetchServerLogs) Firebase /LOGS/{day} से आता है — पहले सिर्फ़ 15 दिन
+// बाद अपने आप साफ़ होता था (cleanupOldServerLogs), JE के पास मैन्युअल तरीका नहीं था, तो पुरानी/
+// पहले ही देखी-समझी entries जमा होती रहतीं और हर बार लॉग खोलने पर वही ढेर दिखता रहता — असली bug यही था
+function clearServerLogs(){
+  if(!confirm("⚠️ यह सभी devices से दिख रहे पिछले 2 दिन के लॉग हमेशा के लिए मिटा देगा (सिर्फ़ इस device का लॉग नहीं — सबका)। जारी रखें?"))return;
+  document.getElementById("log-srv").innerHTML='<div class="log-empty">साफ़ हो रहा है...</div>';
+  var days=[0,1].map(function(off){return new Date(Date.now()-off*86400000).toISOString().slice(0,10);});
+  Promise.all(days.map(function(day){
+    return fetch(FB+"/LOGS/"+day+".json",{method:"DELETE"}).catch(function(){});
+  })).then(function(){
+    toast("🗑️ सभी devices के लॉग साफ़ हो गए","ok");
+    fetchServerLogs();
+  });
+}
