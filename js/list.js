@@ -43,7 +43,7 @@ function renderListWith(data){
     return matchQ&&(activeFilter==="all"||x.status===activeFilter);
   });
   if(!filtered.length){
-    var emptyMsg="";
+    var emptyMsg;
     if(activeFilter==="paid") emptyMsg="अभी कोई वसूली दर्ज नहीं";
     else if(activeFilter==="pending") emptyMsg="सभी वसूली हो चुकी है!";
     else if(q) emptyMsg="कोई परिणाम नहीं";
