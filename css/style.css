@@ -178,28 +178,28 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .filter-btn.active-paid{background:rgba(0,200,150,.15);color:var(--green);border-color:var(--green);}
 .filter-btn.active-pending{background:rgba(255,77,109,.12);color:var(--red);border-color:var(--red);}
 .con-list{padding:0 12px 96px;}
-.con-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:16px 17px;margin-bottom:13px;border-left:5px solid var(--border);box-shadow:var(--shadow-card);transition:transform .15s,box-shadow .15s;animation:fadeUp .35s ease-out;}
+.con-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:11px 13px;margin-bottom:9px;border-left:4px solid var(--border);box-shadow:var(--shadow-card);transition:transform .15s,box-shadow .15s;animation:fadeUp .35s ease-out;}
 .con-card:active{transform:scale(.985);}
 .con-card.paid{border-left-color:var(--green);background:linear-gradient(180deg,rgba(8,107,82,.06) 0%,var(--card) 64px);}
 .con-card.pending{border-left-color:var(--red);background:linear-gradient(180deg,rgba(196,31,61,.06) 0%,var(--card) 64px);}
-.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
-.cc-name{font-family:"Baloo 2",cursive;font-size:15.5px;font-weight:700;letter-spacing:.1px;}
-.cc-rank{font-size:9px;font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--gold);border:1px solid var(--border);flex-shrink:0;}
-.cc-amt{font-family:"Baloo 2",cursive;font-size:24px;font-weight:800;color:var(--gold);margin-bottom:8px;letter-spacing:.2px;}
+.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
+.cc-name{font-family:"Baloo 2",cursive;font-size:13.5px;font-weight:700;letter-spacing:.1px;}
+.cc-rank{font-size:8px;font-weight:700;min-width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--gold);border:1px solid var(--border);flex-shrink:0;}
+.cc-amt{font-family:"Baloo 2",cursive;font-size:19px;font-weight:800;color:var(--gold);margin-bottom:5px;letter-spacing:.2px;}
 .cc-amt span{font-size:11px;color:var(--muted);font-weight:600;}
-.cc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px;}
-.chip{font-size:10px;padding:3px 8px;border-radius:12px;box-shadow:0 1px 2px rgba(18,73,113,.06);}
-.chip-acc{background:linear-gradient(135deg,#d3ecfc,#a9d6f5);color:#081625;cursor:pointer;font-size:14px;font-weight:800;letter-spacing:1px;padding:5px 11px;border-radius:9px;border:1px solid #8ec6ef;font-family:Consolas,"Courier New",monospace;box-shadow:0 1px 3px rgba(18,73,113,.10);transition:transform .12s;}
+.cc-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:5px;}
+.chip{font-size:9px;padding:2px 7px;border-radius:11px;box-shadow:0 1px 2px rgba(18,73,113,.06);}
+.chip-acc{background:linear-gradient(135deg,#d3ecfc,#a9d6f5);color:#081625;cursor:pointer;font-size:12.5px;font-weight:800;letter-spacing:.7px;padding:4px 9px;border-radius:8px;border:1px solid #8ec6ef;font-family:Consolas,"Courier New",monospace;box-shadow:0 1px 3px rgba(18,73,113,.10);transition:transform .12s;}
 .chip-acc:active{transform:scale(.96);}
 .chip-ph{background:rgba(8,107,82,.10);color:var(--green);font-weight:600;}
 .chip-addr{background:rgba(61,75,92,.08);color:var(--muted);}
-.cc-extra{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px;}
-.cc-bot{display:flex;align-items:center;justify-content:space-between;padding-top:2px;}
-.sbadge{font-size:11px;font-weight:700;padding:5px 12px;border-radius:14px;letter-spacing:.1px;}
+.cc-extra{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
+.cc-bot{display:flex;align-items:center;justify-content:space-between;padding-top:1px;}
+.sbadge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:12px;letter-spacing:.1px;}
 .sb-paid{background:rgba(8,107,82,.12);color:var(--green);border:1px solid rgba(8,107,82,.28);}
 .sb-pending{background:rgba(196,31,61,.10);color:var(--red);border:1px solid rgba(196,31,61,.22);}
-.act-btns{display:flex;gap:6px;}
-.abtn{padding:7px 14px;border-radius:10px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;box-shadow:0 2px 6px -1px rgba(18,73,113,.15);transition:transform .12s,box-shadow .12s;}
+.act-btns{display:flex;gap:5px;}
+.abtn{padding:6px 12px;border-radius:9px;font-size:10.5px;font-weight:700;border:none;cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;box-shadow:0 2px 6px -1px rgba(18,73,113,.15);transition:transform .12s,box-shadow .12s;}
 .abtn:active{transform:scale(.94);}
 .abtn-pay{background:linear-gradient(135deg,#0fa578,#0a8c68 55%,var(--green));color:#fff;}
 .abtn-rmk{background:linear-gradient(135deg,#d97318,#c2650a 55%,var(--orange));color:#fff;}
@@ -216,7 +216,12 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .empty-ico{font-size:44px;margin-bottom:12px;filter:drop-shadow(0 6px 14px rgba(18,73,113,.18));}
 .empty-t{font-size:15px;font-weight:700;color:var(--text);margin-bottom:5px;}
 .empty-s{font-size:11px;color:var(--muted);}
-.main-scroll{flex:1;overflow-y:auto;}
+/* app-screen को viewport जितनी ऊँचाई पर बांधा गया (पहले सिर्फ़ min-height था, इसलिए flexbox की
+   "flex item का min-height:auto" quirk की वजह से .main-scroll कभी असल में अंदर scroll ही नहीं
+   करता था — पूरा पेज बढ़ जाता, और असली मोबाइल टच-स्क्रॉल पर यही "कार्ड scroll नहीं हो रहे" वाली
+   दिक्कत बनता था)। अब .main-scroll ही असली, सही तरीके से bounded scroll-container है */
+#app-screen{height:100vh;height:100dvh;overflow:hidden;}
+.main-scroll{flex:1;min-height:0;overflow-y:auto;}
 .loading-overlay{position:fixed;inset:0;z-index:900;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 .loading-overlay.hidden{display:none;}
 .spinner{width:46px;height:46px;border:3px solid var(--border);border-top-color:var(--gold);border-right-color:var(--gold);border-radius:50%;animation:sp .7s cubic-bezier(.5,0,.5,1) infinite;}
