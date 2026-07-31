@@ -197,16 +197,16 @@ function prefetchAll(){
   })();
 }
 
-// CDN libraries (Excel/CSV) offline में load नहीं होतीं — नेट आने पर दोबारा load
+// self-hosted libraries (Excel/CSV) — service worker द्वारा cache होती हैं, इसलिए offline में भी load हो जाती हैं
 function ensureLibs(){
   if(typeof XLSX==="undefined"){
     var s1=document.createElement("script");
-    s1.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s1.src="vendor/xlsx.full.min.js";
     document.head.appendChild(s1);
   }
   if(typeof Papa==="undefined"){
     var s2=document.createElement("script");
-    s2.src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js";
+    s2.src="vendor/papaparse.min.js";
     document.head.appendChild(s2);
   }
 }

@@ -226,9 +226,8 @@ function openCashModal(){
 function closeCashModal(){document.getElementById("cash-overlay").classList.remove("open");}
 function ensureXLSX(cb){
   if(window.XLSX){cb(true);return;}
-  if(!navigator.onLine){cb(false);return;}
   var sc=document.createElement("script");
-  sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  sc.src="vendor/xlsx.full.min.js";
   sc.onload=function(){cb(true);};
   sc.onerror=function(){cb(false);};
   document.head.appendChild(sc);
