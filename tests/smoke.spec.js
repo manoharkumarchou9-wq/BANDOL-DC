@@ -1496,6 +1496,21 @@ test.describe('अपडेट बैनर — नया version आने प�
     expect(r.hasBtn).toBe(true);
     expect(r.hasOnclick).toBe(true);
   });
+
+  test('_swSetupAutoUpdate — tab वापस visible होने पर reg.update() ख़ुद बुलाया जाए (browser के अपने-आप घंटों बाद जांचने का इंतज़ार न करना पड़े)', async ({ page }) => {
+    await openApp(page);
+    const called = await page.evaluate(() => {
+      return new Promise((resolve) => {
+        var updateCalls = 0;
+        var fakeReg = { update: function () { updateCalls++; return Promise.resolve(); } };
+        _swSetupAutoUpdate(fakeReg);
+        Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+        document.dispatchEvent(new Event('visibilitychange'));
+        setTimeout(function () { resolve(updateCalls); }, 50);
+      });
+    });
+    expect(called).toBeGreaterThan(0);
+  });
 });
 
 test.describe('PWA installable — manifest + icons', () => {
