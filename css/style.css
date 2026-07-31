@@ -136,6 +136,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .logout-menu.open{display:block;animation:fadeUp .18s ease-out;}
 .user-info-item{padding:8px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px;}
 .logout-item{padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--red);transition:background .12s;}
+.log-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:10px;margin-left:auto;}
 .logout-item:hover{background:rgba(255,77,109,.1);}
 .udot{width:24px;height:24px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);}
 .uname{font-size:11px;font-weight:600;}

@@ -66,6 +66,31 @@ function _dvRender(){
 
 function getLogs(){try{return JSON.parse(localStorage.getItem(LOG_KEY))||[];}catch(e){return [];}}
 
+// ── ERROR BADGE: JE को "एरर लॉग" खोले बिना पता चले कि किसी device पर नई error आई है ──
+var LOG_SEEN_KEY="dc_log_seen_ts";
+function _logSeenTs(){try{return Number(localStorage.getItem(LOG_SEEN_KEY))||0;}catch(e){return 0;}}
+function _logMarkSeen(){try{localStorage.setItem(LOG_SEEN_KEY,String(Date.now()));}catch(e){}}
+function refreshLogBadge(){
+  var el=document.getElementById("log-badge");
+  if(!el||!CU||CU.role!=="supervisor"||!navigator.onLine)return;
+  var seen=_logSeenTs();
+  var days=[0,1].map(function(off){return new Date(Date.now()-off*86400000).toISOString().slice(0,10);});
+  Promise.all(days.map(function(day){
+    return fetch(FB+"/LOGS/"+day+".json?t="+Date.now()).then(function(r){return r.json();}).catch(function(){return null;});
+  })).then(function(res){
+    var count=0;
+    res.forEach(function(d){
+      if(!d||typeof d!=="object")return;
+      Object.keys(d).forEach(function(k){
+        var e=d[k];
+        if(e&&e.t&&new Date(e.t).getTime()>seen) count++;
+      });
+    });
+    if(count>0){el.textContent=count>99?"99+":String(count); el.style.display="inline-block";}
+    else el.style.display="none";
+  }).catch(function(){});
+}
+
 function logErr(ctx, err, extra){
   try{
     var m=!err?"":(err.message||String(err));
@@ -112,6 +137,8 @@ function openLogModal(){
   document.getElementById("log-srv").innerHTML='<div class="log-empty">लोड हो रहा है...</div>';
   fetchServerLogs();
   cleanupOldServerLogs();
+  _logMarkSeen();
+  var badge=document.getElementById("log-badge"); if(badge) badge.style.display="none";
 }
 function closeLogModal(){document.getElementById("log-overlay").classList.remove("open");}
 function closeLogOutside(e){if(e.target===document.getElementById("log-overlay"))closeLogModal();}
