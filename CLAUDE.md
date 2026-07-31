@@ -27,6 +27,7 @@
 - `index.html`, `css/style.css`
 - `sw.js` — service worker + CACHE_NAME
 - `tests/smoke.spec.js` — पूरा टेस्ट suite
+- `database.rules.json` — Firebase Realtime Database की Security Rules (version-controlled कॉपी; असली/लाइव rules Firebase Console → Realtime Database → Rules में हैं)
 
 ## काम शुरू करने से पहले
 `git log --oneline -20` और हाल के merged PRs देख लें — पूरा इतिहास (फ़ैसले, bug root-causes, fixes) commit messages और PR descriptions में दर्ज है।
@@ -41,9 +42,10 @@
 3. Commit → `git fetch origin main` करके rebase करें (पिछले squash-merge से conflict बचाने के लिए) → push → PR बनाएं → PR की "smoke" CI check पास होने का इंतज़ार करें → तभी merge करें (squash) → PR activity से unsubscribe करें।
 4. बड़े visual/UI बदलाव हों तो पहले screenshot लेकर दिखाएं, अनुमति के बाद ही merge करें।
 5. कभी भी बिना पूछे risky/destructive git ऑपरेशन (force push to main, reset --hard, आदि) न करें।
+6. Firebase Security Rules में कोई बदलाव करना हो तो पहले `database.rules.json` में बदलें, commit/PR/merge की सामान्य प्रक्रिया से गुज़ारें, और merge के बाद **JE (उपयोगकर्ता) को Firebase Console → Realtime Database → Rules में जाकर वही बदलाव मैन्युअली paste/publish करने को कहें** — इस रेपो से rules अपने-आप deploy नहीं होतीं, यह फाइल सिर्फ़ version-history/backup के लिए है (कोई automated deploy pipeline अभी नहीं है)।
 
 ## भाषा
 उपयोगकर्ता (JE) से हमेशा हिंदी में बात करें — कोड कमेंट भी हिंदी में लिखे जाते हैं (established convention)।
 
 ## किसी अन्य Distribution Centre के लिए यह ऐप दोबारा बनानी हो तो
-सिर्फ़ यही बदलना पड़ेगा (कोई feature/logic नहीं बदलता): नया Firebase प्रोजेक्ट (DB + Auth + App Check), `js/config.js` का HQS/HQ_AUTH_EMAIL/JE_EMAIL, `js/firebase.js` का पूरा config, `scripts/backup.js` की अलग HQS/DB_URL, `js/village.js` का VILLAGE_ALIASES (खाली करके नए सिरे से), `index.html` का `#hq-sel` dropdown (hardcoded options), और सभी जगह ब्रांडिंग टेक्स्ट ("आदेगांव"/"सिवनी"/"लखनादौन")।
+सिर्फ़ यही बदलना पड़ेगा (कोई feature/logic नहीं बदलता): नया Firebase प्रोजेक्ट (DB + Auth + App Check), `js/config.js` का HQS/HQ_AUTH_EMAIL/JE_EMAIL, `js/firebase.js` का पूरा config, `scripts/backup.js` की अलग HQS/DB_URL, `js/village.js` का VILLAGE_ALIASES (खाली करके नए सिरे से), `index.html` का `#hq-sel` dropdown (hardcoded options), `database.rules.json`/`.firebaserc` (नए project-id और हर HQ के नए Firebase Auth UID के साथ दोबारा बनाना), और सभी जगह ब्रांडिंग टेक्स्ट ("आदेगांव"/"सिवनी"/"लखनादौन")।

@@ -1,0 +1,46 @@
+{
+  "rules": {
+    "CAT_NAMES": {
+      ".read": "auth != null",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com'"
+    },
+    "HOME_SCORECARD": {
+      ".read": "auth != null",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com' && (!newData.exists() || !data.child('ts').exists() || newData.child('ts').val() >= data.child('ts').val())"
+    },
+    "आदेगांव": {
+      ".read": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'Jm8txywdH1gmNmvODYPMpNO3at33'",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'Jm8txywdH1gmNmvODYPMpNO3at33'",
+      "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
+    },
+    "पिंडरई": {
+      ".read": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === '15ABFlksdpf0gh7eXNjcJNgaOEy2'",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === '15ABFlksdpf0gh7eXNjcJNgaOEy2'",
+      "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
+    },
+    "जोबा": {
+      ".read": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'mH467iTWo8cZH8vl9efBaTfpp7r2'",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'mH467iTWo8cZH8vl9efBaTfpp7r2'",
+      "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
+    },
+    "पाटन": {
+      ".read": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'qitd6m0UWzRvEHiYpna1XOYz3yq2'",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'qitd6m0UWzRvEHiYpna1XOYz3yq2'",
+      "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
+    },
+    "बीबी": {
+      ".read": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'e0UGSD4Aa6drRkkwWTIKAYwjYq62'",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'e0UGSD4Aa6drRkkwWTIKAYwjYq62'",
+      "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
+    },
+    "मढ़ी": {
+      ".read": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'elaQYR70BJc49A4jBrljiTMmCqw2'",
+      ".write": "auth.token.email === 'pradeepks2015@gmail.com' || auth.uid === 'elaQYR70BJc49A4jBrljiTMmCqw2'",
+      "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
+    },
+    "$other": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
