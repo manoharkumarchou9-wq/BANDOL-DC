@@ -112,6 +112,42 @@ test.describe('बूट और login', () => {
     await page.reload();
     await page.waitForFunction(() => document.getElementById('login-screen').classList.contains('active'), null, { timeout: 15000 });
   });
+
+  test('html/body और सभी scroll-containers पर overscroll-behavior-y सेट रहे — वरना native pull-to-refresh पूरा पेज reload करके गलती से logout कर देती है (v9.62 के structural scroll-fix में यह चुपचाप गायब हो गया था, बिना test के किसी को पता नहीं चला)', async ({ page }) => {
+    await openApp(page);
+    const val = await page.evaluate(() => getComputedStyle(document.body).overscrollBehaviorY);
+    expect(val).toBe('none');
+    await loginLineman(page);
+    const containers = ['.main-scroll', '.msheet', '.preview-box', '.prev-rmk-list', '.log-list'];
+    for (const sel of containers) {
+      const cv = await page.evaluate((s) => {
+        var el = document.querySelector(s);
+        return el ? getComputedStyle(el).overscrollBehaviorY : null;
+      }, sel);
+      expect(cv, sel + ' पर overscroll-behavior-y होना चाहिए').toBe('contain');
+    }
+  });
+
+  test('"वापस" बटन से बार-बार पीछे जाकर login screen तक पहुंचने पर logout से पहले पूछे — बिना पूछे logout जैसा महसूस न हो (v9.59)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    // goBack पहले activeCat को "घरेलू" पर रीसेट करके रुक जाता है (पहले श्रेणी पर लौटना पहला कदम है) —
+    // यहां सीधे उस अवस्था पर पहुंचकर logout-confirm वाला अगला कदम जांचते हैं
+    await page.evaluate(() => { activeCat = "घरेलू"; });
+    const askedMsg = await page.evaluate(() => new Promise((resolve) => {
+      var msg = null;
+      window.confirm = function (m) { msg = m; return false; }; // 'नहीं' चुना
+      document.getElementById('back-btn').click();
+      setTimeout(() => resolve(msg), 200);
+    }));
+    expect(askedMsg).toContain('लॉगआउट');
+    // 'नहीं' चुनने पर app-screen पर ही रहे
+    expect(await page.evaluate(() => document.getElementById('app-screen').classList.contains('active'))).toBe(true);
+
+    await page.evaluate(() => { window.confirm = function () { return true; }; }); // 'हां' चुना
+    await page.click('#back-btn');
+    await page.waitForFunction(() => document.getElementById('login-screen').classList.contains('active'), null, { timeout: 15000 });
+  });
 });
 
 test.describe('रोल-आधारित UI', () => {
