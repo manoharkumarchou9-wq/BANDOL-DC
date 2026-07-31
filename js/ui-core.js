@@ -327,6 +327,7 @@ function buildUI(){
     var el=document.getElementById(id);
     if(el) el.style.display=CU.role==="supervisor"?"flex":"none";
   });
+  if(typeof refreshLogBadge==="function") refreshLogBadge();
   buildHQTabs(); buildCatTabs(); buildActionBtns();
   _profilePhotoCache=null; loadProfilePhoto();
 }

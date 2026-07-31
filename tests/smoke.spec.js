@@ -1624,6 +1624,43 @@ test.describe('error logging', () => {
     expect(deletedPaths.length).toBe(2);
     await expect(page.locator('#toast')).toContainText('साफ़ हो गए');
   });
+
+  test('refreshLogBadge — पिछली बार देखने के बाद नई server error आई हो तो "एरर लॉग" पर गिनती वाला बैज दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => { localStorage.setItem('dc_log_seen_ts', String(Date.now() - 60000)); }); // 1 मिनट पहले देखा था
+    await page.evaluate(() => new Promise((resolve) => {
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('/LOGS/') > -1 && (!opts || !opts.method)) {
+          const today = new Date().toISOString().slice(0, 10);
+          const isToday = url.indexOf('/LOGS/' + today) > -1;
+          const data = isToday ? { a: { t: new Date().toISOString(), c: 'js-error', m: 'नई गड़बड़ी' } } : null;
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(data) });
+        }
+        return orig(url, opts);
+      };
+      refreshLogBadge();
+      setTimeout(() => { window.fetch = orig; resolve(); }, 300);
+    }));
+    // badge profile-menu (बंद dropdown) के अंदर है, इसलिए ancestor-visibility नहीं — सिर्फ़ अपनी inline style जांचें
+    expect(await page.evaluate(() => document.getElementById('log-badge').style.display)).toBe('inline-block');
+    expect(await page.evaluate(() => document.getElementById('log-badge').textContent)).toBe('1');
+  });
+
+  test('"एरर लॉग" खोलने पर बैज छुप जाए और "देखा हुआ" समय अपडेट हो — दोबारा वही पुरानी errors न गिनी जाएं', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => {
+      document.getElementById('log-badge').textContent = '3';
+      document.getElementById('log-badge').style.display = 'inline-block';
+    });
+    const beforeSeen = await page.evaluate(() => Number(localStorage.getItem('dc_log_seen_ts')) || 0);
+    await page.evaluate(() => openLogModal());
+    expect(await page.evaluate(() => document.getElementById('log-badge').style.display)).toBe('none');
+    const afterSeen = await page.evaluate(() => Number(localStorage.getItem('dc_log_seen_ts')) || 0);
+    expect(afterSeen).toBeGreaterThan(beforeSeen);
+  });
 });
 
 test.describe('प्रोफ़ाइल — बॉटम नेव, एवतार रंग, फ़ोटो अपलोड', () => {
