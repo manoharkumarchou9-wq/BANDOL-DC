@@ -39,8 +39,10 @@
 html{scroll-behavior:smooth;}
 /* मोबाइल Chrome/WebView का native "pull-to-refresh" (ऊपर से नीचे उंगली खींचने पर पूरा पेज reload)
    बंद — वरना पूरा पेज असल में दोबारा लोड हो जाता (JS memory का login session मिट जाता, जिससे
-   दोबारा login करना पड़ता, भले ही user सिर्फ़ लिस्ट scroll करना चाहता हो) */
-html,body{overscroll-behavior-y:none;}
+   दोबारा login करना पड़ता, भले ही user सिर्फ़ लिस्ट scroll करना चाहता हो)। "none" की जगह "contain"
+   — "none" कुछ मोबाइल ब्राउज़र पर पूरे पेज का normal scroll (कंज्यूमर कार्ड लिस्ट सहित) ही रोक देता
+   था; "contain" सिर्फ़ pull-to-refresh रोकता है, सामान्य ऊपर-नीचे scroll को नहीं छूता */
+html,body{overscroll-behavior-y:contain;}
 body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
 .screen{display:none;min-height:100vh;flex-direction:column;}
 .screen.active{display:flex;}
