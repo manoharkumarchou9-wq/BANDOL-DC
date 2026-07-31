@@ -1874,3 +1874,74 @@ test.describe('कैश लिस्ट — एक ही उपभोक्त
     expect(statuses.ghar).toBe('paid');
   });
 });
+
+test.describe('परफ़ॉर्मेंस — बड़ी लिस्ट (कुल उपभोक्ता का असली max 3500 records)', () => {
+  test('renderListWith — पूरे 3500 records "और दिखाएं" से पूरे रेंडर करने में उचित समय लगे', async ({ page }) => {
+    test.setTimeout(60000);
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate((hq) => {
+      var arr = [];
+      for (var i = 0; i < 3500; i++) {
+        arr.push({
+          acc: '9' + String(i).padStart(9, '0'), name: 'उपभोक्ता ' + i, addr: 'गांव ' + (i % 40),
+          status: i % 3 === 0 ? 'paid' : 'pending', amount: 500 + (i % 50) * 10, phone: '9' + String(1000000000 + i),
+          tariff: 'LV1', father: 'पिता ' + i,
+        });
+      }
+      cSet(CU.hq, 'कुल उपभोक्ता', arr);
+      activeCat = 'कुल उपभोक्ता';
+    }, null);
+    const t = await page.evaluate(() => {
+      _renderLimit = 3500;
+      var start = performance.now();
+      renderListWith(cGet(CU.hq, 'कुल उपभोक्ता'));
+      return performance.now() - start;
+    });
+    expect(await page.evaluate(() => document.querySelectorAll('.con-card').length)).toBe(3500);
+    expect(t).toBeLessThan(2000); // CI पर असल में ~200ms लगता है — 10x मार्जिन, फिर भी भविष्य में कोई O(n²)-जैसी गड़बड़ी आने पर पकड़ लेगा
+  });
+
+  test('renderListWith — 3500 records में search/filter उचित समय में हो', async ({ page }) => {
+    test.setTimeout(60000);
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => {
+      var arr = [];
+      for (var i = 0; i < 3500; i++) {
+        arr.push({ acc: '9' + String(i).padStart(9, '0'), name: 'उपभोक्ता ' + i, addr: 'गांव ' + (i % 40), status: i % 3 === 0 ? 'paid' : 'pending', amount: 500 });
+      }
+      cSet(CU.hq, 'कुल उपभोक्ता', arr);
+      activeCat = 'कुल उपभोक्ता';
+      document.getElementById('search-inp').value = 'उपभोक्ता 34';
+    });
+    const t = await page.evaluate(() => {
+      var start = performance.now();
+      renderList();
+      return performance.now() - start;
+    });
+    expect(t).toBeLessThan(1000);
+  });
+
+  test('_vgComputeRows — एक HQ के सभी categories मिलाकर गांव-वार जोड़ने में उचित समय लगे', async ({ page }) => {
+    test.setTimeout(60000);
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => {
+      var cats = ['कुल उपभोक्ता', 'घरेलू', 'व्यवसाय', 'कृषि'];
+      cats.forEach(function (cat) {
+        var arr = [];
+        for (var i = 0; i < 1000; i++) {
+          arr.push({ acc: cat + '_' + i, name: 'उपभोक्ता ' + i, addr: 'गांव ' + (i % 50), status: i % 2 === 0 ? 'paid' : 'pending', amount: 500 });
+        }
+        cSet('आदेगांव', cat, arr);
+      });
+    });
+    const t = await page.evaluate(() => {
+      var start = performance.now();
+      _vgComputeRows('आदेगांव');
+      return performance.now() - start;
+    });
+    expect(t).toBeLessThan(2000);
+  });
+});
