@@ -255,7 +255,10 @@ function doLogin(){
 // (असली secret PIN ही है, यह prefix कोई गोपनीयता नहीं जोड़ता, सिर्फ़ Firebase की न्यूनतम लंबाई पूरी करता है)
 function _hqAuthPassword(pin){ return "vasuli-"+pin; }
 
-function _finishLogin(name){
+function _finishLogin(name,silent){
+  // ताकि pull-to-refresh या कोई और असली page reload login session न मिटाए — reload के बाद
+  // startApp() इसी से चुपचाप वापस अंदर ले आता है, दोबारा login नहीं करना पड़ता
+  try{sessionStorage.setItem("dc_cu",JSON.stringify(CU));}catch(e){}
   activeHQ=CU.hq; activeFilter="all";
   rebuildCatsForHQ(activeHQ);
   activeCat=CATS[0];
@@ -266,7 +269,7 @@ function _finishLogin(name){
   fbGet(activeHQ,activeCat,function(data){
     renderSummaryWith(data); renderListWith(data);
     startListen(activeHQ,activeCat);
-    hideLoader(); toast("स्वागत है "+name+"!","ok");
+    hideLoader(); if(!silent) toast("स्वागत है "+name+"!","ok");
     setTimeout(prefetchAll,1500); // सभी लिस्ट offline के लिए download
     startDevicePing(); // यह device किस app version पर है — Firebase पर दर्ज करें
   });
@@ -283,6 +286,7 @@ function doLogout(askConfirm){
   stopListen();
   if(catNamesTimer){clearInterval(catNamesTimer);catNamesTimer=null;}
   stopDevicePing();
+  try{sessionStorage.removeItem("dc_cu");}catch(e){}
   CU=null; selectedRole="";
   document.getElementById("app-screen").classList.remove("active");
   document.getElementById("login-screen").classList.add("active");

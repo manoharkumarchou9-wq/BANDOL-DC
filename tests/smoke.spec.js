@@ -67,6 +67,27 @@ test.describe('बूट और login', () => {
     await page.click('.login-btn');
     await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'));
   });
+
+  test('login session reload में बना रहे — pull-to-refresh जैसा असली page reload दोबारा login न मांगे', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page, 'रिलोड लाइनमैन');
+    expect(await page.evaluate(() => sessionStorage.getItem('dc_cu'))).toContain('रिलोड लाइनमैन');
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
+    expect(await page.evaluate(() => document.getElementById('login-screen').classList.contains('active'))).toBe(false);
+    expect(await page.evaluate(() => CU && CU.name)).toBe('रिलोड लाइनमैन');
+    // चुपचाप वापस आया — "स्वागत है" toast दोबारा न दिखे
+    expect(await page.evaluate(() => document.getElementById('toast').classList.contains('show'))).toBe(false);
+  });
+
+  test('explicit logout के बाद session साफ़ हो जाए — अगला reload login screen पर ही रुके', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => doLogout(false));
+    expect(await page.evaluate(() => sessionStorage.getItem('dc_cu'))).toBeNull();
+    await page.reload();
+    await page.waitForFunction(() => document.getElementById('login-screen').classList.contains('active'), null, { timeout: 15000 });
+  });
 });
 
 test.describe('रोल-आधारित UI', () => {
@@ -1598,12 +1619,12 @@ test.describe('प्रोफ़ाइल — बॉटम नेव, एवत
     expect(after).toBe('dark');
     expect(await page.evaluate(() => localStorage.getItem('dc_theme'))).toBe('dark');
     await expect(page.locator('#theme-switch-btn')).toHaveClass(/\bon\b/);
-    // reload — theme flash न हो, तुरंत dark लागू हो
+    // reload — theme flash न हो, तुरंत dark लागू हो; login session भी बना रहे (pull-to-refresh जैसे
+    // असली reload से logout न हो — सिर्फ़ dc_cu session-storage से चुपचाप वापस अंदर आ जाए)
     await page.reload();
-    await page.waitForFunction(() => document.getElementById('login-screen').classList.contains('active'), null, { timeout: 15000 });
+    await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
     expect(await page.evaluate(() => document.documentElement.getAttribute('data-theme'))).toBe('dark');
     // वापस light पर टॉगल करने पर साफ़ हो जाए
-    await loginJE(page);
     await page.evaluate(() => openProfileModal());
     await page.evaluate(() => toggleTheme());
     expect(await page.evaluate(() => document.documentElement.getAttribute('data-theme'))).toBe('light');
