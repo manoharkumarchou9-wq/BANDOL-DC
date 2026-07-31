@@ -1750,3 +1750,39 @@ test.describe('फोन-नंबर मॉडल — दो तरह के �
     expect(await page.evaluate(() => localStorage.getItem('dc_ph_msgtype'))).toBe('reminder');
   });
 });
+
+test.describe('"बाकी/वसूल" filter चुनकर HQ बदलने पर सही रीसेट हो (bug: वसूल entry बाकी में दिखना)', () => {
+  test('"बाकी" filter चुनकर दूसरे HQ पर जाने पर filter बटन भी वापस "सभी" दिखे, अंदर से भी activeFilter="all" हो', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.click('[data-f="pending"]');
+    await expect(page.locator('[data-f="pending"]')).toHaveClass(/active-pending/);
+    await page.evaluate(() => {
+      var tabs = document.querySelectorAll('#hq-tabs .hq-tab');
+      tabs[1].click(); // कोई दूसरा HQ
+    });
+    await page.waitForFunction(() => typeof activeFilter !== 'undefined' && activeFilter === 'all');
+    expect(await page.evaluate(() => document.querySelector('[data-f="all"]').className)).toContain('active-all');
+    expect(await page.evaluate(() => document.querySelector('[data-f="pending"]').className)).toBe('filter-btn');
+  });
+});
+
+test.describe('कैश लिस्ट — एक ही उपभोक्ता कई categories में हो तो सभी में status मिले', () => {
+  test('_applyCashMatched के बाद reconcileHQ से बाकी categories में भी paid status मिल जाए', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => {
+      activeHQ = 'आदेगांव';
+      cSet('आदेगांव', 'कुल उपभोक्ता', [{ acc: '1134022288', name: 'टेस्ट उपभोक्ता', status: 'pending', amount: 500 }]);
+      cSet('आदेगांव', 'घरेलू', [{ acc: '1134022288', name: 'टेस्ट उपभोक्ता', status: 'pending', amount: 500 }]);
+      CASH_IVRS = ['1134022288'];
+    });
+    await page.evaluate(() => _applyCashMatched(['आदेगांव']));
+    const statuses = await page.evaluate(() => ({
+      kul: cGet('आदेगांव', 'कुल उपभोक्ता')[0].status,
+      ghar: cGet('आदेगांव', 'घरेलू')[0].status,
+    }));
+    expect(statuses.kul).toBe('paid');
+    expect(statuses.ghar).toBe('paid');
+  });
+});

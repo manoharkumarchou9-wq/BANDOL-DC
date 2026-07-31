@@ -328,7 +328,7 @@ function _applyCashMatched(hqs){
   btn.textContent="⏳ mark हो रहा है...";
   var ivrs={};CASH_IVRS.forEach(function(x){ivrs[x]=1;});
   var now=new Date(),dateStr=now.toLocaleDateString("hi-IN"),dtStr=now.toLocaleString("hi-IN"),ts=Date.now();
-  var matched={},newly=0,already=0,tabsChanged=0;
+  var matched={},newly=0,already=0,tabsChanged=0,reconciled=0;
   hqs.forEach(function(hq){
     for(var i=0;i<CATS_DEFAULT.length;i++){
       var cat=(i>=4)?getCatName(hq,i):CATS_DEFAULT[i];
@@ -349,12 +349,18 @@ function _applyCashMatched(hqs){
       });
       if(changed){fbSet(hq,cat,d,prevSnap,null);tabsChanged++;}
     }
+    // एक ही उपभोक्ता कई categories में दिखता है (जैसे "कुल उपभोक्ता" + अपनी असली tariff category) —
+    // ऊपर सिर्फ़ वही category paid हुई जिसमें IVRS सीधे मैच हुआ; बाकी categories में वही acc अब भी
+    // "बाकी" दिखता रह जाता (यही bug था — "बाकी" filter में एक already-वसूल entry दिखना)।
+    // reconcileHQ हर category में status मिलाकर बाकी सभी को भी paid कर देता है
+    reconciled+=reconcileHQ(hq);
   });
   var mCount=Object.keys(matched).length,noMatch=CASH_IVRS.length-mCount;
   CASH_NOMATCH=CASH_IVRS.filter(function(x){return !matched[x];});
   document.getElementById("cash-result").innerHTML=
     "✅ <b style='color:var(--green);'>"+newly+"</b> नई वसूली दर्ज ("+tabsChanged+" tabs में)<br>"+
     (already?"ℹ "+already+" records पहले से वसूल थे<br>":"")+
+    (reconciled?"🔁 "+reconciled+" record का status बाकी categories में भी मिलाया<br>":"")+
     (noMatch?"⚠ <b style='color:var(--gold2);'>"+noMatch+"</b> IVRS किसी list में नहीं मिले<br><button class='mbtn' style='margin-top:8px;background:#37474f;color:#fff;font-size:13px;padding:9px 14px;' onclick='downloadNoMatch()'>⬇ नहीं मिले IVRS की Excel डाउनलोड करें</button>":"सभी IVRS match हो गए 🎉");
   btn.style.display="none";btn.disabled=false;btn.textContent="✔ सभी को वसूल करें";
   toast("✅ कैश लिस्ट लागू — "+newly+" वसूली दर्ज","ok");
