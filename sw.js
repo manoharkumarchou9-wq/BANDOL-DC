@@ -1,10 +1,10 @@
-var CACHE_NAME="adegaon-dc-v84";
+var CACHE_NAME="adegaon-dc-v85";
 var CDN=[
-  "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js",
-  "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js",
+  "./vendor/papaparse.min.js",
+  "./vendor/xlsx.full.min.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
