@@ -103,20 +103,29 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .stxt{color:#fff;}
 .stxt.off{color:#ffe3e3;}
 .stime{color:rgba(255,255,255,.88);font-size:10px;}
-.app-header{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(18,73,113,.06);overflow:hidden;}
-.hdr-tower-deco{position:absolute;top:-14px;right:-6px;width:92px;height:auto;opacity:.12;pointer-events:none;z-index:0;}
-.app-header::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 60% 100% at 100% 0%,rgba(38,128,201,.07),transparent 70%);pointer-events:none;z-index:0;}
+/* बोल्ड/मॉडर्न हैडर — sync-bar वाला ही signature gradient यहां भी, ताकि दोनों मिलकर एक बड़ा,
+   रंगीन, "floating header card" जैसा दिखें (नीचे रेडियस देकर स्क्रीन से अलग उठा हुआ अहसास) */
+.app-header{background:var(--grad-brand);padding:12px 14px 10px;position:sticky;top:0;z-index:100;box-shadow:0 8px 24px -8px rgba(18,73,113,.4);overflow:hidden;border-radius:0 0 22px 22px;}
+.hdr-tower-deco{position:absolute;top:-14px;right:-6px;width:100px;height:auto;opacity:.16;pointer-events:none;z-index:0;filter:brightness(4);}
+.app-header::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 100% at 100% 0%,rgba(255,255,255,.10),transparent 70%);pointer-events:none;z-index:0;}
 .app-header>.hdr1,.app-header>.hq-scroll{position:relative;z-index:1;}
-.hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.hdr-left{display:flex;align-items:center;gap:6px;}
+.hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.hdr-left{display:flex;align-items:center;gap:8px;}
 .hdr-right{display:flex;align-items:center;gap:5px;}
-.hdr-icon{width:34px;height:34px;border-radius:10px;background:var(--grad-brand2);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 10px -2px rgba(18,73,113,.35);}
-.hdr-title{font-family:"Baloo 2",cursive;font-size:14px;font-weight:800;color:var(--gold2);}
-.hdr-sub{font-size:10px;color:var(--muted);}
-.hbtn{border:none;border-radius:9px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px -1px rgba(0,0,0,.18);transition:transform .12s;}
+.hdr-icon{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 3px 10px -2px rgba(0,0,0,.25);}
+.hdr-title{font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;color:#fff;letter-spacing:.2px;}
+.hdr-sub{font-size:10.5px;color:rgba(255,255,255,.82);font-weight:600;}
+.hbtn{border:none;border-radius:10px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px -1px rgba(0,0,0,.3);transition:transform .12s;}
 .hbtn:active{transform:scale(.94);}
-.user-pill{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 9px 4px 4px;cursor:pointer;position:relative;transition:box-shadow .15s;}
-.user-pill:active{box-shadow:0 0 0 3px rgba(38,128,201,.12);}
+.user-pill{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 9px 4px 4px;cursor:pointer;position:relative;transition:box-shadow .15s;}
+.user-pill:active{box-shadow:0 0 0 3px rgba(255,255,255,.18);}
+.user-pill .uname{color:#fff;}
+.user-pill>span{color:rgba(255,255,255,.85) !important;}
+/* HQ tabs अब रंगीन gradient हैडर के ऊपर बैठते हैं — कॉन्ट्रास्ट के हिसाब से अलग स्टाइल चाहिए
+   (village-modal में वही .hq-tab class सादे background पर भी दोहराया जाता है, इसलिए यहीं scope किया) */
+.app-header .hq-tab{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.9);}
+.app-header .hq-tab.active{background:#fff;color:var(--gold2);border-color:#fff;box-shadow:0 3px 8px -2px rgba(0,0,0,.3);}
+#back-btn{color:#fff !important;}
 /* fixed इसलिए — मोबाइल पर .hdr-right scrollable है और absolute menu उसमें कटता (clip) था */
 .logout-menu{display:none;position:fixed;top:56px;right:10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:6px;z-index:600;min-width:210px;box-shadow:0 14px 34px rgba(0,0,0,.28);}
 :root[data-theme="dark"] .logout-menu{box-shadow:0 14px 34px rgba(0,0,0,.6);}
@@ -131,8 +140,8 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .hq-tab{flex-shrink:0;padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:"Noto Sans Devanagari",sans-serif;white-space:nowrap;transition:all .15s;}
 .hq-tab.active{background:var(--grad-brand2);color:#fff;border-color:transparent;box-shadow:0 3px 8px -2px rgba(18,73,113,.4);}
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:10px 12px;}
-.sbox{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 6px;text-align:center;box-shadow:var(--shadow-sm);transition:transform .15s;}
-.snum{font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;line-height:1;}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:11px 6px;text-align:center;box-shadow:var(--shadow-sm);transition:transform .15s;}
+.snum{font-family:"Baloo 2",cursive;font-size:18px;font-weight:800;line-height:1;}
 .slbl{font-size:9px;color:var(--muted);margin-top:3px;font-weight:600;}
 .sbox:nth-child(2) .snum{color:var(--green);}
 .sbox:nth-child(3) .snum{color:var(--red);}
@@ -168,15 +177,15 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .filter-btn.active-all{background:var(--card);color:var(--text);box-shadow:var(--shadow-sm);}
 .filter-btn.active-paid{background:rgba(0,200,150,.15);color:var(--green);border-color:var(--green);}
 .filter-btn.active-pending{background:rgba(255,77,109,.12);color:var(--red);border-color:var(--red);}
-.con-list{padding:0 12px 80px;}
-.con-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px 15px;margin-bottom:11px;border-left:4px solid var(--border);box-shadow:var(--shadow-card);transition:transform .15s,box-shadow .15s;animation:fadeUp .35s ease-out;}
+.con-list{padding:0 12px 96px;}
+.con-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:16px 17px;margin-bottom:13px;border-left:5px solid var(--border);box-shadow:var(--shadow-card);transition:transform .15s,box-shadow .15s;animation:fadeUp .35s ease-out;}
 .con-card:active{transform:scale(.985);}
 .con-card.paid{border-left-color:var(--green);background:linear-gradient(180deg,rgba(8,107,82,.06) 0%,var(--card) 64px);}
 .con-card.pending{border-left-color:var(--red);background:linear-gradient(180deg,rgba(196,31,61,.06) 0%,var(--card) 64px);}
-.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
-.cc-name{font-family:"Baloo 2",cursive;font-size:14.5px;font-weight:700;letter-spacing:.1px;}
-.cc-rank{font-size:9px;font-weight:700;min-width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--gold);border:1px solid var(--border);flex-shrink:0;}
-.cc-amt{font-family:"Baloo 2",cursive;font-size:22px;font-weight:800;color:var(--gold);margin-bottom:7px;letter-spacing:.2px;}
+.cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.cc-name{font-family:"Baloo 2",cursive;font-size:15.5px;font-weight:700;letter-spacing:.1px;}
+.cc-rank{font-size:9px;font-weight:700;min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--gold);border:1px solid var(--border);flex-shrink:0;}
+.cc-amt{font-family:"Baloo 2",cursive;font-size:24px;font-weight:800;color:var(--gold);margin-bottom:8px;letter-spacing:.2px;}
 .cc-amt span{font-size:11px;color:var(--muted);font-weight:600;}
 .cc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:7px;}
 .chip{font-size:10px;padding:3px 8px;border-radius:12px;box-shadow:0 1px 2px rgba(18,73,113,.06);}
@@ -218,7 +227,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .msheet::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad-brand2);border-radius:26px 26px 0 0;}
 .moverlay.open .msheet{transform:translateY(0);}
 .mhandle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:10px auto 14px;}
-.mtitle{font-family:"Baloo 2",cursive;font-size:17px;font-weight:800;margin-bottom:18px;color:var(--gold2);}
+.mtitle{font-family:"Baloo 2",cursive;font-size:19px;font-weight:800;margin-bottom:18px;color:var(--gold2);}
 .fg{margin-bottom:12px;}
 .fg label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;display:block;}
 .fi,.fs,.fta{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:"Noto Sans Devanagari",sans-serif;font-size:13px;outline:none;appearance:none;transition:border-color .15s;}
@@ -264,7 +273,8 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .tmpl-btn{width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:"Noto Sans Devanagari",sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:transform .12s;}
 .tmpl-btn:active{transform:scale(.97);}
 /* Remark modal - history section */
-.bottom-nav{display:flex;justify-content:space-around;background:var(--surface);border-top:1px solid var(--border);padding:7px 4px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -4px 16px rgba(18,73,113,.07);flex-shrink:0;position:relative;z-index:50;}
+/* फ्लोटिंग बॉटम-नेव — किनारों से थोड़ा हटकर, गोल कोने, ऊपर उठा हुआ अहसास (modern app जैसा) */
+.bottom-nav{display:flex;justify-content:space-around;background:var(--surface);border:1px solid var(--border);margin:0 10px calc(10px + env(safe-area-inset-bottom));border-radius:22px;padding:8px 4px;box-shadow:var(--shadow-glow);flex-shrink:0;position:relative;z-index:50;}
 .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--muted);font-family:"Noto Sans Devanagari",sans-serif;font-size:10px;font-weight:600;padding:5px 12px;cursor:pointer;flex:1;transition:color .15s;}
 .bnav-item.active{color:var(--gold);}
 .bnav-ico{font-size:18px;line-height:1;padding:4px 14px;border-radius:14px;transition:background .2s,transform .15s;}
