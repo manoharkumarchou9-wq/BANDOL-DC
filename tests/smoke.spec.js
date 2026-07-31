@@ -1716,3 +1716,37 @@ test.describe('होम पेज डिस्प्ले बोर्ड — 
     expect(body.showBoard).toBe('0');
   });
 });
+
+test.describe('फोन-नंबर मॉडल — दो तरह के संदेश (सामान्य रिमाइंडर / विच्छेदन सूचना धारा 56)', () => {
+  test('डिफ़ॉल्ट रूप से "सामान्य रिमाइंडर" चुना हो — नाम सहित सही sms/WhatsApp लिंक बने', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => openPhModal('राम कुमार', '9876543210', 'ACC1', 500));
+    const active = await page.evaluate(() => document.querySelector('.ph-mt-btn.active').getAttribute('data-type'));
+    expect(active).toBe('reminder');
+    const wa = await page.evaluate(() => decodeURIComponent(document.getElementById('ph-wa-btn').href.split('text=')[1]));
+    expect(wa).toContain('राम कुमार');
+    expect(wa).not.toContain('धारा 56');
+  });
+
+  test('"विच्छेदन सूचना" चुनने पर नाम + आदेगांव बिजली वितरण केंद्र सिवनी वाला संदेश बने, और याद रह जाए', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => openPhModal('सीता बाई', '9876500000', 'ACC2', 3107));
+    await page.evaluate(() => _phSelectMsgType('disconnect'));
+    const wa = await page.evaluate(() => decodeURIComponent(document.getElementById('ph-wa-btn').href.split('text=')[1]));
+    expect(wa).toContain('सीता बाई');
+    expect(wa).toContain('धारा 56');
+    expect(wa).toContain('आदेगांव बिजली वितरण केंद्र सिवनी');
+    expect(wa).not.toContain('MPPKVVCL');
+    expect(await page.evaluate(() => localStorage.getItem('dc_ph_msgtype'))).toBe('disconnect');
+    // मॉडल दोबारा खोलने पर वही (याद किया हुआ) टाइप चुना हो — पर दूसरा विकल्प भी मौजूद रहे
+    await page.evaluate(() => closePhModal());
+    await page.evaluate(() => openPhModal('गीता देवी', '9876511111', 'ACC3', 800));
+    expect(await page.evaluate(() => document.querySelector('.ph-mt-btn.active').getAttribute('data-type'))).toBe('disconnect');
+    expect(await page.evaluate(() => document.querySelectorAll('.ph-mt-btn').length)).toBe(2);
+    // वापस "सामान्य रिमाइंडर" पर बदल सकें
+    await page.evaluate(() => _phSelectMsgType('reminder'));
+    expect(await page.evaluate(() => localStorage.getItem('dc_ph_msgtype'))).toBe('reminder');
+  });
+});

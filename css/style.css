@@ -309,7 +309,11 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .ph-overlay.open .ph-sheet{transform:translateY(0);}
 .ph-handle{width:34px;height:4px;border-radius:2px;background:var(--border);margin:8px auto 14px;}
 .ph-name{font-family:"Baloo 2",cursive;font-size:16px;font-weight:800;color:var(--gold2);margin-bottom:3px;}
-.ph-num{font-size:13px;color:var(--muted);margin-bottom:20px;letter-spacing:.5px;}
+.ph-num{font-size:13px;color:var(--muted);margin-bottom:14px;letter-spacing:.5px;}
+.ph-msgtype{display:flex;gap:8px;margin-bottom:16px;}
+.ph-mt-btn{flex:1;padding:9px 6px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:"Noto Sans Devanagari",sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;transition:transform .12s,background .15s,border-color .15s,color .15s;text-align:center;line-height:1.3;}
+.ph-mt-btn:active{transform:scale(.97);}
+.ph-mt-btn.active{background:linear-gradient(135deg,#0fa578,#0a8c68 55%,var(--green));border-color:transparent;color:#fff;}
 .ph-btns{display:flex;flex-direction:column;gap:10px;}
 .ph-btn{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;border:1px solid var(--border);background:var(--card);cursor:pointer;text-decoration:none;transition:transform .12s,background .15s;}
 .ph-btn:active{transform:scale(.98);opacity:.85;}

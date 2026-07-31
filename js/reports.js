@@ -1,19 +1,47 @@
 // ─── PHONE ACTION MODAL ───────────────────────────────────────────────────────
+// दो तरह के संदेश टेम्पलेट — "सामान्य रिमाइंडर" (पुराना) और "विच्छेदन सूचना धारा 56" (नया, कानूनी
+// भाषा वाला)। जो टाइप आख़िरी बार चुना गया वह localStorage में याद रहता है — अगली बार सीधे वही चुना
+// हुआ दिखता/भेजा जाता है, पर दूसरा विकल्प भी हमेशा वहीं मौजूद रहता है बदलने के लिए
+var _phCtx=null;
+function _phBuildMsg(type,ctx){
+  if(type==="disconnect"){
+    return "⚠️ वैधानिक सूचना\n"+ctx.name+" जी, आपके विद्युत संयोजन"+
+      (ctx.acc?" क्रमांक "+ctx.acc:"")+" पर"+
+      (ctx.amtN?" ₹"+ctx.amtN.toLocaleString("hi-IN"):"")+
+      " बकाया है। विद्युत अधिनियम, 2003 की धारा 56 के अंतर्गत यह विच्छेदन सूचना है। 15 दिवस के भीतर भुगतान न होने पर नियमानुसार विद्युत आपूर्ति विच्छेदित की जा सकती है।"+
+      " कृपया आज ही भुगतान करें ताकि बिजली विच्छेदन, विलंब शुल्क और असुविधा से बचा जा सके।"+
+      "\n– आदेगांव बिजली वितरण केंद्र सिवनी"+
+      "\n(नोट: यदि भुगतान कर दिया है तो कृपया इस संदेश को अनदेखा करें)";
+  }
+  return "नमस्ते "+ctx.name+" जी, आपका बिजली संयोजन"+
+    (ctx.acc?" क्रमांक "+ctx.acc:"")+
+    " पर वर्तमान माह तक"+
+    (ctx.amtN?" "+ctx.amtN.toLocaleString("hi-IN")+"/- रूपए":"")+
+    " बिजली बिल बकाया है। कृपया बिजली ऑफिस, लाइन मैन, अथवा ऑनलाइन माध्यम से शीघ्र भुगतान करें।"+
+    "\nधन्यवाद,\nआदेगांव बिजली वितरण केंद्र"+
+    "\n(नोट: यदि भुगतान कर दिया है तो कृपया इस संदेश को अनदेखा करें)";
+}
+function _phApplyMsgType(type){
+  if(!_phCtx) return;
+  try{localStorage.setItem("dc_ph_msgtype",type);}catch(e){}
+  document.querySelectorAll(".ph-mt-btn").forEach(function(b){
+    b.classList.toggle("active",b.getAttribute("data-type")===type);
+  });
+  var msg=_phBuildMsg(type,_phCtx);
+  document.getElementById("ph-sms-btn").href="sms:"+_phCtx.clean+"?body="+encodeURIComponent(msg);
+  document.getElementById("ph-wa-btn").href="https://wa.me/91"+_phCtx.clean+"?text="+encodeURIComponent(msg);
+}
+function _phSelectMsgType(type){ _phApplyMsgType(type); }
 function openPhModal(name, phone, acc, amt){
   var clean=phone.replace(/\D/g,"");
-  var amtN=Number(amt)||0;
-  var msg="नमस्ते "+name+" जी, आपका बिजली संयोजन"+
-    (acc?" क्रमांक "+acc:"")+
-    " पर वर्तमान माह तक"+
-    (amtN?" "+amtN.toLocaleString("hi-IN")+"/- रूपए":"")+
-    " बिजली बिल बकाया है। कृपया बिजली ऑफिस, लाइन मैन, अथवा ऑनलाइन माध्यम से शीघ्र भुगतान करें।";
-  var sign="\nधन्यवाद,\nआदेगांव बिजली वितरण केंद्र\n(नोट: यदि भुगतान कर दिया है तो कृपया इस संदेश को अनदेखा करें)";
-  var waMsg=encodeURIComponent(msg+sign);
+  _phCtx={name:name,acc:acc,amtN:Number(amt)||0,clean:clean};
   document.getElementById("ph-name").textContent=name;
   document.getElementById("ph-num").textContent="📞 "+phone;
   document.getElementById("ph-call-btn").href="tel:"+clean;
-  document.getElementById("ph-sms-btn").href="sms:"+clean+"?body="+encodeURIComponent(msg+sign);
-  document.getElementById("ph-wa-btn").href="https://wa.me/91"+clean+"?text="+waMsg;
+  var savedType="reminder";
+  try{savedType=localStorage.getItem("dc_ph_msgtype")||"reminder";}catch(e){}
+  if(savedType!=="disconnect") savedType="reminder";
+  _phApplyMsgType(savedType);
   document.getElementById("ph-overlay").classList.add("open");
 }
 function closePhModal(){document.getElementById("ph-overlay").classList.remove("open");}
