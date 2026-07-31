@@ -37,6 +37,10 @@
 .org-banner{background:var(--grad-brand);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;font-family:"Baloo 2",cursive;font-weight:800;font-size:14px;letter-spacing:.2px;box-shadow:var(--shadow-glow);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html{scroll-behavior:smooth;}
+/* मोबाइल Chrome/WebView का native "pull-to-refresh" (ऊपर से नीचे उंगली खींचने पर पूरा पेज reload)
+   बंद — वरना पूरा पेज असल में दोबारा लोड हो जाता (JS memory का login session मिट जाता, जिससे
+   दोबारा login करना पड़ता, भले ही user सिर्फ़ लिस्ट scroll करना चाहता हो) */
+html,body{overscroll-behavior-y:none;}
 body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
 .screen{display:none;min-height:100vh;flex-direction:column;}
 .screen.active{display:flex;}
@@ -221,14 +225,14 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
    करता था — पूरा पेज बढ़ जाता, और असली मोबाइल टच-स्क्रॉल पर यही "कार्ड scroll नहीं हो रहे" वाली
    दिक्कत बनता था)। अब .main-scroll ही असली, सही तरीके से bounded scroll-container है */
 #app-screen{height:100vh;height:100dvh;overflow:hidden;}
-.main-scroll{flex:1;min-height:0;overflow-y:auto;}
+.main-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior-y:contain;}
 .loading-overlay{position:fixed;inset:0;z-index:900;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
 .loading-overlay.hidden{display:none;}
 .spinner{width:46px;height:46px;border:3px solid var(--border);border-top-color:var(--gold);border-right-color:var(--gold);border-radius:50%;animation:sp .7s cubic-bezier(.5,0,.5,1) infinite;}
 .loading-text{font-size:13px;color:var(--muted);}
 .moverlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
 .moverlay.open{opacity:1;pointer-events:all;}
-.msheet{background:var(--surface);border-radius:26px 26px 0 0;width:100%;max-height:92vh;overflow-y:auto;border:1px solid var(--border);border-bottom:none;padding:6px 18px 34px;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);position:relative;}
+.msheet{background:var(--surface);border-radius:26px 26px 0 0;width:100%;max-height:92vh;overflow-y:auto;overscroll-behavior-y:contain;border:1px solid var(--border);border-bottom:none;padding:6px 18px 34px;transform:translateY(100%);transition:transform .32s cubic-bezier(.32,.72,0,1);position:relative;}
 .msheet::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--grad-brand2);border-radius:26px 26px 0 0;}
 .moverlay.open .msheet{transform:translateY(0);}
 .mhandle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:10px auto 14px;}
@@ -267,7 +271,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .uz-icon{font-size:28px;margin-bottom:5px;}
 .uz-t{font-size:13px;font-weight:700;margin-bottom:3px;}
 .uz-s{font-size:10px;color:var(--muted);}
-.preview-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:10px;max-height:140px;overflow-y:auto;}
+.preview-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:10px;max-height:140px;overflow-y:auto;overscroll-behavior-y:contain;}
 .prev-row{font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);display:grid;grid-template-columns:2fr 1fr 1fr;gap:4px;}
 .prev-row:last-child{border-bottom:none;}
 .pr-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -297,7 +301,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .prev-rmk-section{margin-bottom:12px;}
 .prev-rmk-hdr{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
 .prev-rmk-hdr span{background:rgba(255,140,66,.2);color:var(--orange);border-radius:10px;padding:1px 7px;font-size:10px;}
-.prev-rmk-list{background:var(--card);border:1px solid var(--border);border-radius:10px;max-height:120px;overflow-y:auto;}
+.prev-rmk-list{background:var(--card);border:1px solid var(--border);border-radius:10px;max-height:120px;overflow-y:auto;overscroll-behavior-y:contain;}
 .prev-rmk-item{padding:7px 10px;border-bottom:1px solid var(--border);font-size:11px;}
 .prev-rmk-item:last-child{border-bottom:none;}
 .prev-rmk-text{color:var(--text);margin-bottom:2px;}
@@ -375,7 +379,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .sc-ov-num{font-family:"Baloo 2",cursive;font-size:18px;font-weight:800;}
 .sc-ov-lbl{font-size:9px;color:var(--muted);margin-top:2px;}
 .log-sec-hdr{font-size:11px;font-weight:700;color:var(--gold2);margin:10px 2px 6px;text-transform:uppercase;letter-spacing:.4px;}
-.log-list{max-height:30vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.log-list{max-height:30vh;overflow-y:auto;overscroll-behavior-y:contain;display:flex;flex-direction:column;gap:6px;}
 .log-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 10px;}
 .log-top{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;}
 .log-ctx{font-size:10px;font-weight:700;color:var(--red);background:rgba(255,77,109,.1);border-radius:6px;padding:1px 7px;}
