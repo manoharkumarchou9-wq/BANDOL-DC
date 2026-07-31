@@ -340,6 +340,12 @@ function buildHQTabs(){
     b.textContent=hq;
     b.onclick=function(){
       activeHQ=hq; activeFilter="all";
+      // filter बटन की दिखावट भी "सभी" पर वापस लाएं — वरना HQ बदलने से पहले "बाकी"/"वसूल" चुना हो तो
+      // वह बटन दिखने में selected ही रह जाता जबकि लिस्ट असल में "सभी" (paid समेत) दिखा रही होती —
+      // यही "बाकी tab में वसूल entry दिखना" वाला bug था
+      document.querySelectorAll(".filter-btn").forEach(function(x){x.className="filter-btn";});
+      var allBtn=document.querySelector("[data-f='all']");
+      if(allBtn) allBtn.className="filter-btn active-all";
       rebuildCatsForHQ(hq);
       activeCat=CATS[0]; // reset to first cat of new HQ
       buildHQTabs();
