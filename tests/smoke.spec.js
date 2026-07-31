@@ -1489,6 +1489,23 @@ test.describe('error logging', () => {
     expect(logs.some((l) => l.c === 'js-error' && l.m.indexOf('uncaught') > -1)).toBe(true);
   });
 
+  test('cross-origin वाली खाली "Script error." लॉग नहीं होती (कोई सुराग नहीं देती, सिर्फ़ शोर) — पर असली errors लॉग होती रहती हैं', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => { try { localStorage.removeItem('dc_logs3'); } catch (e) {} });
+    // ब्राउज़र cross-origin script की error पर बिल्कुल यही खाली signature देता है — filename/lineno/error कुछ नहीं
+    await page.evaluate(() => {
+      window.dispatchEvent(new ErrorEvent('error', { message: 'Script error.', filename: '', lineno: 0, colno: 0, error: null }));
+    });
+    // असली (हमारे कोड जैसी, filename/lineno सहित) error अब भी सामान्य तरीके से लॉग होनी चाहिए
+    await page.evaluate(() => {
+      window.dispatchEvent(new ErrorEvent('error', { message: 'असली गड़बड़ी', filename: 'js/list.js', lineno: 42, error: new Error('असली गड़बड़ी') }));
+    });
+    await page.waitForTimeout(200);
+    const logs = await page.evaluate(() => getLogs());
+    expect(logs.some((l) => l.c === 'js-error' && l.m === 'Script error.')).toBe(false);
+    expect(logs.some((l) => l.c === 'js-error' && l.m.indexOf('असली गड़बड़ी') > -1)).toBe(true);
+  });
+
   test('clearServerLogs — "सभी डिवाइस" वाले (server) logs को DELETE करता है, ताकि JE पुराने ढेर से छुटकारा पा सके', async ({ page }) => {
     await openApp(page);
     await loginJE(page);

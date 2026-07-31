@@ -90,9 +90,14 @@ function logErr(ctx, err, extra){
   }catch(e3){}
 }
 
-// बिना पकड़ी गई हर JS error अपने आप log हो
+// बिना पकड़ी गई हर JS error अपने आप log हो — सिवाय ब्राउज़र के जान-बूझकर छुपाई गई cross-origin
+// "Script error." के (CDN लाइब्रेरी — Firebase/XLSX/PapaParse — के अंदर की error, ब्राउज़र सुरक्षा
+// कारणों से filename/line/detail कुछ नहीं देता) — इसे लॉग करने से कभी कोई सुराग नहीं मिलता, सिर्फ़
+// शोर बनता; असली (हमारे कोड की, same-origin) errors पहले जैसे ही पूरी जानकारी के साथ लॉग होती रहेंगी
 window.addEventListener("error",function(ev){
-  if(ev&&(ev.error||ev.message)) logErr("js-error",ev.error||ev.message,(ev.filename||"").split("/").pop()+":"+(ev.lineno||""));
+  if(!ev) return;
+  if(ev.message==="Script error."&&!ev.filename&&!ev.lineno&&!ev.error) return;
+  if(ev.error||ev.message) logErr("js-error",ev.error||ev.message,(ev.filename||"").split("/").pop()+":"+(ev.lineno||""));
 });
 window.addEventListener("unhandledrejection",function(ev){
   logErr("promise",ev&&ev.reason);
