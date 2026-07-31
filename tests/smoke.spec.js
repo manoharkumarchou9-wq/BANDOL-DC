@@ -54,6 +54,30 @@ test.describe('बूट और login', () => {
     await page.waitForFunction(() => document.querySelectorAll('.sbox').length === 4, null, { timeout: 15000 });
   });
 
+  test('कंज्यूमर कार्ड लिस्ट लंबी हो तो .main-scroll ही अंदर scroll करे, पूरा पेज नहीं (कार्ड scroll न होने वाला bug)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => {
+      var list = document.getElementById('con-list');
+      var html = '';
+      for (var i = 0; i < 60; i++) {
+        html += '<div class="con-card"><div class="cc-top"><div class="cc-name">टेस्ट उपभोक्ता ' + i + '</div></div><div class="cc-amt">1000</div></div>';
+      }
+      list.innerHTML = html;
+    });
+    const dims = await page.evaluate(() => {
+      var ms = document.querySelector('.main-scroll');
+      return {
+        mainScrollScrollable: ms.scrollHeight > ms.clientHeight,
+        docScrollable: document.scrollingElement.scrollHeight > document.scrollingElement.clientHeight + 5,
+      };
+    });
+    expect(dims.mainScrollScrollable).toBe(true);
+    expect(dims.docScrollable).toBe(false); // पूरा पेज/body scroll न करे — सिर्फ़ अंदर की लिस्ट
+    await page.evaluate(() => { document.querySelector('.main-scroll').scrollTop = 300; });
+    expect(await page.evaluate(() => document.querySelector('.main-scroll').scrollTop)).toBeGreaterThan(0);
+  });
+
   test('JE गलत पासवर्ड पर रुकता है, सही पर अंदर जाता है', async ({ page }) => {
     await openApp(page);
     await page.evaluate(() => _saveJEHash('SahiPass#1'));
