@@ -85,6 +85,8 @@ function goBack(){
     }
   }
   // सबसे पीछे — login page पर जाएं (lineman के लिए, या supervisor पहले HQ पर)
+  // बिना पूछे लॉगआउट जैसा महसूस न हो, इसलिए पक्का पूछें
+  if(!confirm("लॉगआउट करना चाहते हैं?"))return;
   goToLogin();
 }
 
