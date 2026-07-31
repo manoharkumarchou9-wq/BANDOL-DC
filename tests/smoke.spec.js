@@ -1610,3 +1610,64 @@ test.describe('प्रोफ़ाइल — बॉटम नेव, एवत
     expect(await page.evaluate(() => localStorage.getItem('dc_theme'))).toBe('light');
   });
 });
+
+test.describe('होम पेज डिस्प्ले बोर्ड — पूरा बोर्ड दिखाने/छुपाने का चुनाव', () => {
+  test('renderHomeSc — showBoard:"0" पर home-sc बिल्कुल खाली रहे (login से पहले किसी को कुछ न दिखे)', async ({ page }) => {
+    await openApp(page);
+    await page.evaluate(() => {
+      HSC = { curPaid: '10', curAmt: '5', lyPaid: '8', lyAmt: '4', showBoard: '0' };
+      renderHomeSc();
+    });
+    expect(await page.evaluate(() => document.getElementById('home-sc').innerHTML.trim())).toBe('');
+  });
+
+  test('renderHomeSc — showBoard न हो (पुराना बोर्ड) या "1" हो तो पहले जैसे दिखता रहे', async ({ page }) => {
+    await openApp(page);
+    const withoutFlag = await page.evaluate(() => {
+      HSC = { curPaid: '10', curAmt: '5', lyPaid: '8', lyAmt: '4' }; // पुराना बोर्ड — showBoard field ही नहीं
+      renderHomeSc();
+      return document.getElementById('home-sc').innerHTML.length;
+    });
+    expect(withoutFlag).toBeGreaterThan(0);
+    const withFlagOn = await page.evaluate(() => {
+      HSC.showBoard = '1';
+      renderHomeSc();
+      return document.getElementById('home-sc').innerHTML.length;
+    });
+    expect(withFlagOn).toBeGreaterThan(0);
+  });
+
+  test('openHscModal — showBoard checkbox default checked रहे (नया बोर्ड या showBoard missing दोनों में)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => { HSC = null; });
+    await page.evaluate(() => openHscModal());
+    expect(await page.locator('#hsc-showboard').isChecked()).toBe(true);
+    await page.evaluate(() => closeHscModal());
+    await page.evaluate(() => { HSC = { curPaid: '10', curAmt: '5' }; }); // पुराना बोर्ड, showBoard field नहीं
+    await page.evaluate(() => openHscModal());
+    expect(await page.locator('#hsc-showboard').isChecked()).toBe(true);
+  });
+
+  test('saveHsc — showBoard अनचेक करके सेव करें तो publish होने वाले data में showBoard:"0" जाए', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const body = await page.evaluate(() => new Promise((resolve) => {
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('HOME_SCORECARD') > -1 && opts && opts.method === 'PUT') {
+          window.fetch = orig;
+          resolve(JSON.parse(opts.body));
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+        }
+        return orig(url, opts);
+      };
+      openHscModal();
+      document.getElementById('hsc-curpaid').value = '10';
+      document.getElementById('hsc-curamt').value = '5';
+      document.getElementById('hsc-showboard').checked = false;
+      saveHsc();
+    }));
+    expect(body.showBoard).toBe('0');
+  });
+});

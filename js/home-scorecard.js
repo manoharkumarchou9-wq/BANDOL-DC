@@ -40,7 +40,9 @@ function toggleBoard(k){BRD_COL[k]=!BRD_COL[k];try{localStorage.setItem("dc_brdc
 function renderHomeSc(){
   var el=document.getElementById("home-sc");
   if(!el)return;
-  if(!HSC){el.innerHTML="";return;}
+  // showBoard="0" यानी JE ने पूरा डिस्प्ले बोर्ड होम पेज से हटाने का चुनाव किया है — पुराने बोर्ड
+  // (जिनमें यह field ही नहीं) पहले जैसे दिखते रहें, इसलिए सिर्फ़ "0" पर ही छुपाएं, undefined पर नहीं
+  if(!HSC||HSC.showBoard==="0"){el.innerHTML="";return;}
   var cp=Number(HSC.curPaid)||0,lp=Number(HSC.lyPaid)||0;
   var ca=Number(HSC.curAmt)||0,la=Number(HSC.lyAmt)||0;
   var dp=cp-lp, da=ca-la;
@@ -383,6 +385,7 @@ function downloadNoMatch(){
 function openHscModal(){
   if(!CU||CU.role!=="supervisor"){toast("सिर्फ JE upload कर सकते हैं","err");return;}
   ["hsc-ason","hsc-curpaid","hsc-curamt","hsc-lypaid","hsc-lyamt","hsc-pbitgt","hsc-pbimonth","hsc-cashdem","hsc-lyfull","hsc-growth","hsc-growmonth","hsc-lyfullpaid","hsc-cntgrowth","hsc-cumcoll","hsc-cuminput","hsc-crputgt","hsc-bldunits","hsc-curdem","hsc-betgt","hsc-cetgt","hsc-atctgt"].forEach(function(id){document.getElementById(id).value="";});
+  document.getElementById("hsc-showboard").checked=!(HSC&&HSC.showBoard==="0");
   document.getElementById("hsc-showcrpu").checked=!(HSC&&HSC.showCrpu==="0");
   document.getElementById("hsc-showeff").checked=!(HSC&&HSC.showEff==="0");
   if(HSC){
@@ -420,6 +423,7 @@ function saveHsc(){
     lyAmt:document.getElementById("hsc-lyamt").value.replace(/,/g,"").trim(),
     pbiTgt:document.getElementById("hsc-pbitgt").value.replace(/,/g,"").trim(),
     pbiMonth:document.getElementById("hsc-pbimonth").value.trim(),
+    showBoard:document.getElementById("hsc-showboard").checked?"1":"0",
     showCrpu:document.getElementById("hsc-showcrpu").checked?"1":"0",
     showEff:document.getElementById("hsc-showeff").checked?"1":"0",
     cashDem:document.getElementById("hsc-cashdem").value.replace(/,/g,"").trim(),
