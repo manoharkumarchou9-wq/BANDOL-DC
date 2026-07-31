@@ -335,8 +335,18 @@ function fallbackCopy(txt){
 // ── नया version आते ही चेतावनी: device लंबे समय खुला पड़ा रहे तो पुराना JS memory में ही रह जाता है
 // (sw.js खुद नए worker को activate/claim कर लेता है, पर पहले से खुले tab का चल रहा कोड नहीं बदलता) —
 // इसलिए यूज़र को साफ़ दिखाओ कि नया version आ गया है, रीलोड करने पर ताज़ा कोड मिलेगा
+// ब्राउज़र खुद कभी-कभी घंटों बाद ही नया sw.js जांचता है (tab लंबे समय खुला/background में पड़ा रहे
+// तो) — इसलिए खुद भी बार-बार जांचते रहें, ताकि नया version deploy होते ही (browser के अपने-आप
+// जांचने का इंतज़ार किए बिना) कुछ ही मिनट में "नया version आ गया है" बैनर दिख जाए
+function _swSetupAutoUpdate(reg){
+  if(!reg) return;
+  setInterval(function(){reg.update().catch(function(){});},5*60*1000);
+  document.addEventListener("visibilitychange",function(){
+    if(document.visibilityState==="visible") reg.update().catch(function(){});
+  });
+}
 if("serviceWorker" in navigator && location.protocol.indexOf("http")===0){
-  navigator.serviceWorker.register("sw.js").catch(function(){});
+  navigator.serviceWorker.register("sw.js").then(_swSetupAutoUpdate).catch(function(){});
   navigator.serviceWorker.addEventListener("controllerchange",function(){
     _showUpdateBanner();
   });
