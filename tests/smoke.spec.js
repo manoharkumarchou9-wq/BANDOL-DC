@@ -438,6 +438,7 @@ test.describe('डेटा और वसूली', () => {
 
   test('कैश लिस्ट: नया-पुराना timestamp नियम (बोर्ड टकराव)', async ({ page }) => {
     await openApp(page);
+    await loginJE(page); // असली publish (PUT) सिर्फ़ JE कर सकता है — _hscRetryPublish अब यह जांचता है
     const r = await page.evaluate(() => new Promise((res) => {
       let serverBoard = { curPaid: '999', curAmt: '9', ts: 200 };
       let putCount = 0;
@@ -1960,6 +1961,46 @@ test.describe('होम पेज डिस्प्ले बोर्ड — 
       saveHsc();
     }));
     expect(body.showBoard).toBe('0');
+  });
+
+  test('_hscRetryPublish — lineman/login-से-पहले वाला device बिना अनुमति PUT न भेजे (bug: pending फ्लैग कभी साफ़ न होना)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page); // lineman के पास होम-बोर्ड लिखने की अनुमति नहीं (Firebase rules)
+    const putAttempted = await page.evaluate(() => new Promise((resolve) => {
+      HSC = { curPaid: '10', curAmt: '5', ts: Date.now() }; // local, server से नया मानकर
+      const orig = window.fetch;
+      let putSeen = false;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('HOME_SCORECARD') > -1) {
+          if (opts && opts.method === 'PUT') { putSeen = true; return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }); }
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(null) }); // server पर कुछ नहीं (या पुराना) — फिर भी PUT न हो
+        }
+        return orig(url, opts);
+      };
+      _hscRetryPublish();
+      setTimeout(() => { window.fetch = orig; resolve(putSeen); }, 300);
+    }));
+    expect(putAttempted).toBe(false);
+  });
+
+  test('_hscRetryPublish — JE का device सही तरीके से publish कर सके', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const putAttempted = await page.evaluate(() => new Promise((resolve) => {
+      HSC = { curPaid: '10', curAmt: '5', ts: Date.now() };
+      const orig = window.fetch;
+      let putSeen = false;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('HOME_SCORECARD') > -1) {
+          if (opts && opts.method === 'PUT') { putSeen = true; return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }); }
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(null) });
+        }
+        return orig(url, opts);
+      };
+      _hscRetryPublish();
+      setTimeout(() => { window.fetch = orig; resolve(putSeen); }, 300);
+    }));
+    expect(putAttempted).toBe(true);
   });
 });
 

@@ -16,6 +16,10 @@ function _hscRetryPublish(){
     .then(function(r){return r.json();})
     .then(function(srv){
       if(srv&&typeof srv==="object"&&Number(srv.ts||0)>Number(HSC.ts||0)){_hscAdopt(srv);return;} // server नया है — उसे अपनाओ
+      // सिर्फ़ JE ही असली publish कर सकता है (Firebase rules) — lineman/login-से-पहले वाले device
+      // यहां रुक जाएं, वरना हर बार बिना अनुमति वाला PUT भेजते और "pending" फ्लैग कभी साफ़ नहीं होता
+      // (असली bug था — बार-बार hsc-conflict लॉग होता रहता, चुपचाप fail होकर)
+      if(!CU||CU.role!=="supervisor")return;
       return fetch(FB+"/HOME_SCORECARD.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(HSC)})
         .then(function(r){if(r.ok){_setHscPending(false);toast("✅ डिस्प्ले बोर्ड अब प्रकाशित हो गया","ok");}});
     })
