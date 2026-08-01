@@ -4,9 +4,14 @@
   "description": "आदेगांव DC वसूली ट्रैकर — smoke tests",
   "private": true,
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "lint": "eslint js scripts tests playwright.config.js eslint.config.js"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1"
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
+    "eslint": "^10.8.0",
+    "espree": "^10.4.0",
+    "globals": "^15.15.0"
   }
 }

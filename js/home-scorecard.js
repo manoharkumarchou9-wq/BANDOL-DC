@@ -91,10 +91,7 @@ function renderHomeSc(){
   var buC=Number(HSC.bldUnits)||0, crpuDen=buC>0?buC:ci, crpuDenLbl=buC>0?"÷ Billed Units":"÷ Input";
   if(cc>0&&crpuDen>0&&HSC.showCrpu!=="0"){
     var crpu=cc/crpuDen;
-    var ach=ct>0?(crpu/ct)*100:0;
-    var achClr=ach>=100?"var(--green)":(ach>=85?"var(--gold2)":"var(--red)");
     var needColl=ct>0?Math.max(0,ct*crpuDen-cc):0;
-    var unitsCov=ct>0?cc/ct:0, unitGap=Math.max(0,crpuDen-unitsCov);
     crpuHtml="<div style='background:rgba(121,134,203,.08);border:1px solid rgba(121,134,203,.3);border-radius:10px;padding:10px;margin-top:8px;'>"+
       "<div onclick=\"toggleBoard('crpu')\" style='display:flex;justify-content:space-between;align-items:center;cursor:pointer;"+(BRD_COL.crpu?"":"margin-bottom:7px;")+"'>"+
         "<div style='font-size:11px;font-weight:700;color:#9fa8da;'>⚡ CRPU बोर्ड</div>"+

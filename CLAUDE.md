@@ -28,6 +28,7 @@
 - `sw.js` — service worker + CACHE_NAME
 - `tests/smoke.spec.js` — पूरा टेस्ट suite
 - `database.rules.json` — Firebase Realtime Database की Security Rules (version-controlled कॉपी; असली/लाइव rules Firebase Console → Realtime Database → Rules में हैं)
+- `eslint.config.js` / `eslint.shared-globals.json` — CI लिंट सेटअप; कोई नई top-level global var/function (जो दूसरी js/*.js फाइल में इस्तेमाल हो) जोड़ें तो `node scripts/gen-eslint-globals.js` चलाकर globals list दोबारा बनाएं
 
 ## काम शुरू करने से पहले
 `git log --oneline -20` और हाल के merged PRs देख लें — पूरा इतिहास (फ़ैसले, bug root-causes, fixes) commit messages और PR descriptions में दर्ज है।
@@ -39,7 +40,8 @@
    PW_CHROMIUM=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npx playwright test
    ```
    (local dev server: `python3 -m http.server 8080 --directory <repo-path>`)
-3. Commit → `git fetch origin main` करके rebase करें (पिछले squash-merge से conflict बचाने के लिए) → push → PR बनाएं → PR की "smoke" CI check पास होने का इंतज़ार करें → तभी merge करें (squash) → PR activity से unsubscribe करें।
+   साथ ही `npm run lint` भी साफ़ (0 errors) होना चाहिए।
+3. Commit → `git fetch origin main` करके rebase करें (पिछले squash-merge से conflict बचाने के लिए) → push → PR बनाएं → PR की "smoke" **और** "lint" दोनों CI checks पास होने का इंतज़ार करें → तभी merge करें (squash) → PR activity से unsubscribe करें।
 4. बड़े visual/UI बदलाव हों तो पहले screenshot लेकर दिखाएं, अनुमति के बाद ही merge करें।
 5. कभी भी बिना पूछे risky/destructive git ऑपरेशन (force push to main, reset --hard, आदि) न करें।
 6. Firebase Security Rules में कोई बदलाव करना हो तो पहले `database.rules.json` में बदलें, commit/PR/merge की सामान्य प्रक्रिया से गुज़ारें, और merge के बाद **JE (उपयोगकर्ता) को Firebase Console → Realtime Database → Rules में जाकर वही बदलाव मैन्युअली paste/publish करने को कहें** — इस रेपो से rules अपने-आप deploy नहीं होतीं, यह फाइल सिर्फ़ version-history/backup के लिए है (कोई automated deploy pipeline अभी नहीं है)।
