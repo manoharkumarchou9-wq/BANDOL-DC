@@ -113,6 +113,7 @@ try{
             <div class="logout-item" id="cash-menu-item" style="display:none;color:var(--green);" onclick="openCashModal()">&#128181; कैश लिस्ट</div>
             <div class="logout-item" id="backup-menu-item" style="display:none;color:var(--gold);" onclick="downloadFullBackup()">&#128190; पूरा बैकअप</div>
             <div class="logout-item" id="log-menu-item" style="display:none;color:var(--gold2);" onclick="openLogModal()">&#129534; एरर लॉग<span id="log-badge" class="log-badge" style="display:none;"></span></div>
+            <div class="logout-item" id="usage-menu-item" style="display:none;color:#0288d1;" onclick="openUsageModal()">&#128246; डेटा उपयोग</div>
             <div class="logout-item" id="mig-menu-item" style="display:none;color:#455a64;" onclick="openMigModal()">&#128736;&#65039; चरण 3 जांच</div>
             <div class="logout-item" id="pin-menu-item" style="display:none;color:#c41f3d;" onclick="openPinModal()">&#128274; Lineman PIN</div>
             <div class="logout-item" onclick="doLogout(true)">&#128682; लॉगआउट करें</div>
@@ -464,6 +465,18 @@ try{
   </div>
 </div>
 
+<!-- DATA USAGE MODAL (JE only) — Firebase Blaze plan पर अनुमानित डेटा-उपयोग ट्रेंड -->
+<div class="moverlay" id="usage-overlay" onclick="closeUsageOutside(event)">
+  <div class="msheet" style="max-height:92vh;">
+    <div class="mhandle"></div>
+    <div class="mtitle">&#128246; डेटा उपयोग (अनुमानित)</div>
+    <div id="usage-content"></div>
+    <div class="mfooter">
+      <button class="btn-save" onclick="closeUsageModal()">बंद करें</button>
+    </div>
+  </div>
+</div>
+
 <!-- चरण 3 (per-record migration) — Dry-run जांच, सिर्फ पढ़ता है, कुछ नहीं लिखता (JE only) -->
 <div class="moverlay" id="mig-overlay" onclick="if(event.target===this)closeMigModal()">
   <div class="msheet" style="max-height:92vh;">
@@ -537,6 +550,7 @@ try{
 <script src="js/firebase.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/database.js"></script>
+<script src="js/usage.js"></script>
 <script src="js/ui-core.js"></script>
 <script src="js/list.js"></script>
 <script src="js/upload.js"></script>

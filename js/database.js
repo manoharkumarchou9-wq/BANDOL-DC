@@ -31,6 +31,7 @@ function fbGet(hq,cat,cb){
     fetch(FB+"/"+fbPath(hq,cat)+".json?t="+Date.now())
       .then(function(r){return r.json();})
       .then(function(d){
+        trackUsageBytes(JSON.stringify(d||"").length);
         _checkMigrationRevert(hq,cat,d); // migrated list कहीं पुराने device ने वापस array में तो नहीं बदल दी
         var data=normList(d);
         overlayOps(hq,cat,data);
@@ -52,6 +53,7 @@ function fbGet(hq,cat,cb){
   fetch(FB+"/"+fbPath(hq,cat)+".json?t="+Date.now())
     .then(function(r){return r.json();})
     .then(function(d){
+      trackUsageBytes(JSON.stringify(d||"").length);
       _checkMigrationRevert(hq,cat,d);
       var data=normList(d);
       overlayOps(hq,cat,data);
