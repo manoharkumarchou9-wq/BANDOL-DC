@@ -1,4 +1,4 @@
-var CACHE_NAME="adegaon-dc-v85";
+var CACHE_NAME="adegaon-dc-v86";
 var CDN=[
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js",
@@ -18,6 +18,7 @@ var CDN=[
   "./js/firebase.js",
   "./js/storage.js",
   "./js/database.js",
+  "./js/usage.js",
   "./js/ui-core.js",
   "./js/list.js",
   "./js/upload.js",

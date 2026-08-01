@@ -155,13 +155,13 @@ test.describe('रोल-आधारित UI', () => {
     await openApp(page);
     await loginJE(page);
     const jeVisible = await page.evaluate(() =>
-      ['hsc-menu-item', 'cash-menu-item', 'log-menu-item', 'backup-menu-item', 'wasc-menu-item']
+      ['hsc-menu-item', 'cash-menu-item', 'log-menu-item', 'backup-menu-item', 'wasc-menu-item', 'usage-menu-item']
         .every((id) => document.getElementById(id).style.display !== 'none'));
     expect(jeVisible).toBe(true);
     await page.evaluate(() => doLogout(false));
     await loginLineman(page);
     const linHidden = await page.evaluate(() =>
-      ['hsc-menu-item', 'cash-menu-item', 'log-menu-item', 'backup-menu-item', 'wasc-menu-item', 'mig-menu-item']
+      ['hsc-menu-item', 'cash-menu-item', 'log-menu-item', 'backup-menu-item', 'wasc-menu-item', 'mig-menu-item', 'usage-menu-item']
         .every((id) => document.getElementById(id).style.display === 'none'));
     expect(linHidden).toBe(true);
   });
@@ -1660,6 +1660,79 @@ test.describe('error logging', () => {
     expect(await page.evaluate(() => document.getElementById('log-badge').style.display)).toBe('none');
     const afterSeen = await page.evaluate(() => Number(localStorage.getItem('dc_log_seen_ts')) || 0);
     expect(afterSeen).toBeGreaterThan(beforeSeen);
+  });
+});
+
+test.describe('डेटा उपयोग (Firebase Blaze plan) — अनुमानित ट्रेंड ट्रैकिंग', () => {
+  test('trackUsageBytes जमा होता है और _usageFlush /USAGE/{महीना} पर POST करके काउंटर रीसेट कर देता है', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const result = await page.evaluate(() => new Promise((resolve) => {
+      trackUsageBytes(500);
+      trackUsageBytes(300);
+      const orig = window.fetch;
+      var posted = null;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('/USAGE/') > -1 && opts && opts.method === 'POST') {
+          posted = { url: url, body: JSON.parse(opts.body) };
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(null) });
+        }
+        return orig(url, opts);
+      };
+      _usageFlush();
+      setTimeout(() => { window.fetch = orig; resolve({ posted: posted, remaining: _usageBytes }); }, 200);
+    }));
+    const curMonth = new Date().toISOString().slice(0, 7);
+    expect(result.posted.url).toContain('/USAGE/' + curMonth);
+    expect(result.posted.body.b).toBe(800);
+    expect(result.remaining).toBe(0);
+  });
+
+  test('openUsageModal — सिर्फ JE खोल सकते हैं', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => openUsageModal());
+    expect(await page.evaluate(() => document.getElementById('usage-overlay').classList.contains('open'))).toBe(false);
+    await expect(page.locator('#toast')).toContainText('सिर्फ JE');
+  });
+
+  test('_usageRender — पिछले महीने से 50% से ज़्यादा बढ़ोतरी हो तो चेतावनी दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => new Promise((resolve) => {
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('/USAGE/') > -1 && (!opts || !opts.method)) {
+          var curMonth = new Date().toISOString().slice(0, 7);
+          var isCur = url.indexOf('/USAGE/' + curMonth) > -1;
+          var data = isCur ? { a: { d: 'dev1', b: 3000000, t: Date.now() } } : { a: { d: 'dev1', b: 1000000, t: Date.now() } };
+          return Promise.resolve({ ok: true, json: () => Promise.resolve(data) });
+        }
+        return orig(url, opts);
+      };
+      _usageRender();
+      setTimeout(() => { window.fetch = orig; resolve(); }, 300);
+    }));
+    await expect(page.locator('#usage-content')).toContainText('ज़्यादा डेटा इस्तेमाल हुआ');
+  });
+
+  test('_usageRender — बढ़ोतरी सामान्य हो तो कोई चेतावनी न दिखे, बस दोनों महीनों का आंकड़ा दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => new Promise((resolve) => {
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('/USAGE/') > -1 && (!opts || !opts.method)) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({ a: { d: 'dev1', b: 2000000, t: Date.now() } }) });
+        }
+        return orig(url, opts);
+      };
+      _usageRender();
+      setTimeout(() => { window.fetch = orig; resolve(); }, 300);
+    }));
+    const content = await page.locator('#usage-content').innerText();
+    expect(content).not.toContain('असामान्य बढ़ोतरी');
+    expect(content).toContain('MB');
   });
 });
 

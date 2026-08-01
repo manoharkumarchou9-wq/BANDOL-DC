@@ -24,6 +24,7 @@
 - `js/reports.js` — फोन एक्शन मॉडल (SMS/WhatsApp templates), स्कोरकार्ड, PDF/Excel, service-worker registration
 - `js/migration.js` — पुराने array-format से नए per-record object-format में माइग्रेशन
 - `js/profile.js`, `js/upload.js`
+- `js/usage.js` — Firebase डेटा-उपयोग का अनुमानित ट्रेंड (Blaze plan पर बिना बताए बिल न बढ़े, JE-only viewer)
 - `index.html`, `css/style.css`
 - `sw.js` — service worker + CACHE_NAME
 - `tests/smoke.spec.js` — पूरा टेस्ट suite
