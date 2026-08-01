@@ -112,7 +112,12 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .app-header{background:var(--grad-brand);padding:12px 14px 10px;position:sticky;top:0;z-index:100;box-shadow:0 8px 24px -8px rgba(18,73,113,.4);overflow:hidden;border-radius:0 0 22px 22px;}
 .hdr-tower-deco{position:absolute;top:-14px;right:-6px;width:100px;height:auto;opacity:.16;pointer-events:none;z-index:0;filter:brightness(4);}
 .app-header::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 100% at 100% 0%,rgba(255,255,255,.10),transparent 70%);pointer-events:none;z-index:0;}
-.app-header>.hdr1,.app-header>.hq-scroll{position:relative;z-index:1;}
+.app-header>.hq-scroll{position:relative;z-index:1;}
+/* .hdr1 (user-pill/profile-मेनू यहीं अंदर है) .hq-scroll से ऊपर होना ज़रूरी — वरना profile-मेनू का
+   z-index:600 भी बेअसर रहता है (position:fixed होते हुए भी बाहर के stacking context के अंदर ही
+   गिना जाता है), और नीचे के hq-tab क्लिक चुरा लेते हैं (bug: "स्कोरकार्ड डिस्प्ले"/"होम पेज डिस्प्ले"
+   जैसे मेनू आइटम दबाने पर उसकी जगह मुख्यालय बदल जाता था) */
+.app-header>.hdr1{position:relative;z-index:2;}
 .hdr1{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .hdr-left{display:flex;align-items:center;gap:8px;}
 .hdr-right{display:flex;align-items:center;gap:5px;}
@@ -135,7 +140,7 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 :root[data-theme="dark"] .logout-menu{box-shadow:0 14px 34px rgba(0,0,0,.6);}
 .logout-menu.open{display:block;animation:fadeUp .18s ease-out;}
 .user-info-item{padding:8px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:4px;}
-.logout-item{padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--red);transition:background .12s;}
+.logout-item{width:100%;background:none;border:none;appearance:none;font-family:"Noto Sans Devanagari",sans-serif;text-align:left;padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--red);transition:background .12s;}
 .log-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:10px;margin-left:auto;}
 .logout-item:hover{background:rgba(255,77,109,.1);}
 .udot{width:24px;height:24px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);}

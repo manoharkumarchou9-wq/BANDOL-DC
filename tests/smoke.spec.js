@@ -215,6 +215,35 @@ test.describe('रोल-आधारित UI', () => {
     expect(linHidden).toBe(true);
   });
 
+  test('profile-मेनू के आइटम असली <button> हैं — कीबोर्ड/स्क्रीन-रीडर से भी इस्तेमाल हो सकें (accessibility)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const tags = await page.evaluate(() =>
+      ['hsc-menu-item', 'wasc-menu-item', 'village-menu-item', 'cash-menu-item', 'backup-menu-item', 'log-menu-item', 'usage-menu-item', 'mig-menu-item', 'pin-menu-item']
+        .map((id) => document.getElementById(id).tagName));
+    expect(tags.every((t) => t === 'BUTTON')).toBe(true);
+  });
+
+  test('profile-मेनू का "स्कोरकार्ड डिस्प्ले" दबाने पर सही मॉडल खुले, गलती से नीचे का hq-tab न दब जाए (z-index bug)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const hqBefore = await page.evaluate(() => activeHQ);
+    await page.click('.user-pill');
+    await page.click('#wasc-menu-item');
+    expect(await page.evaluate(() => document.getElementById('wasc-overlay').classList.contains('open'))).toBe(true);
+    expect(await page.evaluate(() => activeHQ)).toBe(hqBefore); // नीचे का hq-tab गलती से न दब जाए
+  });
+
+  test('profile-मेनू का "होम पेज डिस्प्ले बोर्ड" दबाने पर सही मॉडल खुले, गलती से नीचे का hq-tab न दब जाए (z-index bug)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    const hqBefore = await page.evaluate(() => activeHQ);
+    await page.click('.user-pill');
+    await page.click('#hsc-menu-item');
+    expect(await page.evaluate(() => document.getElementById('hsc-overlay').classList.contains('open'))).toBe(true);
+    expect(await page.evaluate(() => activeHQ)).toBe(hqBefore);
+  });
+
   test('JE के सभी modals खुलते-बंद होते हैं', async ({ page }) => {
     await openApp(page);
     await loginJE(page);
