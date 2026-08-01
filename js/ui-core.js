@@ -450,3 +450,23 @@ function buildActionBtns(){
   }
 }
 
+// ── BOTTOM NAV AUTO-HIDE: कंज्यूमर लिस्ट scroll करते समय Profile/Support वाली पट्टी छुप जाए,
+// मोबाइल स्क्रीन पर ज़्यादा कार्ड दिखें — सिर्फ़ लिस्ट के बिल्कुल आखिर (scroll के end) में दोबारा दिखे ──
+function _bnavAtBottom(){
+  var ms=document.querySelector(".main-scroll");
+  if(!ms) return true;
+  return ms.scrollTop+ms.clientHeight>=ms.scrollHeight-4;
+}
+function _updateBnavVisibility(){
+  var bnav=document.querySelector(".bottom-nav");
+  if(!bnav) return;
+  bnav.classList.toggle("bnav-hidden",!_bnavAtBottom());
+}
+function _setupBnavAutoHide(){
+  var ms=document.querySelector(".main-scroll");
+  if(!ms) return;
+  ms.addEventListener("scroll",_updateBnavVisibility,{passive:true});
+  _updateBnavVisibility();
+}
+_setupBnavAutoHide();
+

@@ -150,6 +150,55 @@ test.describe('बूट और login', () => {
   });
 });
 
+test.describe('बॉटम नेव auto-hide — लिस्ट scroll करते समय Profile/Support पट्टी छुपे, सिर्फ़ आखिर में दिखे', () => {
+  test('स्क्रॉल के दौरान bnav-hidden लगे, बिल्कुल नीचे पहुंचने पर हट जाए, बीच में वापस जाने पर फिर लगे', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    await page.evaluate(() => {
+      var list = document.getElementById('con-list');
+      var html = '';
+      for (var i = 0; i < 60; i++) {
+        html += '<div class="con-card" style="height:80px;"><div class="cc-top"><div class="cc-name">टेस्ट उपभोक्ता ' + i + '</div></div></div>';
+      }
+      list.innerHTML = html;
+    });
+    // शुरुआत में सबसे ऊपर — bnav छुपी होनी चाहिए (आखिर तक नहीं पहुंचे)
+    await page.evaluate(() => {
+      var ms = document.querySelector('.main-scroll');
+      ms.scrollTop = 0;
+      ms.dispatchEvent(new Event('scroll'));
+    });
+    expect(await page.evaluate(() => document.querySelector('.bottom-nav').classList.contains('bnav-hidden'))).toBe(true);
+
+    // बिल्कुल नीचे — bnav दिखनी चाहिए
+    await page.evaluate(() => {
+      var ms = document.querySelector('.main-scroll');
+      ms.scrollTop = ms.scrollHeight;
+      ms.dispatchEvent(new Event('scroll'));
+    });
+    expect(await page.evaluate(() => document.querySelector('.bottom-nav').classList.contains('bnav-hidden'))).toBe(false);
+
+    // बीच में वापस — फिर छुप जाए
+    await page.evaluate(() => {
+      var ms = document.querySelector('.main-scroll');
+      ms.scrollTop = 100;
+      ms.dispatchEvent(new Event('scroll'));
+    });
+    expect(await page.evaluate(() => document.querySelector('.bottom-nav').classList.contains('bnav-hidden'))).toBe(true);
+  });
+
+  test('खाली लिस्ट में (scroll की ज़रूरत ही नहीं) bnav हमेशा दिखे', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    // _updateBnavVisibility अगले paint frame तक टलता है (देखें js/list.js) — उसका इंतज़ार करें
+    await page.evaluate(() => new Promise((resolve) => {
+      activeFilter = 'paid'; renderList(); // कोई paid record नहीं — खाली दिखेगा
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    }));
+    expect(await page.evaluate(() => document.querySelector('.bottom-nav').classList.contains('bnav-hidden'))).toBe(false);
+  });
+});
+
 test.describe('रोल-आधारित UI', () => {
   test('JE को dropdown में चारों tools दिखते हैं, lineman को नहीं', async ({ page }) => {
     await openApp(page);
@@ -1570,6 +1619,13 @@ test.describe('PWA installable — manifest + icons', () => {
     expect(href).toBeTruthy();
     const status = await page.evaluate((src) => fetch(src).then((r) => r.status), href);
     expect(status).toBe(200);
+  });
+
+  test('viewport pinch-zoom बंद न हो — कमज़ोर नज़र वाले उपयोगकर्ता टेक्स्ट बड़ा कर सकें (accessibility)', async ({ page }) => {
+    await openApp(page);
+    const content = await page.evaluate(() => document.querySelector('meta[name="viewport"]')?.getAttribute('content'));
+    expect(content).not.toContain('user-scalable=no');
+    expect(content).not.toMatch(/maximum-scale=1(\.0)?\b/);
   });
 });
 
