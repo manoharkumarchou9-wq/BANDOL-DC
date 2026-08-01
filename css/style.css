@@ -284,7 +284,10 @@ body{font-family:"Noto Sans Devanagari",sans-serif;background:var(--bg);color:va
 .tmpl-btn:active{transform:scale(.97);}
 /* Remark modal - history section */
 /* फ्लोटिंग बॉटम-नेव — किनारों से थोड़ा हटकर, गोल कोने, ऊपर उठा हुआ अहसास (modern app जैसा) */
-.bottom-nav{display:flex;justify-content:space-around;background:var(--surface);border:1px solid var(--border);margin:0 10px calc(10px + env(safe-area-inset-bottom));border-radius:22px;padding:8px 4px;box-shadow:var(--shadow-glow);flex-shrink:0;position:relative;z-index:50;}
+.bottom-nav{display:flex;justify-content:space-around;background:var(--surface);border:1px solid var(--border);margin:0 10px calc(10px + env(safe-area-inset-bottom));border-radius:22px;padding:8px 4px;box-shadow:var(--shadow-glow);flex-shrink:0;position:relative;z-index:50;max-height:80px;overflow:hidden;opacity:1;transition:max-height .25s ease,opacity .2s ease,margin .25s ease,padding .25s ease,border-width .25s ease;}
+/* लिस्ट scroll करते समय यह पट्टी छुप जाए (मोबाइल स्क्रीन पर ज़्यादा कार्ड दिखें) — .main-scroll के
+   बिल्कुल आखिर (scroll के end) में पहुंचने पर ही दोबारा दिखे (js/ui-core.js: _updateBnavVisibility) */
+.bottom-nav.bnav-hidden{max-height:0;opacity:0;margin-top:0;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0;pointer-events:none;}
 .bnav-item{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;color:var(--muted);font-family:"Noto Sans Devanagari",sans-serif;font-size:10px;font-weight:600;padding:5px 12px;cursor:pointer;flex:1;transition:color .15s;}
 .bnav-item.active{color:var(--gold);}
 .bnav-ico{font-size:18px;line-height:1;padding:4px 14px;border-radius:14px;transition:background .2s,transform .15s;}

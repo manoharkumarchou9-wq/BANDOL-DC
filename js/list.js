@@ -53,6 +53,7 @@ function renderListWith(data){
     c.innerHTML="<div class='empty'><div class='empty-ico'>"+emptyIco+"</div>"+
       "<div class='empty-t'>"+emptyMsg+"</div>"+
       "<div class='empty-s'>"+emptySub+"</div></div>";
+    requestAnimationFrame(_updateBnavVisibility); // अगले paint frame तक टालें — DOM लिखने के तुरंत बाद scrollHeight पढ़ने से जबरन (महंगा) layout reflow होता है, बड़ी list पर धीमापन
     return;
   }
   var toRender=filtered.slice(0,_renderLimit);
@@ -102,6 +103,7 @@ function renderListWith(data){
       rmkHtml+"</div>";
   }).join("")+
   (hasMore?"<div style='text-align:center;padding:14px 0 60px;'><button onclick='_renderLimit+=100;renderListWith(cGet(activeHQ,activeCat));' style='border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:10px;padding:10px 22px;font-family:\"Noto Sans Devanagari\",sans-serif;font-size:12px;cursor:pointer;'>⬇ और दिखाएं ("+toRender.length+"/"+filtered.length+")</button></div>":"");
+  requestAnimationFrame(_updateBnavVisibility); // अगले paint frame तक टालें — DOM लिखने के तुरंत बाद scrollHeight पढ़ने से जबरन (महंगा) layout reflow होता है, बड़ी list पर धीमापन
 }
 
 function escHtml(s){
