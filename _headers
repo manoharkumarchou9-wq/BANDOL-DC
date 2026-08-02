@@ -1,0 +1,12 @@
+# sw.js कभी भी browser/CDN/मोबाइल-नेटवर्क proxy द्वारा cache न हो — वरना browser को
+# कभी पता ही नहीं चलता कि नया version आया है, और device हमेशा के लिए पुराने version पर
+# अटक जाता है (चाहे tab कितनी भी बार बंद-खोलें) — असली bug यही था
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# index.html भी हमेशा ताज़ा मिले — service worker registration और नए sw.js का पता इसी
+# से शुरू होता है
+/
+  Cache-Control: no-cache, no-store, must-revalidate
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
