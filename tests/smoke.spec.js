@@ -4,6 +4,8 @@
 //  1. tests कभी असली production database को न छुएं
 //  2. app का offline-first रास्ता भी हर PR पर अपने आप जांचा जाए
 const { test, expect } = require('@playwright/test');
+const fs = require('fs');
+const path = require('path');
 
 /** @param {import('@playwright/test').Page} page */
 async function blockExternal(page) {
@@ -1629,6 +1631,18 @@ test.describe('अपडेट बैनर — नया version आने प�
 });
 
 test.describe('PWA installable — manifest + icons', () => {
+  test('_headers — sw.js/index.html कभी भी browser/CDN/मोबाइल-नेटवर्क से cache न हों (bug: device पुराने version पर हमेशा के लिए अटक जाना)', () => {
+    const content = fs.readFileSync(path.join(__dirname, '..', '_headers'), 'utf8');
+    const noCacheFor = (route) => {
+      const idx = content.indexOf(route + '\n');
+      expect(idx, route + ' के लिए _headers में rule होना चाहिए').toBeGreaterThan(-1);
+      const block = content.slice(idx, idx + 200);
+      expect(block).toMatch(/Cache-Control:\s*no-cache/);
+    };
+    noCacheFor('/sw.js');
+    noCacheFor('/index.html');
+  });
+
   test('index.html में manifest लिंक है और manifest.json सही/मान्य है', async ({ page }) => {
     await openApp(page);
     const href = await page.evaluate(() => document.querySelector('link[rel="manifest"]')?.getAttribute('href'));
