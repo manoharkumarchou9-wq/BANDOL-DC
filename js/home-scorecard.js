@@ -26,13 +26,21 @@ function _hscRetryPublish(){
     .catch(function(){});
 }
 function hscFetch(){
-  if(_hscPending()){_hscRetryPublish();return;} // local बोर्ड नया है — पहले उसे प्रकाशित करने की कोशिश
+  if(_hscPending()){
+    if(CU&&CU.role==="supervisor"){_hscRetryPublish();return;}
+    _setHscPending(false); // JE के अलावा किसी device पर pending होने का कोई मतलब नहीं (पुराना bug — नीचे देखें)
+  }
   fetch(FB+"/HOME_SCORECARD.json?t="+Date.now())
     .then(function(r){return r.json();})
     .then(function(d){
       if(d&&typeof d==="object"){
-        // local, server से नया हो (कहीं से पुराना data server पर चढ़ गया) — local रखो और उसे दोबारा प्रकाशित करो
-        if(HSC&&Number(HSC.ts||0)>Number(d.ts||0)){logErr("hsc-conflict",new Error("server stale — republishing"));_setHscPending(true);_hscRetryPublish();return;}
+        // सिर्फ़ JE (supervisor) के device पर local, server से नया हो तो ही असली "अभी तक प्रकाशित न
+        // हुआ बदलाव" माना जाए — lineman/login-से-पहले वाले किसी भी device के पुराने cached data को
+        // server से ज़्यादा सही मानने की कोई वजह नहीं, वरना हर ऐसे device पर बेवजह hsc-conflict लॉग
+        // होता रहता (असली bug यही था — कई अलग-अलग devices से रोज़ाना कई बार यह लॉग आ रहा था)
+        if(HSC&&CU&&CU.role==="supervisor"&&Number(HSC.ts||0)>Number(d.ts||0)){
+          logErr("hsc-conflict",new Error("server stale — republishing"));_setHscPending(true);_hscRetryPublish();return;
+        }
         HSC=d;try{localStorage.setItem("dc_homesc3",JSON.stringify(d));}catch(e){}renderHomeSc();
       }
     }).catch(function(){});
