@@ -2016,6 +2016,30 @@ test.describe('होम पेज डिस्प्ले बोर्ड — 
     }));
     expect(putAttempted).toBe(true);
   });
+
+  test('hscFetch — lineman/login-से-पहले वाले device पर पुराना cached data server से "नया" दिखे तो भी hsc-conflict लॉग न हो, बस server अपनाए (bug: बेवजह conflict लॉग + pending फ्लैग हमेशा अटकना)', async ({ page }) => {
+    await openApp(page); // अभी login नहीं — CU=null, ठीक वैसे ही जैसे production logs में "(login से पहले)"
+    const result = await page.evaluate(() => new Promise((resolve) => {
+      localStorage.removeItem('dc_logs3');
+      HSC = { curPaid: '10', curAmt: '5', ts: Date.now() }; // device पर पुराना cached data, ts server से नया दिखता है
+      _setHscPending(true); // पुराने bug जैसा हाल — गलत pending फ्लैग पहले से अटका
+      const orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('HOME_SCORECARD') > -1 && (!opts || !opts.method)) {
+          return Promise.resolve({ ok: true, json: () => Promise.resolve({ curPaid: '20', curAmt: '9', ts: Date.now() - 100000 }) });
+        }
+        return orig(url, opts);
+      };
+      hscFetch();
+      setTimeout(() => {
+        window.fetch = orig;
+        resolve({ pending: _hscPending(), conflictLogs: getLogs().filter((e) => e.c === 'hsc-conflict').length, adopted: HSC.curPaid });
+      }, 300);
+    }));
+    expect(result.pending).toBe(false); // पुराना अटका pending फ्लैग साफ़ हुआ
+    expect(result.conflictLogs).toBe(0); // बेवजह conflict लॉग नहीं हुआ
+    expect(result.adopted).toBe('20'); // server का data अपनाया, अपना पुराना cached data नहीं
+  });
 });
 
 test.describe('फोन-नंबर मॉडल — दो तरह के संदेश (सामान्य रिमाइंडर / विच्छेदन सूचना धारा 56)', () => {
