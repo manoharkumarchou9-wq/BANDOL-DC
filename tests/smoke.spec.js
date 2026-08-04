@@ -2182,3 +2182,22 @@ test.describe('परफ़ॉर्मेंस — बड़ी लिस्�
     expect(t).toBeLessThan(2000);
   });
 });
+
+test.describe('Firebase bandwidth — एक ही list बेवजह बार-बार डाउनलोड न हो (bug: RTDB free download quota रोज़ पार होना)', () => {
+  test('startListen — EventSource सफलतापूर्वक बनते ही तुरंत redundant REST fetch न हो (caller पहले ही data दिखा चुका होता है, और EventSource खुद जुड़ते ही पूरा data भेजता है)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    const immediateFetchCount = await page.evaluate(() => {
+      var count = 0;
+      var orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf(fbPath(activeHQ, activeCat)) > -1 && (!opts || !opts.method)) count++;
+        return orig(url, opts);
+      };
+      startListen(activeHQ, activeCat); // सिर्फ़ synchronous हिस्सा जांचना है — EventSource async है
+      window.fetch = orig;
+      return count;
+    });
+    expect(immediateFetchCount).toBe(0);
+  });
+});

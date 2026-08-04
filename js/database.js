@@ -344,7 +344,10 @@ function startListen(hq,cat){
         }
         // वरना EventSource खुद reconnect करने की कोशिश करता रहेगा
       };
-      pollOnce(); // पहला data तुरंत दिखाएं
+      // यहां pollOnce() जान-बूझकर नहीं बुलाया — caller (fbGet, हमेशा startListen से ठीक पहले/इसी
+      // callback में चलता है) पहले ही ताज़ा data दिखा चुका होता है, और EventSource जुड़ते ही खुद अपना
+      // पहला "put" event भेजता है जिसमें पूरा मौजूदा data होता है — तीसरी बार वही data डाउनलोड करना
+      // सिर्फ़ बेवजह Firebase bandwidth (और पैसा) खर्च कर रहा था, कोई UI फ़ायदा नहीं था
     }catch(e){
       startPolling();
     }
@@ -352,12 +355,12 @@ function startListen(hq,cat){
     startPolling();
   }
 
-  // हर 8 sec में CAT_NAMES check — JE का बदला नाम तुरंत दिखे; साथ ही MIGRATED flags भी ताज़ा रहें
-  // (चरण 3 माइग्रेशन के दौरान/बाद हर device जल्दी सही write-path — array या per-record — अपनाए)
+  // CAT_NAMES/MIGRATED flags कम बदलने वाली चीज़ें हैं (JE कभी-कभार नाम बदलता है) — 8 sec बहुत
+  // ज़्यादा बार-बार था और bandwidth बेवजह खर्च करता था; 30 sec में भी बदलाव उतनी ही जल्दी दिख जाता है
   if(catNamesTimer) clearInterval(catNamesTimer);
   catNamesTimer=setInterval(function(){
     fetchCatNamesFromFB(true);
     loadMigratedFlags();
-  },8000);
+  },30000);
 }
 
