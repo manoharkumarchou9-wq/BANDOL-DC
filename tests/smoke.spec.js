@@ -2268,4 +2268,45 @@ test.describe('Firebase bandwidth — एक ही list बेवजह बा�
     });
     expect(opened).toBe(false);
   });
+
+  test('visibilitychange — tab background में जाते ही listen/timer रुकें, वापस दिखने पर फिर जुड़ें (bug: background में पड़ा device घंटों तक चुपचाप bandwidth खर्च करता रहना)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.waitForFunction(() => !!catNamesTimer, null, { timeout: 15000 }); // startListen fbGet callback के बाद async चलता है
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      var hadTimerBefore = !!catNamesTimer;
+      Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      var timerClearedOnHide = !catNamesTimer;
+      var listenClearedOnHide = !liveSource && !pollTimer;
+      Object.defineProperty(document, 'hidden', { value: false, configurable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      setTimeout(() => {
+        resolve({ hadTimerBefore: hadTimerBefore, timerClearedOnHide: timerClearedOnHide, listenClearedOnHide: listenClearedOnHide, timerResumedOnShow: !!catNamesTimer });
+      }, 50);
+    }));
+    expect(r.hadTimerBefore).toBe(true);
+    expect(r.timerClearedOnHide).toBe(true);
+    expect(r.listenClearedOnHide).toBe(true);
+    expect(r.timerResumedOnShow).toBe(true);
+  });
+});
+
+test.describe('लिस्ट अपलोड — सिर्फ़ JE का काम, lineman को बटन न दिखे', () => {
+  test('buildActionBtns — lineman के लिए "अपलोड" बटन न बने, JE के लिए बने', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    const linemanBtns = await page.evaluate(() => document.getElementById('action-btns').innerHTML);
+    expect(linemanBtns).not.toContain('अपलोड');
+  });
+
+  test('openUpModal — lineman सीधे function बुलाए तो भी न खुले (defense-in-depth)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    const opened = await page.evaluate(() => {
+      openUpModal();
+      return document.getElementById('up-overlay').classList.contains('open');
+    });
+    expect(opened).toBe(false);
+  });
 });
