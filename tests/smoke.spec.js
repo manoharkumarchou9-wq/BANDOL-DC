@@ -1643,6 +1643,17 @@ test.describe('PWA installable — manifest + icons', () => {
     noCacheFor('/index.html');
   });
 
+  test('sw.js — Excel/CSV वाली भारी vendor लाइब्रेरी (862KB xlsx) eager-precache list में न हों (bug: हर version-update पर हर device बेवजह दोबारा डाउनलोड करता, चाहे कभी इस्तेमाल हो या न हो)', () => {
+    const swContent = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+    const cdnBlock = swContent.slice(swContent.indexOf('var CDN='), swContent.indexOf('];') + 2);
+    expect(cdnBlock).not.toContain('vendor/xlsx');
+    expect(cdnBlock).not.toContain('vendor/papaparse');
+    // पर lazy-load वाला रास्ता (js/storage.js: ensureLibs) अब भी सही जगह से लोड करता हो
+    const storageContent = fs.readFileSync(path.join(__dirname, '..', 'js', 'storage.js'), 'utf8');
+    expect(storageContent).toContain('vendor/xlsx.full.min.js');
+    expect(storageContent).toContain('vendor/papaparse.min.js');
+  });
+
   test('index.html में manifest लिंक है और manifest.json सही/मान्य है', async ({ page }) => {
     await openApp(page);
     const href = await page.evaluate(() => document.querySelector('link[rel="manifest"]')?.getAttribute('href'));

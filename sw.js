@@ -1,10 +1,14 @@
-var CACHE_NAME="adegaon-dc-v94";
+var CACHE_NAME="adegaon-dc-v95";
+// ध्यान दें: ./vendor/papaparse.min.js (20KB) और ./vendor/xlsx.full.min.js (862KB) जान-बूझकर
+// यहां शामिल नहीं हैं — ये सिर्फ़ Excel/CSV वाले features (backup/upload) इस्तेमाल होने पर
+// js/storage.js की ensureLibs() से lazy-load होती हैं। पहले हर version-update पर हर device
+// (lineman समेत, जिन्हें अब Excel/upload दिखता भी नहीं) यह 862KB फ़ाइल फिर से डाउनलोड करता था,
+// चाहे कभी इस्तेमाल हो या न हो — असली bug यही था (मोबाइल डेटा की बर्बादी)। अब यह सिर्फ़ पहली बार
+// असल में इस्तेमाल होने पर ही डाउनलोड होगी (fetch handler खुद-ब-खुद उसे तभी cache कर लेता है)।
 var CDN=[
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js",
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js",
-  "./vendor/papaparse.min.js",
-  "./vendor/xlsx.full.min.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
