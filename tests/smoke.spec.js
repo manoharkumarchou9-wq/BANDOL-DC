@@ -2200,4 +2200,72 @@ test.describe('Firebase bandwidth — एक ही list बेवजह बा�
     });
     expect(immediateFetchCount).toBe(0);
   });
+
+  test('_cashRefreshAll — 5 मिनट के cooldown के अंदर दोबारा बुलाने पर network fetch न हो (बैकअप/village-report/WhatsApp-scorecard बार-बार खुलने पर बचत)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      var fetchCount = 0;
+      var orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ9') > -1) {
+          fetchCount++;
+          return Promise.resolve({ json: () => Promise.resolve([{ acc: '1', status: 'pending' }]) });
+        }
+        return orig(url, opts);
+      };
+      _cashRefreshAll(['टेस्ट HQ9'], function () {
+        var firstCount = fetchCount;
+        _cashRefreshAll(['टेस्ट HQ9'], function () {
+          window.fetch = orig;
+          resolve({ firstCount: firstCount, secondCount: fetchCount });
+        });
+      });
+    }));
+    expect(r.firstCount).toBeGreaterThan(0);
+    expect(r.secondCount).toBe(r.firstCount);
+  });
+
+  test('_cashRefreshAll — force=true हो तो cooldown नज़रअंदाज़ करके हमेशा ताज़ा fetch हो (कैश-लिस्ट apply में सटीकता सबसे ज़रूरी)', async ({ page }) => {
+    await openApp(page);
+    const r = await page.evaluate(() => new Promise((resolve) => {
+      var fetchCount = 0;
+      var orig = window.fetch;
+      window.fetch = function (url, opts) {
+        if (typeof url === 'string' && url.indexOf('टेस्ट_HQ10') > -1) {
+          fetchCount++;
+          return Promise.resolve({ json: () => Promise.resolve([{ acc: '1', status: 'pending' }]) });
+        }
+        return orig(url, opts);
+      };
+      _cashRefreshAll(['टेस्ट HQ10'], function () {
+        var firstCount = fetchCount;
+        _cashRefreshAll(['टेस्ट HQ10'], function () {
+          window.fetch = orig;
+          resolve({ firstCount: firstCount, secondCount: fetchCount });
+        }, true);
+      });
+    }));
+    expect(r.secondCount).toBeGreaterThan(r.firstCount);
+  });
+
+  test('lineman के लिए "स्कोरकार्ड" बटन छुपा रहे (header + bottom-nav) — यह JE का काम है, हर खुलने पर कई categories का data मंगाता है', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    const hidden = await page.evaluate(() => ({
+      hdr: getComputedStyle(document.getElementById('sc-hdr-btn')).display,
+      bnav: getComputedStyle(document.getElementById('sc-bnav-btn')).display,
+    }));
+    expect(hidden.hdr).toBe('none');
+    expect(hidden.bnav).toBe('none');
+  });
+
+  test('openScorecard — lineman सीधे function बुलाए तो भी न खुले (defense-in-depth)', async ({ page }) => {
+    await openApp(page);
+    await loginLineman(page);
+    const opened = await page.evaluate(() => {
+      openScorecard();
+      return document.getElementById('sc-overlay').classList.contains('open');
+    });
+    expect(opened).toBe(false);
+  });
 });

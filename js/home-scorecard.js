@@ -292,13 +292,24 @@ function cashCollect(cells){
 }
 // apply से पहले सभी लिस्ट server से ताज़ा लाओ — cache अधूरा/पुराना हो तो भी कोई IVRS न छूटे
 var _CASH_REFRESH_TIMEOUT_MS=8000; // टेस्ट में छोटा करके तेज़ जांच की जा सकती है
-function _cashRefreshAll(hqs,cb){
+// बैकअप/गांव-रिपोर्ट/WhatsApp-स्कोरकार्ड बार-बार (एक ही घंटे में कई बार) खुलने पर हर बार सभी
+// HQ का पूरा data दोबारा मंगाते थे — Firebase RTDB का रोज़ का मुफ़्त download-कोटा इसी वजह से
+// पार हो रहा था (असली bug यही था)। अब हाल ही में (5 मिनट के अंदर) ताज़ा हो चुके HQ/श्रेणी को
+// दोबारा नहीं मंगाते — cache से ही काम चलता है। कैश-लिस्ट apply (force=true) में सटीकता सबसे
+// ज़्यादा ज़रूरी है इसलिए वहां cooldown लागू नहीं होता, हमेशा पूरा ताज़ा data मंगाया जाता है।
+var _CASH_REFRESH_COOLDOWN_MS=5*60*1000;
+var _lastRefreshAt={};
+function _cashRefreshAll(hqs,cb,force){
   if(!navigator.onLine){cb();return;}
   var jobs=[];
+  var now=Date.now();
   hqs.forEach(function(hq){
     for(var i=0;i<CATS_DEFAULT.length;i++){
       var cat=(i>=4)?getCatName(hq,i):CATS_DEFAULT[i];
-      if(!isPending(hq,cat)) jobs.push({hq:hq,cat:cat}); // pending offline बदलाव हों तो overwrite मत करो
+      if(isPending(hq,cat)) continue; // pending offline बदलाव हों तो overwrite मत करो
+      var key=hq+"/"+cat;
+      if(!force&&_lastRefreshAt[key]&&(now-_lastRefreshAt[key])<_CASH_REFRESH_COOLDOWN_MS) continue; // हाल ही में ताज़ा हो चुका
+      jobs.push({hq:hq,cat:cat,key:key});
     }
   });
   if(!jobs.length){cb();return;}
@@ -317,6 +328,7 @@ function _cashRefreshAll(hqs,cb){
         var data=normList(d);
         overlayOps(j.hq,j.cat,data);
         cSet(j.hq,j.cat,data);
+        _lastRefreshAt[j.key]=Date.now();
         safeFin();
       })
       .catch(function(){clearTimeout(tm);safeFin();}); // fetch fail — उस tab के लिए cache से ही चलेगा
@@ -328,7 +340,7 @@ function applyCashList(){
   var btn=document.getElementById("cash-apply");
   btn.disabled=true;btn.textContent="⏳ लिस्ट ताज़ा हो रही हैं...";
   var hqs=CU.role==="supervisor"?HQS:[CU.hq];
-  _cashRefreshAll(hqs,function(){_applyCashMatched(hqs);});
+  _cashRefreshAll(hqs,function(){_applyCashMatched(hqs);},true); // cash-list में सटीकता सबसे ज़रूरी — हमेशा ताज़ा data
 }
 
 function _applyCashMatched(hqs){

@@ -51,6 +51,7 @@ function closePhOutside(e){if(e.target===document.getElementById("ph-overlay"))c
 var scActiveHQ = "";
 
 function openScorecard(){
+  if(!CU||CU.role!=="supervisor"){toast("सिर्फ JE स्कोरकार्ड देख सकते हैं","err");return;}
   scActiveHQ = activeHQ;
   document.getElementById("sc-overlay").classList.add("open");
   buildScorecard();
