@@ -28,6 +28,7 @@ function updateUpCounter(){
 }
 
 function openUpModal(){
+  if(!CU||CU.role!=="supervisor"){toast("सिर्फ JE लिस्ट अपलोड कर सकते हैं","err");return;}
   // Sync editable category names in upload dropdown
   var o4=document.getElementById("up-cat-4");
   var o5=document.getElementById("up-cat-5");

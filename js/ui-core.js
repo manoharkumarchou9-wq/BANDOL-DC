@@ -40,6 +40,18 @@ window.addEventListener("online",function(){
   }
 });
 window.addEventListener("offline",function(){setSyncStatus(false);});
+// tab/app background में जाते ही (होम बटन दबाकर छोड़ दिया, बंद नहीं किया) live connection और
+// टाइमर रोक दो — वरना background में पड़ा device घंटों तक चुपचाप Firebase bandwidth खर्च करता रहता,
+// चाहे कोई देख भी नहीं रहा हो। वापस दिखने पर फिर से जोड़ लेते हैं — EventSource खुद जुड़ते ही ताज़ा
+// data दे देता है, कुछ छूटता नहीं।
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden){
+    stopListen();
+    if(catNamesTimer){clearInterval(catNamesTimer);catNamesTimer=null;}
+  } else if(CU&&activeHQ&&activeCat){
+    startListen(activeHQ,activeCat);
+  }
+});
 // हर 20 sec — pending बदलाव हों और नेट हो तो sync करते रहो
 setInterval(function(){
   var needCat=false;try{needCat=localStorage.getItem("dc_catpending3")==="1";}catch(e){}
@@ -443,10 +455,12 @@ function openEditCat(i, slotKey){
 
 function buildActionBtns(){
   var c=document.getElementById("action-btns"); c.innerHTML="";
-  var b1=document.createElement("button");
-  b1.className="tbtn tbtn-blue"; b1.innerHTML="📤 अपलोड"; b1.onclick=openUpModal;
-  c.appendChild(b1);
+  // लिस्ट अपलोड (पूरी CSV/Excel मास्टर लिस्ट बदलना) JE का काम है — lineman का काम फ़ील्ड-वेरिफ़िकेशन/
+  // स्टेटस-अपडेट है, उसे यह बटन दिखने की ज़रूरत नहीं
   if(CU.role==="supervisor"){
+    var b1=document.createElement("button");
+    b1.className="tbtn tbtn-blue"; b1.innerHTML="📤 अपलोड"; b1.onclick=openUpModal;
+    c.appendChild(b1);
     var b2=document.createElement("button");
     b2.className="tbtn tbtn-red"; b2.innerHTML="🗑️ हटाएं"; b2.onclick=clearList;
     c.appendChild(b2);
