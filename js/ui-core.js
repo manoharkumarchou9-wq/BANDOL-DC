@@ -327,6 +327,10 @@ function buildUI(){
     var el=document.getElementById(id);
     if(el) el.style.display=CU.role==="supervisor"?"flex":"none";
   });
+  // स्कोरकार्ड (दिनांक-वार विश्लेषण) सिर्फ़ JE का काम है, lineman को फ़ील्ड-वेरिफ़िकेशन से मतलब —
+  // हर खुलने पर कई categories का data मंगाता है, lineman devices पर बेवजह Firebase bandwidth खर्च होता था
+  var scHdr=document.getElementById("sc-hdr-btn"); if(scHdr) scHdr.style.display=CU.role==="supervisor"?"":"none";
+  var scBnav=document.getElementById("sc-bnav-btn"); if(scBnav) scBnav.style.display=CU.role==="supervisor"?"flex":"none";
   if(typeof refreshLogBadge==="function") refreshLogBadge();
   buildHQTabs(); buildCatTabs(); buildActionBtns();
   _profilePhotoCache=null; loadProfilePhoto();

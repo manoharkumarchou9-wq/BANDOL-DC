@@ -98,7 +98,7 @@ try{
         </div>
       </div>
       <div class="hdr-right">
-        <button class="hbtn" style="background:#6a1b9a;color:#fff;" onclick="openScorecard()"><img src="icons/scorecard-icon.svg" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"> स्कोरकार्ड</button>
+        <button class="hbtn" id="sc-hdr-btn" style="background:#6a1b9a;color:#fff;" onclick="openScorecard()"><img src="icons/scorecard-icon.svg" alt="" style="width:14px;height:14px;vertical-align:-2px;margin-right:2px;"> स्कोरकार्ड</button>
         <button class="hbtn" style="background:#c62828;color:#fff;" onclick="downloadPDF()">&#128196; PDF</button>
         <button class="hbtn" style="background:#2e7d32;color:#fff;" onclick="downloadExcel()">&#128202; Excel</button>
         <div class="user-pill" onclick="toggleUserMenu(event)">
@@ -146,7 +146,7 @@ try{
     <button class="bnav-item active" onclick="_bnavHome()">
       <span class="bnav-ico">&#127968;</span><span class="bnav-lbl">Home</span>
     </button>
-    <button class="bnav-item" onclick="openScorecard()">
+    <button class="bnav-item" id="sc-bnav-btn" onclick="openScorecard()">
       <img class="bnav-ico-img" src="icons/scorecard-icon.svg" alt="">
       <span class="bnav-lbl">स्कोरकार्ड</span>
     </button>
