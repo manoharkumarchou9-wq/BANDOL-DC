@@ -94,8 +94,13 @@ function dOver(e){e.preventDefault();document.getElementById("up-zone").classLis
 function dLeave(){document.getElementById("up-zone").classList.remove("drag");}
 function dDrop(e){e.preventDefault();dLeave();handleFile(e.dataTransfer.files[0]);}
 
+// हर नई फ़ाइल-selection का अपना token — बड़ी फ़ाइल (जैसे 3500 records वाली) पढ़ने में समय लगता है,
+// उस बीच कोई दूसरी फ़ाइल चुन ली जाए तो पुराना (धीमा) पढ़ना बाद में पूरा होकर नए वाले को overwrite कर
+// सकता था (जैसे Adegaon की फ़ाइल का data देर से आकर Pindrai के ऊपर चढ़ जाना) — असली bug यही था
+var _handleFileToken=0;
 function handleFile(f){
   if(!f)return;
+  var myToken=++_handleFileToken;
   document.getElementById("uz-ico").textContent="⏳";
   document.getElementById("uz-t").textContent=f.name;
   var n=f.name.toLowerCase();
@@ -115,6 +120,7 @@ function handleFile(f){
   if(isXl){
     var rd=new FileReader();
     rd.onload=function(e){
+      if(myToken!==_handleFileToken)return; // इस बीच कोई नई फ़ाइल चुन ली गई — यह पुराना (stale) परिणाम है
       try{
         var wb=XLSX.read(e.target.result,{type:"array"});
         processRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:"",raw:false}));
@@ -124,6 +130,7 @@ function handleFile(f){
   } else {
     var rd2=new FileReader();
     rd2.onload=function(e){
+      if(myToken!==_handleFileToken)return;
       var result=Papa.parse(e.target.result,{header:true,skipEmptyLines:true});
       if(result.data&&result.data.length) processRows(result.data);
       else toast("CSV में data नहीं मिला","err");
