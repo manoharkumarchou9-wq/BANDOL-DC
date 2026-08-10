@@ -2321,3 +2321,37 @@ test.describe('लिस्ट अपलोड — सिर्फ़ JE का 
     expect(opened).toBe(false);
   });
 });
+
+test.describe('अपलोड — दो फ़ाइलें जल्दी-जल्दी चुनने पर race-condition न हो', () => {
+  test('handleFile — पहली (धीमी) फ़ाइल का parse देर से पूरा हो तो भी उसे नज़रअंदाज़ करे, दूसरी (नई) फ़ाइल का ही data रहे (bug: पुराने HQ का data नए के ऊपर चढ़ जाना)', async ({ page }) => {
+    await openApp(page);
+    await loginJE(page);
+    await page.evaluate(() => { openUpModal(); document.getElementById('up-cat').value = 'घरेलू'; });
+    const names = await page.evaluate(() => new Promise((resolve) => {
+      var origReadAsText = FileReader.prototype.readAsText;
+      var call = 0;
+      FileReader.prototype.readAsText = function (blob) {
+        var reader = this;
+        var n = ++call;
+        var delay = n === 1 ? 150 : 0; // पहली फ़ाइल जान-बूझकर धीमी (असली दुनिया में बड़ी Excel फ़ाइल जैसी)
+        blob.text().then(function (txt) {
+          setTimeout(function () {
+            Object.defineProperty(reader, 'result', { value: txt, configurable: true });
+            if (reader.onload) reader.onload({ target: reader });
+          }, delay);
+        });
+      };
+      var fileA = new File(['Consumer No,Consumer Name,Net Bill\n1001,OLD-HQ,100\n'], 'old.csv', { type: 'text/csv' });
+      var fileB = new File(['Consumer No,Consumer Name,Net Bill\n2001,NEW-HQ,200\n'], 'new.csv', { type: 'text/csv' });
+      handleFile(fileA); // धीमी, पुरानी फ़ाइल — पहले चुनी गई
+      setTimeout(function () {
+        handleFile(fileB); // तेज़, नई फ़ाइल — बाद में चुनी गई, पहले पूरी हो जाएगी
+        setTimeout(function () {
+          FileReader.prototype.readAsText = origReadAsText;
+          resolve(parsedRows.map(function (r) { return r.name; }));
+        }, 300);
+      }, 20);
+    }));
+    expect(names).toEqual(['NEW-HQ']);
+  });
+});
