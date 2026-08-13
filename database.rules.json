@@ -13,8 +13,8 @@
       ".write": "auth.token.email === 'manoharkumarchou9@gmail.com'"
     },
     "बंडोल": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'JBzEvRVfjHfdm3cVHZXPnhHZiKK2'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'JBzEvRVfjHfdm3cVHZXPnhHZiKK2'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'skwPo50PQkZfHKwpBxu3V2moOIn2'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'skwPo50PQkZfHKwpBxu3V2moOIn2'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "सागर": {
