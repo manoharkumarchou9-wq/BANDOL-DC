@@ -1,6 +1,6 @@
 # वसूली ट्रैकर (Recovery Tracker)
 
-Bandol DC (मध्य प्रदेश बिजली विभाग) के लिए एक ऑफ़लाइन-फर्स्ट PWA — vanilla JavaScript, कोई framework नहीं।
+Bandol DC / सिवनी डिवीजन (मध्य प्रदेश बिजली विभाग) के लिए एक ऑफ़लाइन-फर्स्ट PWA — vanilla JavaScript, कोई framework नहीं।
 
 ## Tech Stack
 - Vanilla JavaScript (कोई build step नहीं)
