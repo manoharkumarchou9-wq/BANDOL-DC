@@ -187,7 +187,7 @@ function renderHomeSc(){
   el.innerHTML=
   "<div style='background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;'>"+
     "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;'>"+
-      "<div><div style='font-family:\"Baloo 2\",cursive;font-weight:800;font-size:14px;color:var(--gold2);'>ADEGAON DC</div>"+
+      "<div><div style='font-family:\"Baloo 2\",cursive;font-weight:800;font-size:14px;color:var(--gold2);'>BANDOL DC</div>"+
       "<div style='font-size:10px;color:var(--muted);'>Collection Status Summary</div></div>"+
       "<div style='text-align:right;font-size:10px;color:var(--muted);'>As on<br><b style='color:var(--text);'>"+escHtml(HSC.asOn||"")+"</b></div>"+
     "</div>"+

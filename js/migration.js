@@ -272,6 +272,6 @@ function downloadMigReport(){
     ws["!cols"]=[{wch:12},{wch:16},{wch:8},{wch:10},{wch:34},{wch:12},{wch:24},{wch:10},{wch:24}];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"चरण3 Dry-run");
-    XLSX.writeFile(wb,"ADEGAON_charan3_dryrun_"+new Date().toLocaleDateString("en-IN").replace(/\//g,"-")+".xlsx");
+    XLSX.writeFile(wb,"BANDOL_charan3_dryrun_"+new Date().toLocaleDateString("en-IN").replace(/\//g,"-")+".xlsx");
   });
 }

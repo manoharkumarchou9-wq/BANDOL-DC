@@ -385,7 +385,7 @@ function downloadPDF(){
     ".ib{text-align:center;}.ib b{font-size:15px;display:block;}"+
     "table{width:100%;border-collapse:collapse;}th{background:#1a237e;color:#fff;padding:5px;}"+
     "@media print{.np{display:none}}</style></head><body>"+
-    "<h2>आदेगांव DC वसूली रिपोर्ट</h2>"+
+    "<h2>Bandol DC वसूली रिपोर्ट</h2>"+
     "<p>HQ: <b>"+activeHQ+"</b> | Category: <b>"+activeCat+"</b> | दिनांक: <b>"+new Date().toLocaleDateString("hi-IN")+"</b> | "+CU.name+"</p>"+
     "<div class='info'>"+
       "<div class='ib'><b>"+data.length+"</b>कुल</div>"+

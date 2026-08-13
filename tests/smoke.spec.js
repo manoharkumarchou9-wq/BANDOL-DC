@@ -267,13 +267,13 @@ test.describe('रोल-आधारित UI', () => {
     await openApp(page);
     await loginJE(page);
     await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '1', status: 'paid', amount: 100 },
         { acc: '2', status: 'pending', amount: 500 },
       ]);
     });
     await page.evaluate(() => openWaScorecard());
-    await page.waitForFunction(() => document.querySelectorAll('#wasc-content tbody tr').length === 6, null, { timeout: 20000 });
+    await page.waitForFunction(() => document.querySelectorAll('#wasc-content tbody tr').length === 9, null, { timeout: 20000 });
     const r = await page.evaluate(() => {
       const row = document.querySelectorAll('#wasc-content tbody tr')[0];
       return {
@@ -282,7 +282,7 @@ test.describe('रोल-आधारित UI', () => {
         text: row.textContent,
       };
     });
-    expect(r.hq).toBe('आदेगांव');
+    expect(r.hq).toBe('बंडोल');
     expect(r.paidBold).toBe('1');
     expect(r.text).toContain('50.0%');
   });
@@ -291,14 +291,14 @@ test.describe('रोल-आधारित UI', () => {
     await openApp(page);
     await loginJE(page);
     const row = await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '1', addr: 'रामपुर', status: 'pending', amount: 100 },
       ]);
       // acc '99' किसी और श्रेणी में paid है पर "कुल उपभोक्ता" (मास्टर) में मौजूद ही नहीं — असली उपभोक्ता नहीं
-      cSet('आदेगांव', 'घरेलू', [
+      cSet('बंडोल', 'घरेलू', [
         { acc: '99', status: 'paid', amount: 200 },
       ]);
-      return _waScRow('आदेगांव');
+      return _waScRow('बंडोल');
     });
     expect(row.tot).toBe(1);
     expect(row.paid).toBe(0); // acc '99' नहीं गिना जाना चाहिए — मास्टर सूची में नहीं है
@@ -308,13 +308,13 @@ test.describe('रोल-आधारित UI', () => {
     await openApp(page);
     await loginJE(page);
     const txt = await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '1', addr: 'रामपुर', status: 'pending', amount: 100 },
       ]);
-      cSet('आदेगांव', 'घरेलू', [
+      cSet('बंडोल', 'घरेलू', [
         { acc: '99', status: 'paid', amount: 200 },
       ]);
-      buildScOverview(['आदेगांव']);
+      buildScOverview(['बंडोल']);
       return document.getElementById('sc-overview').textContent;
     });
     expect(txt).toContain('1कुल उपभोक्ता');
@@ -325,14 +325,14 @@ test.describe('रोल-आधारित UI', () => {
     await openApp(page);
     await loginJE(page);
     const txt = await page.evaluate(() => {
-      scActiveHQ = 'आदेगांव';
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      scActiveHQ = 'बंडोल';
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '1', addr: 'रामपुर', status: 'pending', amount: 100 },
       ]);
-      cSet('आदेगांव', 'घरेलू', [
+      cSet('बंडोल', 'घरेलू', [
         { acc: '99', status: 'paid', amount: 200, paydate: '1/1/2026' },
       ]);
-      renderScDateTable(cGet('आदेगांव', 'घरेलू'));
+      renderScDateTable(cGet('बंडोल', 'घरेलू'));
       return document.getElementById('sc-body').textContent;
     });
     expect(txt).toContain('कोई वसूली नहीं'); // acc '99' मास्टर सूची में नहीं — कोई paid record नहीं बचना चाहिए
@@ -343,23 +343,23 @@ test.describe('डेटा और वसूली', () => {
   test('cache की लिस्ट render होती है और वसूल mark काम करता है', async ({ page }) => {
     await openApp(page);
     await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '111222', name: 'राम कुमार', status: 'pending', amount: 500 },
         { acc: '333444', name: 'श्याम लाल', status: 'pending', amount: 700 },
       ]);
     });
-    await loginLineman(page); // HQ index 1 = आदेगांव (index 0 placeholder)
+    await loginLineman(page); // HQ index 1 = बंडोल (index 0 placeholder)
     await expect(page.locator('.con-card').first()).toContainText('राम कुमार', { timeout: 15000 });
     await page.evaluate(() => markPaid(0));
     await page.waitForTimeout(500);
-    const st = await page.evaluate(() => cGet('आदेगांव', 'कुल उपभोक्ता')[0].status);
+    const st = await page.evaluate(() => cGet('बंडोल', 'कुल उपभोक्ता')[0].status);
     expect(st).toBe('paid');
   });
 
   test('रिमार्क मोडल खुला रहते हुए लिस्ट का क्रम बदल जाए (background sync) — फिर भी सही record में सेव हो, acc से मिलान करके', async ({ page }) => {
     await openApp(page);
     await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '111222', name: 'राम कुमार', status: 'pending', amount: 500 },
         { acc: '333444', name: 'श्याम लाल', status: 'pending', amount: 700 },
       ]);
@@ -371,7 +371,7 @@ test.describe('डेटा और वसूली', () => {
     await expect(page.locator('#rmk-name')).toHaveText('राम कुमार');
     // मोडल खुला रहते हुए — background sync ने क्रम पलट दिया, अब idx 0 पर श्याम लाल है
     await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '333444', name: 'श्याम लाल', status: 'pending', amount: 700 },
         { acc: '111222', name: 'राम कुमार', status: 'pending', amount: 500 },
       ]);
@@ -379,7 +379,7 @@ test.describe('डेटा और वसूली', () => {
     await page.fill('#rmk-text', 'टेस्ट रिमार्क');
     await page.evaluate(() => saveRmk());
     await page.waitForTimeout(300);
-    const data = await page.evaluate(() => cGet('आदेगांव', 'कुल उपभोक्ता'));
+    const data = await page.evaluate(() => cGet('बंडोल', 'कुल उपभोक्ता'));
     const ram = data.find((x) => x.acc === '111222');
     const shyam = data.find((x) => x.acc === '333444');
     expect(ram.remarksArr && ram.remarksArr[0].text).toBe('टेस्ट रिमार्क'); // सही व्यक्ति (राम) पर लगा
@@ -389,7 +389,7 @@ test.describe('डेटा और वसूली', () => {
   test('रिमार्क मोडल खुला रहते हुए वह record ही हट जाए — चुपचाप fail न हो, साफ़ error दिखे', async ({ page }) => {
     await openApp(page);
     await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '111222', name: 'राम कुमार', status: 'pending', amount: 500 },
       ]);
     });
@@ -397,7 +397,7 @@ test.describe('डेटा और वसूली', () => {
     await expect(page.locator('.con-card').first()).toContainText('राम कुमार', { timeout: 15000 });
     await page.evaluate(() => openRmkModal(0, '111222'));
     // background sync ने वह record ही हटा दिया (जैसे JE ने लिस्ट दोबारा अपलोड कर दी हो)
-    await page.evaluate(() => { cSet('आदेगांव', 'कुल उपभोक्ता', []); });
+    await page.evaluate(() => { cSet('बंडोल', 'कुल उपभोक्ता', []); });
     await page.fill('#rmk-text', 'टेस्ट रिमार्क');
     await page.evaluate(() => saveRmk());
     await page.waitForTimeout(300);
@@ -412,9 +412,9 @@ test.describe('डेटा और वसूली', () => {
     // हो जाता — user को लगता "सेव हुआ" पर असल में कभी Firebase तक पहुंचा ही नहीं।
     await openApp(page);
     await page.evaluate(() => {
-      MIGRATED[hqKey('आदेगांव')] = {};
-      MIGRATED[hqKey('आदेगांव')][catKey('कुल उपभोक्ता')] = true;
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      MIGRATED[hqKey('बंडोल')] = {};
+      MIGRATED[hqKey('बंडोल')][catKey('कुल उपभोक्ता')] = true;
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '555666', name: 'गीता देवी', status: 'pending', amount: 300, o: 0 },
       ]);
     });
@@ -423,7 +423,7 @@ test.describe('डेटा और वसूली', () => {
     const sentBody = await page.evaluate(() => new Promise((resolve) => {
       const orig = window.fetch;
       window.fetch = function (url, opts) {
-        if (typeof url === 'string' && url.indexOf('आदेगांव/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PATCH') {
+        if (typeof url === 'string' && url.indexOf('बंडोल/कुल_उपभोक्ता') > -1 && opts && opts.method === 'PATCH') {
           resolve(JSON.parse(opts.body));
         }
         return orig(url, opts);
@@ -478,7 +478,7 @@ test.describe('ग्राम-वार वसूली', () => {
     await page.evaluate(() => openVillageModal());
     await page.waitForTimeout(500);
     const jeTabs = await page.locator('#vg-hq-tabs .hq-tab').count();
-    expect(jeTabs).toBe(6); // HQS.length जितने tabs
+    expect(jeTabs).toBe(9); // HQS.length जितने tabs
     await page.evaluate(() => closeVillageModal());
     await page.evaluate(() => doLogout(false));
     await loginLineman(page);
@@ -491,13 +491,13 @@ test.describe('ग्राम-वार वसूली', () => {
   test('_vgLoadAndRender अब सभी 8 श्रेणियां ताज़ा करता है (स्कोरकार्ड जैसा) — सिर्फ मास्टर category नहीं', async ({ page }) => {
     await openApp(page);
     await loginJE(page);
-    await page.evaluate(() => { vgActiveHQ = 'आदेगांव'; });
+    await page.evaluate(() => { vgActiveHQ = 'बंडोल'; });
     const jeHqs = await page.evaluate(() => new Promise((resolve) => {
       window._cashRefreshAll = function (hqs, cb) { resolve(hqs.slice()); cb(); };
       _vgLoadAndRender();
     }));
-    expect(jeHqs.length).toBe(6); // JE — सभी HQ की सभी श्रेणियां ताज़ा हों (जैसा downloadVillageExcel में पहले से है)
-    expect(jeHqs).toContain('आदेगांव');
+    expect(jeHqs.length).toBe(9); // JE — सभी HQ की सभी श्रेणियां ताज़ा हों (जैसा downloadVillageExcel में पहले से है)
+    expect(jeHqs).toContain('बंडोल');
 
     await page.evaluate(() => doLogout(false));
     await loginLineman(page);
@@ -513,7 +513,7 @@ test.describe('ग्राम-वार वसूली', () => {
     await openApp(page);
     await loginJE(page);
     await page.evaluate(() => {
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '1', addr: 'रामपुर', status: 'paid', amount: 100 },
         { acc: '2', addr: 'रामपुर', status: 'pending', amount: 200 },
         { acc: '3', addr: 'श्यामपुर', status: 'paid', amount: 150 },
@@ -539,139 +539,38 @@ test.describe('ग्राम-वार वसूली', () => {
     await loginJE(page);
     await page.evaluate(() => {
       // मास्टर "कुल उपभोक्ता" में यह उपभोक्ता अभी भी pending दिखा रहा है...
-      cSet('आदेगांव', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '501', addr: 'टेस्टपुर', status: 'pending', amount: 300 },
       ]);
       // ...लेकिन "घरेलू" श्रेणी में उसे वसूल mark कर दिया गया है
-      cSet('आदेगांव', 'घरेलू', [
+      cSet('बंडोल', 'घरेलू', [
         { acc: '501', addr: 'टेस्टपुर', status: 'paid', amount: 300 },
       ]);
     });
-    const row = await page.evaluate(() => _vgComputeRows('आदेगांव')[0]);
+    const row = await page.evaluate(() => _vgComputeRows('बंडोल')[0]);
     expect(row.tot).toBe(1);
     expect(row.paid).toBe(1);
     expect(row.bakaya).toBe(0);
     expect(row.paidAmt).toBe(300);
   });
 
-  test('मिलते-जुलते गांव-नाम (केस भिन्नता + अलग-टोकन) रिपोर्ट में मर्ज होते हैं', async ({ page }) => {
+  test('मिलते-जुलते गांव-नाम (केस/स्पेस भिन्नता) रिपोर्ट में मर्ज होते हैं', async ({ page }) => {
     await openApp(page);
     await loginJE(page);
     await page.evaluate(() => {
-      cSet('जोबा', 'कुल उपभोक्ता', [
-        { acc: '1', addr: 'PIPARIYA', status: 'paid', amount: 100 },
-        { acc: '2', addr: 'PIPARIYA JOBA', status: 'pending', amount: 200 },
-        { acc: '3', addr: 'Khubi', status: 'paid', amount: 50 },
-        { acc: '4', addr: 'KHUBI', status: 'pending', amount: 60 },
+      cSet('बंडोल', 'कुल उपभोक्ता', [
+        { acc: '1', addr: 'Khubi', status: 'paid', amount: 50 },
+        { acc: '2', addr: 'KHUBI', status: 'pending', amount: 60 },
       ]);
     });
     await page.evaluate(() => openVillageModal());
     await page.waitForTimeout(300);
     await page.evaluate(() => {
-      Array.from(document.querySelectorAll('#vg-hq-tabs .hq-tab')).find((t) => t.textContent === 'जोबा').click();
+      Array.from(document.querySelectorAll('#vg-hq-tabs .hq-tab')).find((t) => t.textContent === 'बंडोल').click();
     });
-    await page.waitForFunction(() => document.querySelectorAll('#vg-list tbody tr').length === 2, null, { timeout: 15000 });
+    await page.waitForFunction(() => document.querySelectorAll('#vg-list tbody tr').length === 1, null, { timeout: 15000 });
     const rows = await page.evaluate(() => Array.from(document.querySelectorAll('#vg-list tbody tr')).map((r) => r.textContent));
-    expect(rows.some((r) => r.includes('2') && (r.includes('PIPARIYA') || r.includes('Piparia')))).toBe(true);
     expect(rows.some((r) => /khubi/i.test(r) && r.includes('2'))).toBe(true);
-  });
-
-  test('बीबी HQ के नए मर्ज-समूह (DEORI/DEVRI, KHAMARIYA KACHHI ग्रुप, MOHGAON KACCHI, NAVALGAON ग्रुप) एक ही कुंजी में पड़ते हैं', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      deori: [_vgNormKey('बीबी', 'DEORI'), _vgNormKey('बीबी', 'DEVRI')],
-      khamariya: [
-        _vgNormKey('बीबी', 'KHAMARIYA KACCHI'),
-        _vgNormKey('बीबी', 'KHAMARIYA KACHHI'),
-        _vgNormKey('बीबी', 'KHAMARIYA KACHHI TOLA'),
-        _vgNormKey('बीबी', 'KHMRIYA KACHHI'),
-      ],
-      mohgaon: [
-        _vgNormKey('बीबी', 'MOHGAON KACCHI'),
-        _vgNormKey('बीबी', 'MOHGAON KACHHI'),
-        _vgNormKey('बीबी', 'Mohgaon kachi'),
-        _vgNormKey('बीबी', 'MOHGAON KACHHI AUR'),
-      ],
-      navalgaon: [
-        _vgNormKey('बीबी', 'NAVAL GAON'),
-        _vgNormKey('बीबी', 'NAVALGAON'),
-        _vgNormKey('बीबी', 'Nawalgaon'),
-      ],
-    }));
-    expect(new Set(r.deori).size).toBe(1);
-    expect(new Set(r.khamariya).size).toBe(1);
-    expect(new Set(r.mohgaon).size).toBe(1);
-    expect(new Set(r.navalgaon).size).toBe(1);
-  });
-
-  test('मढ़ी HQ के मर्ज-समूह (JAMUA/JUMUA, RAHLI/REHLI, KHAMARIYA GUJAR/MADHI) एक ही कुंजी में पड़ते हैं', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      jamua: [_vgNormKey('मढ़ी', 'JAMUA'), _vgNormKey('मढ़ी', 'JUMUA')],
-      rahli: [_vgNormKey('मढ़ी', 'RAHLI'), _vgNormKey('मढ़ी', 'REHLI')],
-      khamariya: [_vgNormKey('मढ़ी', 'KHAMARIYA GUJAR'), _vgNormKey('मढ़ी', 'KHAMARIYA MADHI')],
-    }));
-    expect(new Set(r.jamua).size).toBe(1);
-    expect(new Set(r.rahli).size).toBe(1);
-    expect(new Set(r.khamariya).size).toBe(1);
-  });
-
-  test('पाटन HQ के मर्ज-समूह (JUBAN/JUWAN TOLA ग्रुप, JOGANI/JOGNI TOLA) एक ही कुंजी में पड़ते हैं', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      juban: [_vgNormKey('पाटन', 'JUBAN TOLA'), _vgNormKey('पाटन', 'JUWAN TOLA'), _vgNormKey('पाटन', 'JUWANTOLA')],
-      jogani: [_vgNormKey('पाटन', 'JOGANI TOLA'), _vgNormKey('पाटन', 'JOGNI TOLA')],
-    }));
-    expect(new Set(r.juban).size).toBe(1);
-    expect(new Set(r.jogani).size).toBe(1);
-  });
-
-  test('जोबा HQ का KOMSAGHAT/KOSAMAGHT मर्ज-समूह एक ही कुंजी में पड़ता है', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      komsaghat: [_vgNormKey('जोबा', 'KOMSAGHAT'), _vgNormKey('जोबा', 'KOSAMAGHT')],
-    }));
-    expect(new Set(r.komsaghat).size).toBe(1);
-  });
-
-  test('पिंडरई HQ के मर्ज-समूह (KARABDOL/KARAPDOL, SINGHODI MOCHIPATHAR ग्रुप) एक ही कुंजी में पड़ते हैं', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      karabdol: [_vgNormKey('पिंडरई', 'KARABDOL'), _vgNormKey('पिंडरई', 'KARAPDOL')],
-      singhodi: [
-        _vgNormKey('पिंडरई', 'SINGHODI MOCHIPATHAR'),
-        _vgNormKey('पिंडरई', 'SINGODI MOCHI'),
-        _vgNormKey('पिंडरई', 'SINGODI MOCHIPATHAR'),
-      ],
-    }));
-    expect(new Set(r.karabdol).size).toBe(1);
-    expect(new Set(r.singhodi).size).toBe(1);
-  });
-
-  test('पाटन HQ का KALYAN PUR/KALYANPUR मर्ज-समूह एक ही कुंजी में पड़ता है', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      kalyanpur: [_vgNormKey('पाटन', 'KALYAN PUR'), _vgNormKey('पाटन', 'KALYANPUR')],
-    }));
-    expect(new Set(r.kalyanpur).size).toBe(1);
-  });
-
-  test('आदेगांव HQ के मर्ज-समूह (HAMEERGAGH/HAMEERGARH, CHHOTA/CHOTA BICHHUA) एक ही कुंजी में पड़ते हैं', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      hameergarh: [_vgNormKey('आदेगांव', 'HAMEERGAGH'), _vgNormKey('आदेगांव', 'HAMEERGARH')],
-      bichhua: [_vgNormKey('आदेगांव', 'CHHOTA BICHHUA'), _vgNormKey('आदेगांव', 'CHOTA BICHHUA')],
-    }));
-    expect(new Set(r.hameergarh).size).toBe(1);
-    expect(new Set(r.bichhua).size).toBe(1);
-  });
-
-  test('पिंडरई HQ का PINDARI RAIYAT/PINDRAI RAIYAT मर्ज-समूह एक ही कुंजी में पड़ता है', async ({ page }) => {
-    await openApp(page);
-    const r = await page.evaluate(() => ({
-      pindariRaiyat: [_vgNormKey('पिंडरई', 'PINDARI RAIYAT'), _vgNormKey('पिंडरई', 'PINDRAI RAIYAT')],
-    }));
-    expect(new Set(r.pindariRaiyat).size).toBe(1);
   });
 });
 
@@ -682,9 +581,9 @@ test.describe('गांव-वार सुधरी Excel', () => {
     await loginJE(page);
     await page.waitForTimeout(2000); // login के बाद का background prefetch शुरू होकर शांत हो जाए
     await page.evaluate(() => {
-      cSet('जोबा', 'कुल उपभोक्ता', [
-        { acc: '1', addr: 'PIPARIYA', name: 'राम', status: 'paid', amount: 100 },
-        { acc: '2', addr: 'PIPARIYA JOBA', name: 'श्याम', status: 'pending', amount: 100 },
+      cSet('बंडोल', 'कुल उपभोक्ता', [
+        { acc: '1', addr: 'Rampur', name: 'राम', status: 'paid', amount: 100 },
+        { acc: '2', addr: 'RAMPUR', name: 'श्याम', status: 'pending', amount: 100 },
       ]);
     });
     const r = await page.evaluate(() => new Promise((res) => {
@@ -701,22 +600,22 @@ test.describe('गांव-वार सुधरी Excel', () => {
     }));
     expect(r.order[0]).toBe('सारांश');
     const summarySheet = r.sheets.find((s) => s.name === 'सारांश');
-    const jobaRow = summarySheet.rows.find((row) => row[0] === 'जोबा');
-    expect(jobaRow[1]).toBe('PIPARIYA'); // मर्ज होकर एक ही गांव
-    expect(jobaRow[2]).toBe(2); // कुल कनेक्शन
-    const jobaSheet = r.sheets.find((s) => s.name === 'जोबा');
-    expect(jobaSheet.rows.length).toBe(3); // header + 2 records
+    const bandolRow = summarySheet.rows.find((row) => row[0] === 'बंडोल');
+    expect(bandolRow[1]).toBe('Rampur'); // मर्ज होकर एक ही गांव
+    expect(bandolRow[2]).toBe(2); // कुल कनेक्शन
+    const bandolSheet = r.sheets.find((s) => s.name === 'बंडोल');
+    expect(bandolSheet.rows.length).toBe(3); // header + 2 records
   });
 
   test('lineman भी डाउनलोड कर सकता है, पर सिर्फ अपने HQ का', async ({ page }) => {
     test.setTimeout(90000); // background prefetch (offline-gated fetches) को settle होने का समय — धीमे CI runner पर flake रोकने के लिए
     await openApp(page);
-    await loginLineman(page); // HQ index 1 = पिंडरई
+    await loginLineman(page); // HQ index 1 = बंडोल
     await page.waitForTimeout(2000); // login के बाद का background prefetch शुरू होकर शांत हो जाए
     const myHQ = await page.evaluate(() => CU.hq);
     await page.evaluate(() => {
       cSet(CU.hq, 'कुल उपभोक्ता', [{ acc: '1', addr: 'ORAPANI', name: 'राधा', status: 'paid', amount: 100 }]);
-      cSet('जोबा', 'कुल उपभोक्ता', [{ acc: '9', addr: 'PIPARIYA', name: 'गीता', status: 'paid', amount: 50 }]);
+      cSet('सागर', 'कुल उपभोक्ता', [{ acc: '9', addr: 'PIPARIYA', name: 'गीता', status: 'paid', amount: 50 }]);
     });
     const r = await page.evaluate(() => new Promise((res) => {
       var sheets = [];
@@ -731,7 +630,7 @@ test.describe('गांव-वार सुधरी Excel', () => {
       downloadVillageExcel();
     }));
     expect(r.sheets).toContain(myHQ);
-    expect(r.sheets).not.toContain('जोबा');
+    expect(r.sheets).not.toContain('सागर');
   });
 
   test('HQ-वार sheet में टैरिफ श्रेणी का कॉलम भी शामिल होता है', async ({ page }) => {
@@ -740,7 +639,7 @@ test.describe('गांव-वार सुधरी Excel', () => {
     await loginJE(page);
     await page.waitForTimeout(2000);
     await page.evaluate(() => {
-      cSet('जोबा', 'कुल उपभोक्ता', [
+      cSet('बंडोल', 'कुल उपभोक्ता', [
         { acc: '1', addr: 'PIPARIYA', name: 'राम', status: 'paid', amount: 100, tariff: 'LV1.1' },
       ]);
     });
@@ -756,10 +655,10 @@ test.describe('गांव-वार सुधरी Excel', () => {
       };
       downloadVillageExcel();
     }));
-    const jobaSheet = r.sheets.find((s) => s.name === 'जोबा');
-    const tariffCol = jobaSheet.rows[0].indexOf('टैरिफ');
+    const bandolSheet = r.sheets.find((s) => s.name === 'बंडोल');
+    const tariffCol = bandolSheet.rows[0].indexOf('टैरिफ');
     expect(tariffCol).toBeGreaterThan(-1);
-    expect(jobaSheet.rows[1][tariffCol]).toBe('LV1.1');
+    expect(bandolSheet.rows[1][tariffCol]).toBe('LV1.1');
   });
 
   test('लंबे नाम/गांव के लिए कॉलम अपने-आप चौड़ा होता है — अक्षर कटने न पाएं', async ({ page }) => {
@@ -769,7 +668,7 @@ test.describe('गांव-वार सुधरी Excel', () => {
     await page.waitForTimeout(2000);
     const longName = 'राजेन्द्र कुमार शर्मा विश्वकर्मा पुत्र स्वर्गीय';
     await page.evaluate((n) => {
-      cSet('जोबा', 'कुल उपभोक्ता', [{ acc: '1', addr: 'PIPARIYA', name: n, status: 'pending', amount: 100 }]);
+      cSet('बंडोल', 'कुल उपभोक्ता', [{ acc: '1', addr: 'PIPARIYA', name: n, status: 'pending', amount: 100 }]);
     }, longName);
     const r = await page.evaluate(() => new Promise((res) => {
       var sheets = [];
@@ -783,10 +682,10 @@ test.describe('गांव-वार सुधरी Excel', () => {
       };
       downloadVillageExcel();
     }));
-    const jobaSheet = r.sheets.find((s) => s.name === 'जोबा');
-    const nameCol = jobaSheet.rows[0].indexOf('नाम');
+    const bandolSheet = r.sheets.find((s) => s.name === 'बंडोल');
+    const nameCol = bandolSheet.rows[0].indexOf('नाम');
     // कॉलम की चौड़ाई नाम की लंबाई से काफ़ी कम न रहे (Consumer No/तारीख जैसे narrow कॉलम की गलती न दोहराए)
-    expect(jobaSheet.cols[nameCol].wch).toBeGreaterThan(longName.length * 0.9);
+    expect(bandolSheet.cols[nameCol].wch).toBeGreaterThan(longName.length * 0.9);
   });
 });
 
@@ -868,7 +767,7 @@ test.describe('चरण 3 माइग्रेशन — Dry-run जांच'
     await page.evaluate(() => openMigModal());
     await page.evaluate(() => {
       _migRender([
-        { hq: 'पाटन', cat: 'घरेलू', a: { tot: 5, missingAcc: 1, missingAccSamples: [{ name: 'श्याम लाल', addr: 'PIPARIYA', phone: '' }], dupAcc: 0, illegalAcc: 0 } },
+        { hq: 'बंडोल', cat: 'घरेलू', a: { tot: 5, missingAcc: 1, missingAccSamples: [{ name: 'श्याम लाल', addr: 'PIPARIYA', phone: '' }], dupAcc: 0, illegalAcc: 0 } },
       ]);
     });
     const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
@@ -932,8 +831,8 @@ test.describe('डिवाइस Version ट्रैकिंग', () => {
       window.fetch = function (url) {
         if (String(url).indexOf('/DEVICE_VERSIONS.json') > -1) {
           return Promise.resolve({ ok: true, json: () => Promise.resolve({
-            d1: { v: APP_VER, hq: 'आदेगांव', role: 'supervisor', name: 'JE', t: Date.now() },
-            d2: { v: '9.0', hq: 'पिंडरई', role: 'lineman', name: 'पुराना लाइनमैन', t: Date.now() - 1000 },
+            d1: { v: APP_VER, hq: 'बंडोल', role: 'supervisor', name: 'JE', t: Date.now() },
+            d2: { v: '9.0', hq: 'सागर', role: 'lineman', name: 'पुराना लाइनमैन', t: Date.now() - 1000 },
           }) });
         }
         return Promise.resolve({ ok: true, json: () => Promise.resolve(null) });
@@ -1196,7 +1095,7 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
     await loginJE(page);
     await page.evaluate(() => openMigModal());
     await page.evaluate(() => {
-      _migRender([{ hq: 'आदेगांव', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, reverted: true } }]);
+      _migRender([{ hq: 'बंडोल', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, reverted: true } }]);
     });
     const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
     expect(html).toContain('पलटा हुआ');
@@ -1211,8 +1110,8 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
     await page.evaluate(() => openMigModal());
     await page.evaluate(() => {
       _migRender([
-        { hq: 'आदेगांव', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: true } },
-        { hq: 'आदेगांव', cat: 'व्यवसाय', a: { tot: 0, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: false } }, // खाली — गिनती में अड़चन नहीं
+        { hq: 'बंडोल', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: true } },
+        { hq: 'बंडोल', cat: 'व्यवसाय', a: { tot: 0, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: false } }, // खाली — गिनती में अड़चन नहीं
       ]);
     });
     const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
@@ -1227,8 +1126,8 @@ test.describe('चरण 3 — migration-revert ऑटो-पहचान', () =
     await page.evaluate(() => openMigModal());
     await page.evaluate(() => {
       _migRender([
-        { hq: 'आदेगांव', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: true } },
-        { hq: 'पिंडरई', cat: 'कुल उपभोक्ता', a: { tot: 3, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: false } },
+        { hq: 'बंडोल', cat: 'कुल उपभोक्ता', a: { tot: 5, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: true } },
+        { hq: 'सागर', cat: 'कुल उपभोक्ता', a: { tot: 3, missingAcc: 0, dupAcc: 0, illegalAcc: 0, migrated: false } },
       ]);
     });
     const html = await page.evaluate(() => document.getElementById('mig-content').innerHTML);
@@ -1304,10 +1203,10 @@ test.describe('बकाया ≤0 अपने-आप वसूल — migrati
 test.describe('Lineman PIN — सामान्य सुरक्षा-मज़बूती', () => {
   test('HQ का PIN सेट हो तो गलत PIN से login रुकता है, सही PIN से चलता है', async ({ page }) => {
     await openApp(page);
-    await page.evaluate(() => { HQ_PINS[hqKey('आदेगांव')] = '4321'; });
+    await page.evaluate(() => { HQ_PINS[hqKey('बंडोल')] = '4321'; });
     await page.click('#rc-lin');
     await page.fill('#uname-inp', 'टेस्ट लाइनमैन');
-    await page.selectOption('#hq-sel', { label: 'आदेगांव' });
+    await page.selectOption('#hq-sel', { label: 'बंडोल' });
     await page.fill('#lin-pin', '0000');
     await page.click('.login-btn');
     await page.waitForTimeout(300);
@@ -1319,10 +1218,10 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
 
   test('logout पर PIN फ़ील्ड भी साफ़ हो जाए — वरना shared device पर अगले लाइनमैन को पुराने PIN से login fail दिखता (गड़बड़ी जो "logout ठीक से काम नहीं करता" जैसी दिखती थी)', async ({ page }) => {
     await openApp(page);
-    await page.evaluate(() => { HQ_PINS[hqKey('आदेगांव')] = '4321'; });
+    await page.evaluate(() => { HQ_PINS[hqKey('बंडोल')] = '4321'; });
     await page.click('#rc-lin');
     await page.fill('#uname-inp', 'टेस्ट लाइनमैन');
-    await page.selectOption('#hq-sel', { label: 'आदेगांव' });
+    await page.selectOption('#hq-sel', { label: 'बंडोल' });
     await page.fill('#lin-pin', '4321');
     await page.click('.login-btn');
     await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
@@ -1335,7 +1234,7 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
   test('सही PIN पर उस HQ के असली Firebase account से sign-in होता है (email + PIN से बना password)', async ({ page }) => {
     await openApp(page);
     const r = await page.evaluate(() => new Promise((resolve) => {
-      HQ_PINS[hqKey('आदेगांव')] = '4321';
+      HQ_PINS[hqKey('बंडोल')] = '4321';
       window.firebase = window.firebase || {};
       window.firebase.auth = function () {
         return {
@@ -1348,11 +1247,11 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
       };
       selectRole('lineman');
       document.getElementById('uname-inp').value = 'टेस्ट लाइनमैन';
-      document.getElementById('hq-sel').value = 'आदेगांव';
+      document.getElementById('hq-sel').value = 'बंडोल';
       document.getElementById('lin-pin').value = '4321';
       doLogin();
     }));
-    expect(r.email).toBe('hq-adegaon@adegaondc.internal');
+    expect(r.email).toBe('hq-bandol@bandoldc.internal');
     expect(r.pw).toBe('vasuli-4321');
     await page.waitForFunction(() => document.getElementById('app-screen').classList.contains('active'), null, { timeout: 15000 });
   });
@@ -1360,7 +1259,7 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
   test('HQ sign-in reject (गलत password/server) हो तो login रुक जाता है', async ({ page }) => {
     await openApp(page);
     await page.evaluate(() => {
-      HQ_PINS[hqKey('आदेगांव')] = '4321';
+      HQ_PINS[hqKey('बंडोल')] = '4321';
       window.firebase = window.firebase || {};
       window.firebase.auth = function () {
         return {
@@ -1370,7 +1269,7 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
       };
       selectRole('lineman');
       document.getElementById('uname-inp').value = 'टेस्ट लाइनमैन';
-      document.getElementById('hq-sel').value = 'आदेगांव';
+      document.getElementById('hq-sel').value = 'बंडोल';
       document.getElementById('lin-pin').value = '4321';
       doLogin();
     });
@@ -1381,7 +1280,7 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
   test('HQ sign-in के बीच नेट टूटे तो भी login आगे बढ़ जाता है (offline-सहनशील)', async ({ page }) => {
     await openApp(page);
     await page.evaluate(() => {
-      HQ_PINS[hqKey('आदेगांव')] = '4321';
+      HQ_PINS[hqKey('बंडोल')] = '4321';
       window.firebase = window.firebase || {};
       window.firebase.auth = function () {
         return {
@@ -1391,7 +1290,7 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
       };
       selectRole('lineman');
       document.getElementById('uname-inp').value = 'टेस्ट लाइनमैन';
-      document.getElementById('hq-sel').value = 'आदेगांव';
+      document.getElementById('hq-sel').value = 'बंडोल';
       document.getElementById('lin-pin').value = '4321';
       doLogin();
     });
@@ -1415,13 +1314,13 @@ test.describe('Lineman PIN — सामान्य सुरक्षा-म�
     await openApp(page);
     await loginJE(page);
     await page.evaluate(() => openPinModal());
-    await page.fill('#pin-आदेगांव', '1111');
+    await page.fill('#pin-बंडोल', '1111');
     const r = await page.evaluate(() => new Promise((resolve) => {
       const real = window.fetch;
       window.fetch = function (url, opts) {
         if (String(url).indexOf('/HQ_PIN.json') > -1 && opts && opts.method === 'PUT') {
           window.fetch = real;
-          resolve({ body: JSON.parse(opts.body), key: hqKey('आदेगांव') });
+          resolve({ body: JSON.parse(opts.body), key: hqKey('बंडोल') });
           return Promise.resolve({ ok: true, json: () => Promise.resolve(true) });
         }
         return real(url, opts);
@@ -2065,7 +1964,7 @@ test.describe('फोन-नंबर मॉडल — दो तरह के �
     expect(wa).not.toContain('धारा 56');
   });
 
-  test('"विच्छेदन सूचना" चुनने पर नाम + आदेगांव बिजली वितरण केंद्र सिवनी वाला संदेश बने, और याद रह जाए', async ({ page }) => {
+  test('"विच्छेदन सूचना" चुनने पर नाम + Bandol DC बिजली वितरण केंद्र वाला संदेश बने, और याद रह जाए', async ({ page }) => {
     await openApp(page);
     await loginLineman(page);
     await page.evaluate(() => openPhModal('सीता बाई', '9876500000', 'ACC2', 3107));
@@ -2073,7 +1972,7 @@ test.describe('फोन-नंबर मॉडल — दो तरह के �
     const wa = await page.evaluate(() => decodeURIComponent(document.getElementById('ph-wa-btn').href.split('text=')[1]));
     expect(wa).toContain('सीता बाई');
     expect(wa).toContain('धारा 56');
-    expect(wa).toContain('आदेगांव बिजली वितरण केंद्र सिवनी');
+    expect(wa).toContain('Bandol DC बिजली वितरण केंद्र');
     expect(wa).not.toContain('MPPKVVCL');
     expect(await page.evaluate(() => localStorage.getItem('dc_ph_msgtype'))).toBe('disconnect');
     // मॉडल दोबारा खोलने पर वही (याद किया हुआ) टाइप चुना हो — पर दूसरा विकल्प भी मौजूद रहे
@@ -2108,15 +2007,15 @@ test.describe('कैश लिस्ट — एक ही उपभोक्त
     await openApp(page);
     await loginJE(page);
     await page.evaluate(() => {
-      activeHQ = 'आदेगांव';
-      cSet('आदेगांव', 'कुल उपभोक्ता', [{ acc: '1134022288', name: 'टेस्ट उपभोक्ता', status: 'pending', amount: 500 }]);
-      cSet('आदेगांव', 'घरेलू', [{ acc: '1134022288', name: 'टेस्ट उपभोक्ता', status: 'pending', amount: 500 }]);
+      activeHQ = 'बंडोल';
+      cSet('बंडोल', 'कुल उपभोक्ता', [{ acc: '1134022288', name: 'टेस्ट उपभोक्ता', status: 'pending', amount: 500 }]);
+      cSet('बंडोल', 'घरेलू', [{ acc: '1134022288', name: 'टेस्ट उपभोक्ता', status: 'pending', amount: 500 }]);
       CASH_IVRS = ['1134022288'];
     });
-    await page.evaluate(() => _applyCashMatched(['आदेगांव']));
+    await page.evaluate(() => _applyCashMatched(['बंडोल']));
     const statuses = await page.evaluate(() => ({
-      kul: cGet('आदेगांव', 'कुल उपभोक्ता')[0].status,
-      ghar: cGet('आदेगांव', 'घरेलू')[0].status,
+      kul: cGet('बंडोल', 'कुल उपभोक्ता')[0].status,
+      ghar: cGet('बंडोल', 'घरेलू')[0].status,
     }));
     expect(statuses.kul).toBe('paid');
     expect(statuses.ghar).toBe('paid');
@@ -2182,12 +2081,12 @@ test.describe('परफ़ॉर्मेंस — बड़ी लिस्�
         for (var i = 0; i < 1000; i++) {
           arr.push({ acc: cat + '_' + i, name: 'उपभोक्ता ' + i, addr: 'गांव ' + (i % 50), status: i % 2 === 0 ? 'paid' : 'pending', amount: 500 });
         }
-        cSet('आदेगांव', cat, arr);
+        cSet('बंडोल', cat, arr);
       });
     });
     const t = await page.evaluate(() => {
       var start = performance.now();
-      _vgComputeRows('आदेगांव');
+      _vgComputeRows('बंडोल');
       return performance.now() - start;
     });
     expect(t).toBeLessThan(2000);

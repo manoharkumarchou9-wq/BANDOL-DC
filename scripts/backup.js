@@ -13,9 +13,9 @@ const admin = require("firebase-admin");
 const XLSX = require("xlsx");
 const fs = require("fs");
 
-const DB_URL = "https://adegaon-dc-top-50-default-rtdb.firebaseio.com";
+const DB_URL = "https://bandol-dc-default-rtdb.firebaseio.com";
 const REQ_TIMEOUT_MS = 20000; // एक request ज़्यादा से ज़्यादा 20 सेकंड — कभी भी हमेशा के लिए न अटके
-const HQS = ["आदेगांव", "पिंडरई", "जोबा", "पाटन", "बीबी", "मढ़ी"];
+const HQS = ["बंडोल", "सागर", "बल्लारपुर", "बखारी", "बाकी", "कलार बाकी", "पोंडी", "गोरखपुर", "बंडोल ग्रामीण"];
 const CATS_DEFAULT = ["कुल उपभोक्ता", "घरेलू", "व्यवसाय", "कृषि", "गवर्नमेंट", "इंडस्ट्रियल", "सूची-2", "सूची-3"];
 
 function hqKey(hq) { return hq.replace(/[\s.#$\[\]]/g, "_"); }
@@ -108,7 +108,7 @@ async function main() {
   }
 
   fs.mkdirSync("backup-output", { recursive: true });
-  var fn = "adegaon-backup-" + now.toISOString().slice(0, 10) + ".xlsx";
+  var fn = "bandol-backup-" + now.toISOString().slice(0, 10) + ".xlsx";
   XLSX.writeFile(wb, "backup-output/" + fn);
   console.log("बैकअप बना: " + fn + " (" + totalRecs + " records)");
 }

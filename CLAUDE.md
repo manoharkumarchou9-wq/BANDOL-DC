@@ -1,17 +1,17 @@
 # वसूली ट्रैकर (Recovery Tracker)
 
-आदेगांव Distribution Centre / लखनादौन डिवीजन सिवनी सर्कल (मध्य प्रदेश बिजली विभाग) के लिए एक ऑफ़लाइन-फर्स्ट PWA — vanilla JavaScript, कोई framework नहीं।
+Bandol DC (मध्य प्रदेश बिजली विभाग) के लिए एक ऑफ़लाइन-फर्स्ट PWA — vanilla JavaScript, कोई framework नहीं।
 
 ## Tech Stack
 - Vanilla JavaScript (कोई build step नहीं)
 - Firebase Realtime Database + Firebase Auth + Firebase App Check
-- Netlify पर डिप्लॉय (साइट: adegaondc)
+- Netlify पर डिप्लॉय (साइट: TODO — अभी नई Netlify site बनाकर इस repo से जोड़नी है)
 - Playwright से टेस्ट
 
 ## Repo/Branch
-- GitHub: `pradeepks2015-ship-it/ADEGAON`
+- GitHub: `manoharkumarchou9-wq/bandol-dc`
 - `main` branch से Netlify auto-deploy होता है
-- सारा development branch `claude/app-version-strengths-weaknesses-v19hwv` पर होता है, फिर PR बनाकर `main` में merge होता है
+- Development नई branch (जैसे `claude/...`) पर होता है, फिर PR बनाकर `main` में merge होता है
 
 ## मुख्य फाइलें
 - `js/config.js` — HQS, CATS, APP_VER, HQ_AUTH_EMAIL, JE_EMAIL, CAT_NAMES
@@ -19,7 +19,7 @@
 - `js/ui-core.js` — login/logout/UI core, doLogout, goBack
 - `js/list.js` — कंज्यूमर लिस्ट render + filter + status (renderListWith, markPaid, propagateStatus)
 - `js/database.js` — fbGet, normList, startListen
-- `js/village.js` — गांव-वार वसूली + VILLAGE_ALIASES (आदेगांव-विशिष्ट गांव-नाम स्पेलिंग सुधार)
+- `js/village.js` — गांव-वार वसूली + VILLAGE_ALIASES (DC-विशिष्ट गांव-नाम स्पेलिंग सुधार)
 - `js/home-scorecard.js` — होम पेज डिस्प्ले बोर्ड + कैश लिस्ट (bulk cash-payment upload)
 - `js/reports.js` — फोन एक्शन मॉडल (SMS/WhatsApp templates), स्कोरकार्ड, PDF/Excel, service-worker registration
 - `js/migration.js` — पुराने array-format से नए per-record object-format में माइग्रेशन
@@ -51,4 +51,4 @@
 उपयोगकर्ता (JE) से हमेशा हिंदी में बात करें — कोड कमेंट भी हिंदी में लिखे जाते हैं (established convention)।
 
 ## किसी अन्य Distribution Centre के लिए यह ऐप दोबारा बनानी हो तो
-सिर्फ़ यही बदलना पड़ेगा (कोई feature/logic नहीं बदलता): नया Firebase प्रोजेक्ट (DB + Auth + App Check), `js/config.js` का HQS/HQ_AUTH_EMAIL/JE_EMAIL, `js/firebase.js` का पूरा config, `scripts/backup.js` की अलग HQS/DB_URL, `js/village.js` का VILLAGE_ALIASES (खाली करके नए सिरे से), `index.html` का `#hq-sel` dropdown (hardcoded options), `database.rules.json`/`.firebaserc` (नए project-id और हर HQ के नए Firebase Auth UID के साथ दोबारा बनाना), और सभी जगह ब्रांडिंग टेक्स्ट ("आदेगांव"/"सिवनी"/"लखनादौन")।
+सिर्फ़ यही बदलना पड़ेगा (कोई feature/logic नहीं बदलता): नया Firebase प्रोजेक्ट (DB + Auth + App Check), `js/config.js` का HQS/HQ_AUTH_EMAIL/JE_EMAIL, `js/firebase.js` का पूरा config, `scripts/backup.js` की अलग HQS/DB_URL, `js/village.js` का VILLAGE_ALIASES (खाली करके नए सिरे से), `index.html` का `#hq-sel` dropdown (hardcoded options), `database.rules.json`/`.firebaserc` (नए project-id और हर HQ के नए Firebase Auth UID के साथ दोबारा बनाना), और सभी जगह ब्रांडिंग टेक्स्ट ("Bandol"/"बंडोल" आदि)।
