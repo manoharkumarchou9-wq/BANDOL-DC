@@ -21,11 +21,7 @@ var _acWaiters = []; // वैसे ही App Check token के लिए —
 try{
   firebase.initializeApp(firebaseConfig);
   try{
-    // TODO(bandol-dc): यह असली reCAPTCHA v3 site key अभी नहीं बनी — JE को Firebase Console →
-    // App Check में जाकर reCAPTCHA v3 provider बनाना होगा, फिर यहां असली site key डालनी होगी।
-    // तब तक यह खाली key try/catch में चुपचाप fail होगी (AC_READY=true बनेगा, बस App Check
-    // header नहीं जुड़ेगा) — कोई crash नहीं, सिर्फ़ Verified% कम दिखेगा।
-    firebase.appCheck().activate("", true); // true = token अपने आप refresh
+    firebase.appCheck().activate("6LdB3IMtAAAAAJOD3znkwwqEh_ZZnoUOOop7uD2V", true); // true = token अपने आप refresh
     var _acRefresh=function(){
       firebase.appCheck().getToken(false)
         .then(function(t){AC_TOKEN=(t&&t.token)||null;})
