@@ -11,11 +11,11 @@ var HQ_AUTH_EMAIL = {
   "सागर":"hq-sagar@bandoldc.internal",
   "बल्लारपुर":"hq-ballarpur@bandoldc.internal",
   "बखारी":"hq-bakhari@bandoldc.internal",
-  "बाकी":"hq-baki@bandoldc.internal",
-  "कलार बाकी":"hq-kalarbaki@bandoldc.internal",
+  "बाकी":"hq-banki@bandoldc.internal",
+  "कलार बाकी":"hq-kalarbanki@bandoldc.internal",
   "पोंडी":"hq-pondi@bandoldc.internal",
   "गोरखपुर":"hq-gorakhpur@bandoldc.internal",
-  "बंडोल ग्रामीण":"hq-bandolgramin@bandoldc.internal"
+  "बंडोल ग्रामीण":"hq-bandolr@bandoldc.internal"
 };
 var APP_VER = "9.83"; // हर अपडेट पर यह नंबर बढ़ाएं
 document.getElementById("ver-badge").textContent="Version "+APP_VER+" • Offline + Auto Sync";
