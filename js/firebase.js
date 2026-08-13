@@ -1,16 +1,17 @@
-var FB = "https://adegaon-dc-top-50-default-rtdb.firebaseio.com";
+var FB = "https://bandol-dc-default-rtdb.firebaseio.com";
 var CACHE = {};
 
 // ── FIREBASE AUTH: गुमनाम (anonymous) sign-in — बिना इसके अब DB access नहीं मिलेगा ──
 // (config secret नहीं है — असली सुरक्षा Firebase Security Rules से आती है, इसे छुपाने की ज़रूरत नहीं)
 var firebaseConfig = {
-  apiKey: "AIzaSyAPFZ2wqPYVMyvU4WqYrKUinVERBkVqdmY",
-  authDomain: "adegaon-dc-top-50.firebaseapp.com",
-  databaseURL: "https://adegaon-dc-top-50-default-rtdb.firebaseio.com",
-  projectId: "adegaon-dc-top-50",
-  storageBucket: "adegaon-dc-top-50.firebasestorage.app",
-  messagingSenderId: "265994697235",
-  appId: "1:265994697235:web:6158cdf1200bd86c201de6"
+  apiKey: "AIzaSyCJAt0RiofP3rLPBV5L-rh92qLq1NtUxk8",
+  authDomain: "bandol-dc.firebaseapp.com",
+  databaseURL: "https://bandol-dc-default-rtdb.firebaseio.com",
+  projectId: "bandol-dc",
+  storageBucket: "bandol-dc.firebasestorage.app",
+  messagingSenderId: "597466693908",
+  appId: "1:597466693908:web:f0423f14ae844ee31c4201",
+  measurementId: "G-NVPH91LJKV"
 };
 var ID_TOKEN = null;
 var AC_TOKEN = null; // App Check token — साबित करता है कि request असली app से है (अभी monitor mode)
@@ -20,7 +21,11 @@ var _acWaiters = []; // वैसे ही App Check token के लिए —
 try{
   firebase.initializeApp(firebaseConfig);
   try{
-    firebase.appCheck().activate("6LdPa10tAAAAAHH1aA7E31NHC1c2k9k0WFEQ7UZX", true); // true = token अपने आप refresh
+    // TODO(bandol-dc): यह असली reCAPTCHA v3 site key अभी नहीं बनी — JE को Firebase Console →
+    // App Check में जाकर reCAPTCHA v3 provider बनाना होगा, फिर यहां असली site key डालनी होगी।
+    // तब तक यह खाली key try/catch में चुपचाप fail होगी (AC_READY=true बनेगा, बस App Check
+    // header नहीं जुड़ेगा) — कोई crash नहीं, सिर्फ़ Verified% कम दिखेगा।
+    firebase.appCheck().activate("", true); // true = token अपने आप refresh
     var _acRefresh=function(){
       firebase.appCheck().getToken(false)
         .then(function(t){AC_TOKEN=(t&&t.token)||null;})

@@ -1,20 +1,23 @@
-var HQS = ["आदेगांव","पिंडरई","जोबा","पाटन","बीबी","मढ़ी"];
+var HQS = ["बंडोल","सागर","बल्लारपुर","बखारी","बाकी","कलार बाकी","पोंडी","गोरखपुर","बंडोल ग्रामीण"];
 var CATS = ["कुल उपभोक्ता","घरेलू","व्यवसाय","कृषि","गवर्नमेंट","इंडस्ट्रियल","सूची-2","सूची-3"];
 var CICO = ["👥","🏠","🏪","🌾","🏛️","🏭","📋","📌"];
 // JE का पासवर्ड अब code में नहीं — Firebase Authentication से verify होता है (देखें ui-core.js: verifyJE)
-var JE_EMAIL = "pradeepks2015@gmail.com";
+var JE_EMAIL = "manoharkumarchou9@gmail.com";
 // हर HQ का अपना असली (गुमनाम नहीं) Firebase account — Security Rules अब सिर्फ़ इसी HQ के account
 // (या JE) को उस HQ का data पढ़ने/लिखने देती हैं। password नहीं है यहां — वो लाइनमैन के टाइप किए
 // PIN से बनता है (देखें ui-core.js: _hqAuthPassword), ताकि कोड में कोई असली secret न रहे।
 var HQ_AUTH_EMAIL = {
-  "आदेगांव":"hq-adegaon@adegaondc.internal",
-  "पिंडरई":"hq-pindrai@adegaondc.internal",
-  "जोबा":"hq-joba@adegaondc.internal",
-  "पाटन":"hq-patan@adegaondc.internal",
-  "बीबी":"hq-bibi@adegaondc.internal",
-  "मढ़ी":"hq-madhi@adegaondc.internal"
+  "बंडोल":"hq-bandol@bandoldc.internal",
+  "सागर":"hq-sagar@bandoldc.internal",
+  "बल्लारपुर":"hq-ballarpur@bandoldc.internal",
+  "बखारी":"hq-bakhari@bandoldc.internal",
+  "बाकी":"hq-baki@bandoldc.internal",
+  "कलार बाकी":"hq-kalarbaki@bandoldc.internal",
+  "पोंडी":"hq-pondi@bandoldc.internal",
+  "गोरखपुर":"hq-gorakhpur@bandoldc.internal",
+  "बंडोल ग्रामीण":"hq-bandolgramin@bandoldc.internal"
 };
-var APP_VER = "9.79"; // हर अपडेट पर यह नंबर बढ़ाएं
+var APP_VER = "9.80"; // हर अपडेट पर यह नंबर बढ़ाएं
 document.getElementById("ver-badge").textContent="Version "+APP_VER+" • Offline + Auto Sync";
 var MAX_RECORDS = 1000;
 // Per-category limits: "कुल उपभोक्ता"=3500, others=1000

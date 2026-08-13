@@ -10,7 +10,7 @@ function _phBuildMsg(type,ctx){
       (ctx.amtN?" ₹"+ctx.amtN.toLocaleString("hi-IN"):"")+
       " बकाया है। विद्युत अधिनियम, 2003 की धारा 56 के अंतर्गत यह विच्छेदन सूचना है। 15 दिवस के भीतर भुगतान न होने पर नियमानुसार विद्युत आपूर्ति विच्छेदित की जा सकती है।"+
       " कृपया आज ही भुगतान करें ताकि बिजली विच्छेदन, विलंब शुल्क और असुविधा से बचा जा सके।"+
-      "\n– आदेगांव बिजली वितरण केंद्र सिवनी"+
+      "\n– Bandol DC बिजली वितरण केंद्र"+
       "\n(नोट: यदि भुगतान कर दिया है तो कृपया इस संदेश को अनदेखा करें)";
   }
   return "नमस्ते "+ctx.name+" जी, आपका बिजली संयोजन"+
@@ -18,7 +18,7 @@ function _phBuildMsg(type,ctx){
     " पर वर्तमान माह तक"+
     (ctx.amtN?" "+ctx.amtN.toLocaleString("hi-IN")+"/- रूपए":"")+
     " बिजली बिल बकाया है। कृपया बिजली ऑफिस, लाइन मैन, अथवा ऑनलाइन माध्यम से शीघ्र भुगतान करें।"+
-    "\nधन्यवाद,\nआदेगांव बिजली वितरण केंद्र"+
+    "\nधन्यवाद,\nBandol DC बिजली वितरण केंद्र"+
     "\n(नोट: यदि भुगतान कर दिया है तो कृपया इस संदेश को अनदेखा करें)";
 }
 function _phApplyMsgType(type){
@@ -268,7 +268,7 @@ function downloadScPDF(){
 
 function dlTemplate(){
   var s="Consumer No,Consumer Name,Father Name,Net Bill,Mobile No,Address,Remark,Tariff,Load,Unit,Last Payment Date,Last Paid Amt\n";
-  s+="1234567890,राम लाल,श्याम लाल,5400,9876543210,आदेगांव,,घरेलू,1KW,1.00KW,15/03/2025,2500\n";
+  s+="1234567890,राम लाल,श्याम लाल,5400,9876543210,बंडोल,,घरेलू,1KW,1.00KW,15/03/2025,2500\n";
   s+="// नोट: Last Payment Date = पिछली भुगतान तिथि, Last Paid Amt = पिछला भुगतान राशि\n";
   var a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([s],{type:"text/csv;charset=utf-8;"}));
@@ -421,7 +421,7 @@ function downloadFullBackup(){
           lg.forEach(function(e){if(e)lr.push([e.t||"",e.c||"",e.m||"",e.x||"",e.u||"",e.v||"",e.d||""]);});
           XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lr),"एरर लॉग");
         }
-        var fn="ADEGAON_backup_"+now.toLocaleDateString("en-IN").replace(/\//g,"-")+"_"+String(now.getHours()).padStart(2,"0")+"-"+String(now.getMinutes()).padStart(2,"0")+".xlsx";
+        var fn="BANDOL_backup_"+now.toLocaleDateString("en-IN").replace(/\//g,"-")+"_"+String(now.getHours()).padStart(2,"0")+"-"+String(now.getMinutes()).padStart(2,"0")+".xlsx";
         XLSX.writeFile(wb,fn);
         hideLoader();
         toast("💾 पूरा बैकअप download हो गया ("+totalRecs+" records)","ok");
@@ -480,7 +480,7 @@ function _waScRender(){
   var gPct=gTot?(gPaid/gTot*100):0;
   var fmt=function(n){return Number(n||0).toLocaleString("hi-IN");};
   var now=new Date();
-  var html="<div class='wasc-hdr'><div class='wasc-hdr-t'>&#9889; वसूली ट्रैकर — आदेगांव DC</div>"+
+  var html="<div class='wasc-hdr'><div class='wasc-hdr-t'>&#9889; वसूली ट्रैकर — Bandol DC</div>"+
     "<div class='wasc-hdr-s'>अद्यतन: "+now.toLocaleDateString("hi-IN")+" "+now.toLocaleTimeString("hi-IN",{hour:"2-digit",minute:"2-digit"})+"</div></div>";
   html+="<table class='wasc-table'><thead><tr><th>क्र.</th><th>मुख्यालय</th>"+
     "<th>कुल उपभोक्ता<br><span class='wasc-sub'>बकाया राशि</span></th>"+

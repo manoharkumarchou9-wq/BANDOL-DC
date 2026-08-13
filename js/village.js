@@ -5,43 +5,8 @@ var vgActiveHQ="";
 var vgRows=[];
 
 // मिलते-जुलते गांव-नाम (केस/स्पेस भिन्नता तो अपने-आप मर्ज होती है — नीचे सिर्फ अलग-टोकन वाले जोड़े, जो सिर्फ केस बदलने से मर्ज नहीं होते)
-var VILLAGE_ALIASES={
-  "आदेगांव":{
-    "HAMEERGAGH":"HAMEERGARH",
-    "CHOTA BICHHUA":"CHHOTA BICHHUA"
-  },
-  "जोबा":{"PIPARIYA JOBA":"PIPARIYA","KOSAMAGHT":"KOMSAGHAT"},
-  "पिंडरई":{
-    "ORAPANI TOLA":"ORAPANI",
-    "KARAPDOL":"KARABDOL",
-    "SINGODI MOCHI":"SINGHODI MOCHIPATHAR",
-    "SINGODI MOCHIPATHAR":"SINGHODI MOCHIPATHAR",
-    "PINDRAI RAIYAT":"PINDARI RAIYAT"
-  },
-  "पाटन":{
-    "KHAKHARIYA TOLA62":"KHAKHARIYA TOLA",
-    "JUWAN TOLA":"JUBAN TOLA",
-    "JUWANTOLA":"JUBAN TOLA",
-    "JOGNI TOLA":"JOGANI TOLA",
-    "KALYAN PUR":"KALYANPUR"
-  },
-  "बीबी":{
-    "MOHGAON KACHHI AUR":"MOHGAON KACHHI",
-    "MOHGAON KACCHI":"MOHGAON KACHHI",
-    "MOHGAON KACHI":"MOHGAON KACHHI",
-    "DEVRI":"DEORI",
-    "KHAMARIYA KACCHI":"KHAMARIYA KACHHI",
-    "KHAMARIYA KACHHI TOLA":"KHAMARIYA KACHHI",
-    "KHMRIYA KACHHI":"KHAMARIYA KACHHI",
-    "NAVAL GAON":"NAVALGAON",
-    "NAWALGAON":"NAVALGAON"
-  },
-  "मढ़ी":{
-    "JUMUA":"JAMUA",
-    "REHLI":"RAHLI",
-    "KHAMARIYA GUJAR":"KHAMARIYA MADHI"
-  }
-};
+// Bandol DC के लिए अभी कोई गांव-नाम स्पेलिंग सुधार तय नहीं हुआ — ज़रूरत पड़ने पर यहां जोड़ें
+var VILLAGE_ALIASES={};
 // गांव नाम की तुलना-कुंजी — trim + uppercase से केस/स्पेस भिन्नता अपने-आप मर्ज; ऊपर की सूची से बाकी बचे जोड़े भी मर्ज
 function _vgNormKey(hq,name){
   var k=(name||"").trim().toUpperCase().replace(/\s+/g," ");
@@ -243,7 +208,7 @@ function downloadVillageExcel(){
       XLSX.utils.book_append_sheet(wb,wsSum,"सारांश");
       wb.SheetNames.unshift(wb.SheetNames.pop()); // सारांश पहली sheet
       var now=new Date();
-      var fn="ADEGAON_गांव_वार_"+now.toLocaleDateString("en-IN").replace(/\//g,"-")+".xlsx";
+      var fn="BANDOL_गांव_वार_"+now.toLocaleDateString("en-IN").replace(/\//g,"-")+".xlsx";
       XLSX.writeFile(wb,fn);
       toast("📥 सुधरी Excel download हो गई ("+grandTot+" records)","ok");
     });

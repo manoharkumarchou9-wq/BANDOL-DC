@@ -1,7 +1,7 @@
 {
-  "name": "वसूली ट्रैकर | आदेगांव DC",
+  "name": "वसूली ट्रैकर | Bandol DC",
   "short_name": "वसूली ट्रैकर",
-  "description": "आदेगांव DC — लखनादौन डिवीजन सिवनी सर्कल वसूली ट्रैकर",
+  "description": "Bandol DC — मध्य प्रदेश बिजली विभाग वसूली ट्रैकर",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
