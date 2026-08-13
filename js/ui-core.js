@@ -168,7 +168,8 @@ function verifyJE(pw,cb){
 }
 
 // ── Lineman PIN: हर HQ का एक साझा PIN (सामान्य सुरक्षा-मज़बूती — कोई भी नाम भरकर न घुस सके) ──
-// असली access-control नहीं (Security Rules अलग से restrict नहीं करतीं) — JE खुद /HQ_PIN में सेट/बदल सकते हैं
+// /HQ_PIN में लिखना सिर्फ़ JE कर सकते हैं (Security Rules — database.rules.json) — लाइनमैन का
+// account सिर्फ़ पढ़ सकता है, बदल नहीं सकता
 var HQ_PINS={};
 function loadHQPins(){
   try{var s=localStorage.getItem("dc_hqpins");if(s)HQ_PINS=JSON.parse(s);}catch(e){}
