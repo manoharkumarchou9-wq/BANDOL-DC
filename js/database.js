@@ -8,6 +8,13 @@ function fbPath(hq,cat){
 // चरण 3 (per-record migration) में सिर्फ लिखने वाला code बदलेगा — पढ़ना यहीं से दोनों संभालता है
 function normList(d){
   if(!d) return [];
+  // Firebase permission-denied जैसे error response ({"error":"..."}) को कभी असली data मत मानो —
+  // वरना उसे एक record समझकर टूटा हुआ card (नाम खाली, ₹NaN बकाया) बन जाता, और असली वजह
+  // (rules/login की समस्या) छुपी रह जाती — इसकी जगह खाली लिस्ट दिखाकर server पर log करें
+  if(!Array.isArray(d)&&typeof d==="object"&&typeof d.error==="string"&&Object.keys(d).length===1){
+    logErr("perm-denied-as-data",d.error);
+    return [];
+  }
   var arr=Array.isArray(d)?d.filter(Boolean):Object.keys(d).map(function(k){return d[k];}).filter(Boolean);
   arr=arr.map(migrateRemarks);
   var hasO=false;

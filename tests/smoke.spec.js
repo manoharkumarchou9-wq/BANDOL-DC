@@ -703,15 +703,19 @@ test.describe('data format (चरण 1 — दोनों ढांचे)', (
       const c = normList({ '111': { acc: '111', o: 2 }, '222': { acc: '222', o: 1 } });
       // 4. खाली/null
       const d = normList(null);
+      // 5. Firebase permission-denied response — record नहीं, खाली लिस्ट माननी चाहिए (bug: पहले
+      // इसे एक टूटा हुआ record समझकर ₹NaN वाला card बना देता था)
+      const e = normList({ error: 'Permission denied' });
       return {
         arrayOk: a.length === 2 && a[0].acc === '111' && a[1].acc === '222',
         objectOk: b.length === 2 && b[0].acc === '111',
         remarksMigrated: Array.isArray(b[0].remarksArr),
         orderOk: c[0].acc === '222' && c[1].acc === '111',
         nullOk: Array.isArray(d) && d.length === 0,
+        permDeniedOk: Array.isArray(e) && e.length === 0,
       };
     });
-    expect(r).toEqual({ arrayOk: true, objectOk: true, remarksMigrated: true, orderOk: true, nullOk: true });
+    expect(r).toEqual({ arrayOk: true, objectOk: true, remarksMigrated: true, orderOk: true, nullOk: true, permDeniedOk: true });
   });
 });
 
