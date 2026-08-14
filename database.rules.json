@@ -13,48 +13,48 @@
       ".write": "auth.token.email === 'manoharkumarchou9@gmail.com'"
     },
     "बंडोल": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'skwPo50PQkZfHKwpBxu3V2moOIn2'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'skwPo50PQkZfHKwpBxu3V2moOIn2'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'YtFhuS9eDmOzeTIzOzZeATBJvlI2'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'YtFhuS9eDmOzeTIzOzZeATBJvlI2'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "सागर": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'RqUNcRRXr9P9uC750y8nXciSWCl2'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'RqUNcRRXr9P9uC750y8nXciSWCl2'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'qsW1yD1luKT1J4QIpB0wJZCA0bB3'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'qsW1yD1luKT1J4QIpB0wJZCA0bB3'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "बल्लारपुर": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'XbD3QPmCy6aiBjigPrW2gK1PK1r2'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'XbD3QPmCy6aiBjigPrW2gK1PK1r2'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'QDkp151ni3dNYdgnABHpf1xMKiB2'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'QDkp151ni3dNYdgnABHpf1xMKiB2'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "बखारी": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'p4ldWplMK8aXojbcAoYXoVYHUY52'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'p4ldWplMK8aXojbcAoYXoVYHUY52'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'kabDwbiB2JNIDyArWRhE5ItGi1A3'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'kabDwbiB2JNIDyArWRhE5ItGi1A3'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "बाकी": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === '5wHAg6mNAPQp0yif4MnWV9Wfkqp2'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === '5wHAg6mNAPQp0yif4MnWV9Wfkqp2'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'xLNcRrrn21YdDWvjm49KaBOMcg43'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'xLNcRrrn21YdDWvjm49KaBOMcg43'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "कलार बाकी": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'UyqzMdVGITOnWHIjwEVgskubeWH2'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'UyqzMdVGITOnWHIjwEVgskubeWH2'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'WWgkROexozY4p3l13q3COdMSsOl1'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'WWgkROexozY4p3l13q3COdMSsOl1'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "पोंडी": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'GQ2KMjzXs2cGQ64inInU0YuRP192'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'GQ2KMjzXs2cGQ64inInU0YuRP192'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'cOm6iCUn2chKpCZkXbSGGpPsxnq2'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'cOm6iCUn2chKpCZkXbSGGpPsxnq2'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "गोरखपुर": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'r0PFEc970QhYghq68kjKzkDPSOo1'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'r0PFEc970QhYghq68kjKzkDPSOo1'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'svWq5tzIOgZNAtod74bMkDzzFD83'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'svWq5tzIOgZNAtod74bMkDzzFD83'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "बंडोल ग्रामीण": {
-      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'v13xHUymbnRy1ZDL3hOzM4K4jH93'",
-      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'v13xHUymbnRy1ZDL3hOzM4K4jH93'",
+      ".read": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'Nh2gVAN7t4MZDBrGx331UYtw9K32'",
+      ".write": "auth.token.email === 'manoharkumarchou9@gmail.com' || auth.uid === 'Nh2gVAN7t4MZDBrGx331UYtw9K32'",
       "$cat": { "$acc": { ".validate": "newData.child('acc').exists() && newData.child('acc').val() != ''" } }
     },
     "$other": {
